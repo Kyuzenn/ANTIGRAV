@@ -17,10 +17,18 @@
   <link rel="stylesheet" href="css/style.css">
   <link rel="manifest" href="manifest.json">
   <script>
-    if ('serviceWorker' in navigator && window.location.protocol.startsWith('http')) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js').catch(() => {});
+    // Automatically unregister any previously cached service workers
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(registrations => {
+        for (let reg of registrations) {
+          reg.unregister();
+        }
       });
+      if ('caches' in window) {
+        caches.keys().then(names => {
+          for (let name of names) caches.delete(name);
+        });
+      }
     }
   </script>
 </head>
