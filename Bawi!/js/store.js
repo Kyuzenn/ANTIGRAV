@@ -347,10 +347,41 @@ window.LuminaStore = (function () {
     profile: JSON.parse(JSON.stringify(DEFAULT_PROFILE)),
     subjects: JSON.parse(JSON.stringify(DEFAULT_SUBJECTS)),
     assessments: JSON.parse(JSON.stringify(DEFAULT_ASSESSMENTS)),
+    tasks: JSON.parse(JSON.stringify(DEFAULT_TASKS)),
     activeSubjectId: 'subj-gen-chem-1',
-    activeTab: 'overview', // 'overview', 'pipeline', 'subject-view', 'simulator', 'matrix'
+    activeTab: 'overview', // 'overview', 'subjects', 'planner', 'matrix'
     activeQuarter: 'Quarter 1'
   };
+
+  const DEFAULT_TASKS = [
+    {
+      id: 'task-1',
+      subjectId: 'subj-basic-calculus',
+      title: 'Practice Limits & Derivatives Problem Set',
+      category: 'WW',
+      dueDate: new Date(Date.now() + 86400000).toISOString().split('T')[0],
+      completed: false,
+      estimatedItems: 20
+    },
+    {
+      id: 'task-2',
+      subjectId: 'subj-gen-chem-1',
+      title: 'Titration Experiment Lab Documentation',
+      category: 'PT',
+      dueDate: new Date(Date.now() + 172800000).toISOString().split('T')[0],
+      completed: false,
+      estimatedItems: 50
+    },
+    {
+      id: 'task-3',
+      subjectId: 'subj-oral-comm',
+      title: 'Extemporaneous Speech Outline & Practice',
+      category: 'PT',
+      dueDate: new Date(Date.now() + 259200000).toISOString().split('T')[0],
+      completed: true,
+      estimatedItems: 50
+    }
+  ];
 
   function init() {
     try {
@@ -361,6 +392,7 @@ window.LuminaStore = (function () {
           state.profile = Object.assign({}, DEFAULT_PROFILE, parsed.profile || {});
           state.subjects = parsed.subjects;
           state.assessments = parsed.assessments || [];
+          state.tasks = parsed.tasks && parsed.tasks.length > 0 ? parsed.tasks : JSON.parse(JSON.stringify(DEFAULT_TASKS));
           state.activeSubjectId = parsed.activeSubjectId || (state.subjects[0] ? state.subjects[0].id : null);
           state.activeTab = parsed.activeTab || 'overview';
           state.activeQuarter = parsed.activeQuarter || state.profile.quarter || 'Quarter 1';
@@ -377,6 +409,7 @@ window.LuminaStore = (function () {
         profile: state.profile,
         subjects: state.subjects,
         assessments: state.assessments,
+        tasks: state.tasks,
         activeSubjectId: state.activeSubjectId,
         activeTab: state.activeTab,
         activeQuarter: state.activeQuarter
@@ -414,6 +447,12 @@ window.LuminaStore = (function () {
     state.profile = Object.assign({}, state.profile, updates);
     if (updates.quarter) {
       state.activeQuarter = updates.quarter;
+    }
+    if (updates.targetGeneralAverage) {
+      const newTarget = Number(updates.targetGeneralAverage) || 95;
+      state.subjects.forEach(s => {
+        s.targetGrade = newTarget;
+      });
     }
     persist();
   }
@@ -497,8 +536,14 @@ window.LuminaStore = (function () {
     persist();
   }
 
-  function getAssessments(subjectId) {
-    return state.assessments.filter(a => a.subjectId === subjectId);
+  function getAssessments(subjectId, quarter) {
+    return state.assessments.filter(a => {
+      if (a.subjectId !== subjectId) return false;
+      if (quarter) {
+        return a.quarter === quarter || (!a.quarter && quarter === 'Quarter 1');
+      }
+      return true;
+    });
   }
 
   function addAssessment(entry) {
@@ -507,16 +552,64 @@ window.LuminaStore = (function () {
       id,
       subjectId: entry.subjectId,
       category: entry.category, // 'WW', 'PT', 'QA'
-      title: entry.title.trim() || (entry.category === 'QA' ? 'Quarterly Examination' : 'Assessment'),
+      title: entry.title.trim() || (entry.category === 'QA' ? 'Quarterly Examination' : (entry.category === 'PT' ? 'Performance Task' : 'Activity')),
       score: Number(entry.score) || 0,
       max: Number(entry.max) || 10,
-      multiplier: Number(entry.multiplier) || 1.0,
+      multiplier: 1.0,
       date: entry.date || new Date().toISOString().split('T')[0],
+      quarter: entry.quarter || state.activeQuarter || 'Quarter 1',
       allowBonus: !!entry.allowBonus
     };
     state.assessments.push(newEntry);
     persist();
     return newEntry;
+  }
+
+  // Tasks (Planner) Management
+  function getTasks(subjectId) {
+    if (subjectId) {
+      return state.tasks.filter(t => t.subjectId === subjectId);
+    }
+    return state.tasks;
+  }
+
+  function addTask(task) {
+    const id = 'task-' + Date.now().toString(36) + '-' + Math.random().toString(36).substring(2, 6);
+    const newTask = {
+      id,
+      subjectId: task.subjectId,
+      title: task.title.trim() || 'Untitled Task',
+      category: task.category || 'WW',
+      dueDate: task.dueDate || new Date().toISOString().split('T')[0],
+      completed: !!task.completed,
+      estimatedItems: Number(task.estimatedItems) || 20
+    };
+    state.tasks.push(newTask);
+    persist();
+    return newTask;
+  }
+
+  function updateTask(id, updates) {
+    const idx = state.tasks.findIndex(t => t.id === id);
+    if (idx !== -1) {
+      state.tasks[idx] = Object.assign({}, state.tasks[idx], updates);
+      persist();
+    }
+  }
+
+  function toggleTask(id) {
+    const task = state.tasks.find(t => t.id === id);
+    if (task) {
+      task.completed = !task.completed;
+      persist();
+      return task;
+    }
+    return null;
+  }
+
+  function deleteTask(id) {
+    state.tasks = state.tasks.filter(t => t.id !== id);
+    persist();
   }
 
   function updateAssessment(id, updates) {
@@ -592,6 +685,11 @@ window.LuminaStore = (function () {
     addAssessment,
     updateAssessment,
     deleteAssessment,
+    getTasks,
+    addTask,
+    updateTask,
+    toggleTask,
+    deleteTask,
     resetToDemo,
     exportJSON,
     importJSON,

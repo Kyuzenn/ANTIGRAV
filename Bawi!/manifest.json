@@ -1,7 +1,7 @@
 {
-  "name": "LUMINA // Senior High School Target Grade & Transmuted Grade OS",
-  "short_name": "LUMINA",
-  "description": "DepEd Senior High School Target Grade & Transmuted Grade OS with reverse-solving simulation and Table 4 transmutation matrix.",
+  "name": "Bawi! // Senior High School Academic OS",
+  "short_name": "Bawi!",
+  "description": "Bawi! is a distraction-free academic operating system for Senior High School students featuring DepEd Table 4 transmutation, target simulation, and academic planning.",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#090A0F",

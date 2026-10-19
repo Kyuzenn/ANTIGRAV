@@ -73,10 +73,11 @@ window.LuminaEngine = (function () {
     const transmutedGrade = LuminaDepEd.initialToTransmuted(effectiveInitialGrade);
 
     // Target Grade comparison
-    const targetGrade = subject.targetGrade || 95;
+    const profile = LuminaStore.getProfile();
+    const targetGrade = subject.targetGrade || profile.targetGeneralAverage || 95;
     const targetMet = transmutedGrade >= targetGrade;
     const minIGForTarget = LuminaDepEd.transmutedToMinInitial(targetGrade);
-    const deficitIG = Math.max(0, +(minIGForTarget - effectiveInitialGrade).toFixed(2));
+    const deficitIG = Math.max(0, +(minRequiredIG - effectiveInitialGrade).toFixed(2));
 
     // Progress in weight completion (0% to 100%)
     const completedWeightRatio = activeWeight; // e.g. 0.75 if QA is 0.25 pending
@@ -252,6 +253,138 @@ window.LuminaEngine = (function () {
   }
 
   /**
+   * Section 5.3: Flexible Assessment Solver (WW Quiz, PT, or QA).
+   * Calculates exact raw points needed out of totalItems.
+   */
+  function solveForAssessment(subjectId, category = 'WW', totalItems = 20, targetTransmutedGrade) {
+    const subject = LuminaStore.getSubject(subjectId);
+    if (!subject) return null;
+
+    const calc = calculateSubject(subject);
+    const profile = LuminaStore.getProfile();
+    const targetTG = Number(targetTransmutedGrade) || subject.targetGrade || profile.targetGeneralAverage || 95;
+    const minRequiredIG = LuminaDepEd.transmutedToMinInitial(targetTG);
+
+    const cat = (category || 'WW').toUpperCase();
+    const items = Number(totalItems) || (cat === 'QA' ? 100 : (cat === 'PT' ? 50 : 20));
+    const weight = subject.weights[cat.toLowerCase()] || 0.25;
+
+    let requiredRawScore = 0;
+    let requiredPct = 0;
+    let maxAchievableIG = 0;
+    let maxAchievableTG = 0;
+
+    if (cat === 'QA') {
+      const lockedPoints = calc.lockedPoints;
+      const deficitPoints = minRequiredIG - lockedPoints;
+      requiredPct = +(deficitPoints / weight).toFixed(2);
+      requiredRawScore = Math.ceil((requiredPct / 100) * items);
+      maxAchievableIG = +(lockedPoints + (weight * 100)).toFixed(2);
+      maxAchievableTG = LuminaDepEd.initialToTransmuted(maxAchievableIG);
+    } else if (cat === 'WW') {
+      const otherLocked = calc.pt.weighted + (calc.hasQA ? calc.qa.weighted : 0);
+      const neededWWWeighted = minRequiredIG - otherLocked;
+      const neededWWPct = neededWWWeighted / subject.weights.ww;
+      const currentScore = calc.ww.score;
+      const newMax = calc.ww.max + items;
+      const neededTotalScore = (neededWWPct / 100) * newMax;
+      requiredRawScore = Math.ceil(neededTotalScore - currentScore);
+      requiredPct = +((requiredRawScore / items) * 100).toFixed(1);
+
+      const maxWWPct = ((currentScore + items) / newMax) * 100;
+      maxAchievableIG = +(otherLocked + (maxWWPct * subject.weights.ww)).toFixed(2);
+      maxAchievableTG = LuminaDepEd.initialToTransmuted(maxAchievableIG);
+    } else if (cat === 'PT') {
+      const otherLocked = calc.ww.weighted + (calc.hasQA ? calc.qa.weighted : 0);
+      const neededPTWeighted = minRequiredIG - otherLocked;
+      const neededPTPct = neededPTWeighted / subject.weights.pt;
+      const currentScore = calc.pt.score;
+      const newMax = calc.pt.max + items;
+      const neededTotalScore = (neededPTPct / 100) * newMax;
+      requiredRawScore = Math.ceil(neededTotalScore - currentScore);
+      requiredPct = +((requiredRawScore / items) * 100).toFixed(1);
+
+      const maxPTPct = ((currentScore + items) / newMax) * 100;
+      maxAchievableIG = +(otherLocked + (maxPTPct * subject.weights.pt)).toFixed(2);
+      maxAchievableTG = LuminaDepEd.initialToTransmuted(maxAchievableIG);
+    }
+
+    let status = 'HIGH_RIGOR'; // 'GUARANTEED', 'COMFORT', 'HIGH_RIGOR', 'IMPOSSIBLE'
+    let statusLabel = '';
+    let recommendation = '';
+
+    if (requiredRawScore <= 0) {
+      status = 'GUARANTEED';
+      statusLabel = 'Target Guaranteed';
+      recommendation = `Target ${targetTG} is already mathematically guaranteed based on current standing, even with 0 on this ${cat === 'QA' ? 'Exam' : (cat === 'PT' ? 'Task' : 'Quiz')}.`;
+      requiredRawScore = 0;
+    } else if (requiredRawScore <= Math.floor(items * 0.75)) {
+      status = 'COMFORT';
+      statusLabel = 'Comfort Zone';
+      const margin = items - requiredRawScore;
+      recommendation = `Need ${requiredRawScore} / ${items} items (${requiredPct}%). Safe cushion of ${margin} mistake${margin === 1 ? '' : 's'}.`;
+    } else if (requiredRawScore <= items) {
+      status = 'HIGH_RIGOR';
+      statusLabel = 'High Rigor';
+      recommendation = `Focused precision required: Need ${requiredRawScore} / ${items} items (${requiredPct}%) to hit ${targetTG}.`;
+    } else {
+      status = 'IMPOSSIBLE';
+      statusLabel = 'Mathematically Impossible';
+      recommendation = `Target ${targetTG} requires ${requiredRawScore} / ${items} items (${requiredPct}%), which exceeds the total. Highest possible grade with 100% on this is ${maxAchievableTG}.`;
+    }
+
+    return {
+      subject,
+      category: cat,
+      targetTG,
+      totalItems: items,
+      requiredRawScore,
+      requiredPct,
+      maxAchievableTG,
+      status,
+      statusLabel,
+      recommendation
+    };
+  }
+
+  /**
+   * Calculate 2-Quarter Semestral Final Grade.
+   */
+  function calculateSemestralGrade(subjectId) {
+    const subject = LuminaStore.getSubject(subjectId);
+    if (!subject) return null;
+
+    const q1Assessments = LuminaStore.getAssessments(subjectId, 'Quarter 1');
+    const q2Assessments = LuminaStore.getAssessments(subjectId, 'Quarter 2');
+
+    const q1Calc = calculateSubject(subject, q1Assessments);
+    const q2Calc = calculateSubject(subject, q2Assessments);
+
+    const hasQ1 = q1Assessments.length > 0;
+    const hasQ2 = q2Assessments.length > 0;
+
+    const q1Grade = q1Calc.transmutedGrade;
+    const q2Grade = q2Calc.transmutedGrade;
+
+    let semestralFinal = q1Grade;
+    if (hasQ1 && hasQ2) {
+      semestralFinal = Math.round((q1Grade + q2Grade) / 2);
+    } else if (hasQ2 && !hasQ1) {
+      semestralFinal = q2Grade;
+    }
+
+    return {
+      subject,
+      q1Grade,
+      q2Grade,
+      hasQ1,
+      hasQ2,
+      semestralFinal,
+      honorsTier: LuminaDepEd.getHonorsTier(semestralFinal)
+    };
+  }
+
+  /**
    * Section 4.1: High-Leverage Study Allocator.
    * Examines remaining uncompleted weights across all subjects and ranks
    * where additional effort yields the highest General Average improvement.
@@ -320,7 +453,9 @@ window.LuminaEngine = (function () {
   return {
     calculateSubject,
     calculateTermSummary,
+    calculateSemestralGrade,
     solveForExam,
+    solveForAssessment,
     getHighLeverageRecommendations
   };
 })();

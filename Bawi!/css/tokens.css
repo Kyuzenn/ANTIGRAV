@@ -59,10 +59,9 @@
   --status-opal-2: #c084fc;
   --status-opal-3: #f472b6;
 
-  /* Blur & Backdrop */
-  --blur-panel: blur(24px) saturate(180%);
-  --blur-card: blur(20px) saturate(180%);
-  --blur-modal: blur(32px) saturate(190%);
+  --blur-panel: blur(20px) saturate(180%);
+  --blur-card: blur(16px) saturate(180%);
+  --blur-modal: blur(16px) saturate(180%);
 
   /* Border Radii */
   --radius-xs: 4px;

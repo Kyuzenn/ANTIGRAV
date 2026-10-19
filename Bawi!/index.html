@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>LUMINA // Senior High School Target Grade & Transmuted Grade OS</title>
-  <meta name="description" content="LUMINA is a distraction-free, Linear and Attio-inspired academic operating system for Senior High School students in the Philippines. Featuring DepEd Table 4 Adjusted Transmutation, reverse-solving simulation, and high-leverage study analytics.">
+  <title>Bawi! // Senior High School Academic OS</title>
+  <meta name="description" content="Bawi! is a distraction-free, Linear and Attio-inspired academic operating system for Senior High School students in the Philippines. Featuring DepEd Table 4 transmutation, target simulation, and study planning.">
   <meta name="theme-color" content="#090A0F">
 
   <!-- Google Fonts: Inter Display, Inter & JetBrains Mono -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 
   <!-- Stylesheets -->
   <link rel="stylesheet" href="css/tokens.css">
@@ -31,12 +31,81 @@
 
   <div class="app-shell" id="appShell">
 
-    <!-- Top Fixed Glass Header -->
+    <!-- Desktop Left Glass Sidebar -->
+    <aside class="app-sidebar" id="appSidebar">
+      <div class="sidebar-top">
+        <div class="sidebar-brand">
+          <div class="sidebar-brand-title" onclick="LuminaApp.switchTab('overview')">
+            <span class="symbol">[λ]</span>
+            <span>Bawi!</span>
+          </div>
+          <div class="sidebar-semester-toggle" id="sidebarSemesterBadge" title="Click to toggle Quarter 1 / Quarter 2">
+            Sem 1 • Q1
+          </div>
+        </div>
+
+        <nav class="sidebar-nav-list" id="sidebarNavList">
+          <button class="sidebar-nav-btn active" data-tab="overview">
+            <div class="nav-left">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
+              <span>Overview</span>
+            </div>
+          </button>
+          <button class="sidebar-nav-btn" data-tab="pipeline">
+            <div class="nav-left">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M6 6h10M6 10h10"/></svg>
+              <span>Subjects</span>
+            </div>
+          </button>
+          <button class="sidebar-nav-btn" data-tab="planner">
+            <div class="nav-left">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/></svg>
+              <span>Planner</span>
+            </div>
+            <span class="sidebar-badge-count" id="sidebarTaskCount">0</span>
+          </button>
+          <button class="sidebar-nav-btn" data-tab="matrix">
+            <div class="nav-left">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 3h18v18H3zM3 9h18M3 15h18M9 3v18M15 3v18"/></svg>
+              <span>Transmutation</span>
+            </div>
+          </button>
+        </nav>
+      </div>
+
+      <div class="sidebar-bottom">
+        <div class="sidebar-profile-card" id="sidebarProfileCard" title="Click to view Academic Profile">
+          <div class="sidebar-profile-top">
+            <span class="sidebar-student-name" id="sidebarStudentName">Student Profile</span>
+            <span class="sidebar-target-pill" id="sidebarTargetPill" title="Target General Average">Target: 95.00</span>
+          </div>
+          <div class="sidebar-student-meta">
+            <span class="dot" style="display:inline-block; width:6px; height:6px; border-radius:50%; background:var(--status-emerald);"></span>
+            <span id="sidebarStrandText">STEM Track</span>
+          </div>
+        </div>
+
+        <div class="sidebar-utility-row">
+          <button class="cmd-k-trigger" id="sidebarCmdKTrigger" style="flex:1; justify-content:space-between;" title="Command Palette (⌘K)">
+            <span>Search</span>
+            <kbd>⌘K</kbd>
+          </button>
+          <button class="icon-btn" id="sidebarAudioToggleBtn" title="Toggle Sound">
+            <!-- Populated by JS -->
+          </button>
+          <button class="icon-btn" id="sidebarThemeToggleBtn" title="Toggle Theme">
+            <!-- Populated by JS -->
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Top Fixed Glass Header (Mobile Only) -->
     <header class="top-header">
       <div class="header-left">
         <div class="brand-monogram" onclick="LuminaApp.switchTab('overview')">
           <span class="symbol">[λ]</span>
-          <span class="brand-title">Lumina</span>
+          <span class="brand-title" style="letter-spacing:normal; text-transform:none; font-weight:600; font-size:15px; color:var(--text-primary);">Bawi!</span>
         </div>
         <div class="header-divider"></div>
         <div class="semester-badge" id="semesterBadge" title="Click to toggle Quarter 1 / Quarter 2">
@@ -44,44 +113,19 @@
         </div>
       </div>
 
-      <!-- Segmented Glass Pill Center Navigation -->
-      <nav class="nav-pill-container" id="navPillContainer">
-        <div class="nav-pill-indicator" id="navPillIndicator"></div>
-        <button class="nav-tab-btn active" data-tab="overview">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
-          Overview
-        </button>
-        <button class="nav-tab-btn" data-tab="pipeline">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M6 6h10M6 10h10"/></svg>
-          Pipeline
-        </button>
-        <button class="nav-tab-btn" data-tab="subject-view">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-          Gradebook
-        </button>
-        <button class="nav-tab-btn" data-tab="simulator">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="m10 15 5-3-5-3v6Z"/></svg>
-          Simulator
-        </button>
-        <button class="nav-tab-btn" data-tab="matrix">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 3h18v18H3zM3 9h18M3 15h18M9 3v18M15 3v18"/></svg>
-          Transmutation
-        </button>
-      </nav>
-
       <!-- Right Header Controls -->
       <div class="header-right">
         <div class="header-badge" id="strandBadge" title="Click to configure Academic Profile">
           <span class="dot"></span> STEM Track
         </div>
-        <div class="header-badge" id="targetAverageBadge" title="Global Cumulative Target">
+        <div class="header-badge" id="targetAverageBadge" title="Click to edit Target Grade" style="cursor:pointer;">
           Target: 95.00
         </div>
         <button class="cmd-k-trigger" id="cmdKTrigger" title="Open Command Palette (Ctrl+K / ⌘K)">
           <span>Search</span>
           <kbd>⌘K</kbd>
         </button>
-        <button class="icon-btn" id="audioToggleBtn" title="Toggle Harmonic Audio Cues">
+        <button class="icon-btn" id="audioToggleBtn" title="Toggle Sound">
           <!-- Populated by JS -->
         </button>
         <button class="icon-btn" id="themeToggleBtn" title="Toggle Dark / Light Theme">
@@ -289,134 +333,85 @@
             </div>
           </div>
         </div>
+
+        <!-- Embedded Reverse-Solver Target Simulator -->
+        <div class="embedded-simulator-section" id="embeddedSimulatorSection">
+          <div class="embedded-sim-header">
+            <div>
+              <div class="embedded-sim-title">Target Simulation & Assessment Solver</div>
+              <p style="font-size:12px; color:var(--text-secondary); margin:0;">
+                Calculate the exact raw points needed on upcoming quizzes, performance tasks, or the quarterly exam to reach your target.
+              </p>
+            </div>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <span style="font-size:12px; color:var(--text-secondary);">Target:</span>
+              <div class="sim-preset-chips" id="embeddedSimPresetChips">
+                <button class="sim-preset-chip" data-target="90">90</button>
+                <button class="sim-preset-chip active" data-target="95">95</button>
+                <button class="sim-preset-chip" data-target="98">98</button>
+              </div>
+              <input type="number" class="form-input mono-input" id="embeddedSimCustomTarget" value="95" min="75" max="100" style="width:70px; padding:4px 8px; font-size:12px;">
+            </div>
+          </div>
+
+          <div class="embedded-sim-grid">
+            <div class="embedded-sim-inputs">
+              <div class="form-group">
+                <label class="form-label">Assessment Type to Simulate</label>
+                <div class="log-category-toggle-group" id="embeddedSimCategoryGroup">
+                  <button class="log-category-toggle-btn active" data-cat="WW">Written Work (Quiz)</button>
+                  <button class="log-category-toggle-btn" data-cat="PT">Performance Task</button>
+                  <button class="log-category-toggle-btn" data-cat="QA">Quarterly Exam</button>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" id="embeddedSimTotalItemsLabel">Total Possible Items (Max)</label>
+                <div style="display:flex; gap:8px; align-items:center;">
+                  <input type="number" class="form-input mono-input" id="embeddedSimTotalItems" value="20" min="1" step="1">
+                  <div class="sim-preset-chips" id="embeddedSimItemPresets">
+                    <button class="sim-preset-chip" data-items="20">20</button>
+                    <button class="sim-preset-chip" data-items="50">50</button>
+                    <button class="sim-preset-chip" data-items="100">100</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Result Card -->
+            <div class="embedded-sim-result-card" id="embeddedSimResultCard">
+              <!-- Populated dynamically by LuminaApp -->
+            </div>
+          </div>
+        </div>
       </section>
 
       <!-- ===================================================================
-           Tab 4: Simulation Laboratory ("What-If" Reverse-Solver Engine)
+           Tab 4: Academic Action Planner (Tasks & Study Tracker)
            =================================================================== -->
-      <section class="tab-view" id="tab-simulator">
+      <section class="tab-view" id="tab-planner">
         <div class="section-header-row">
           <div>
-            <h1 class="section-title">The Simulation Laboratory</h1>
-            <p class="section-subtitle">Reverse-solve the exact Quarterly Examination score required to secure your target transmuted grade.</p>
+            <h1 class="section-title">Academic Action Planner</h1>
+            <p class="section-subtitle">Stay ahead of upcoming quizzes, performance tasks, and exams with high-leverage prioritization.</p>
           </div>
-          <button class="btn-ghost" onclick="LuminaApp.switchTab('matrix')">
-            View Table 4 Matrix →
+          <button class="btn-primary" onclick="LuminaApp.openAddTaskModal()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Add Task
           </button>
         </div>
 
-        <div class="sim-container">
-          <!-- Left Control Panel -->
-          <div class="sim-control-panel">
-            <div class="glass-card">
-              <div class="form-group" style="margin-bottom: 18px;">
-                <label class="form-label">Active Subject to Simulate</label>
-                <select class="form-select" id="simSubjectSelect">
-                  <!-- Populated dynamically -->
-                </select>
-              </div>
-
-              <div class="sim-target-stepper">
-                <div>
-                  <div class="stepper-label">Target Transmuted Grade</div>
-                  <div style="font-size:11px; color:var(--text-tertiary);">DepEd Adjusted Scale (60-100)</div>
-                </div>
-                <div class="stepper-controls">
-                  <button class="stepper-btn" onclick="LuminaApp.adjustSimTarget(-1)">−</button>
-                  <div class="stepper-value" id="simTargetVal">95</div>
-                  <button class="stepper-btn" onclick="LuminaApp.adjustSimTarget(1)">+</button>
-                </div>
-              </div>
-
-              <!-- Locked Standing Breakdown -->
-              <div class="sim-locked-breakdown">
-                <div>
-                  <div style="font-size:10px; color:var(--text-secondary); text-transform:uppercase;">Locked WW Points</div>
-                  <div class="mono" id="simLockedWW" style="font-size:16px; font-weight:500;">--</div>
-                </div>
-                <div>
-                  <div style="font-size:10px; color:var(--text-secondary); text-transform:uppercase;">Locked PT Points</div>
-                  <div class="mono" id="simLockedPT" style="font-size:16px; font-weight:500;">--</div>
-                </div>
-                <div style="grid-column: 1/-1; padding-top:8px; border-top:1px solid var(--border-subtle);">
-                  <div style="font-size:10px; color:var(--text-secondary); text-transform:uppercase;">Total Locked Initial Standing</div>
-                  <div class="mono" id="simLockedTotal" style="font-size:18px; color:var(--status-emerald); font-weight:500;">--</div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Multi-Variable Sandbox Sliders -->
-            <div class="glass-card sim-sandbox-card">
-              <div style="font-size:13px; font-weight:500; color:var(--text-primary); margin-bottom:14px; display:flex; justify-content:space-between; align-items:center;">
-                <span>Interactive Multi-Variable Sandbox</span>
-                <span class="mono" style="font-size:11px; color:var(--text-secondary);">Real-Time Slider Sync</span>
-              </div>
-
-              <div class="sandbox-slider-row">
-                <div class="slider-label-row">
-                  <span style="color:var(--ww-accent);">Written Works Pace</span>
-                  <span class="mono" id="sandboxValWW">92%</span>
-                </div>
-                <input type="range" min="50" max="100" value="92" class="slider-track" id="sandboxSliderWW">
-              </div>
-
-              <div class="sandbox-slider-row">
-                <div class="slider-label-row">
-                  <span style="color:var(--pt-accent);">Performance Tasks Pace</span>
-                  <span class="mono" id="sandboxValPT">95%</span>
-                </div>
-                <input type="range" min="50" max="100" value="95" class="slider-track" id="sandboxSliderPT">
-              </div>
-
-              <div class="sandbox-slider-row">
-                <div class="slider-label-row">
-                  <span style="color:var(--qa-accent);">Quarterly Exam Projected</span>
-                  <span class="mono" id="sandboxValQA">85%</span>
-                </div>
-                <input type="range" min="50" max="100" value="85" class="slider-track" id="sandboxSliderQA">
-              </div>
-
-              <div style="padding:14px; background:var(--glass-subtle); border-radius:var(--radius-sm); border:1px solid var(--border-subtle); display:flex; align-items:baseline; justify-content:space-between;">
-                <div>
-                  <div style="font-size:10px; text-transform:uppercase; color:var(--text-secondary);">Projected Transmuted</div>
-                  <div class="mono" id="sandboxProjectedTG" style="font-size:26px; color:var(--text-primary); font-weight:400;">--</div>
-                </div>
-                <div class="mono" id="sandboxProjectedIG" style="font-size:12px; color:var(--text-secondary);">
-                  Raw Initial: --%
-                </div>
-              </div>
-            </div>
+        <div class="planner-toolbar">
+          <div class="filter-chip-group">
+            <button class="filter-chip active" data-task-filter="all" onclick="LuminaApp.setTaskFilter('all')">All Tasks</button>
+            <button class="filter-chip" data-task-filter="pending" onclick="LuminaApp.setTaskFilter('pending')">Pending</button>
+            <button class="filter-chip" data-task-filter="high-leverage" onclick="LuminaApp.setTaskFilter('high-leverage')">⚡ High Leverage</button>
+            <button class="filter-chip" data-task-filter="completed" onclick="LuminaApp.setTaskFilter('completed')">Completed</button>
           </div>
+        </div>
 
-          <!-- Right Simulation Results Display -->
-          <div class="glass-card sim-results-card" id="simResultsCard">
-            <div>
-              <div style="display:flex; justify-content:space-between; align-items:center;">
-                <span class="hero-metric-label">Quarterly Exam Reverse Solution</span>
-                <div class="feasibility-tag" id="simFeasibilityTag">--</div>
-              </div>
-
-              <div class="sim-exam-score-display">
-                <div class="sim-exam-big-number mono" id="simBigScoreNumber">
-                  -- <span>/ 50</span>
-                </div>
-                <div class="sim-exam-percentage" id="simExamPctReadout">
-                  Calculating minimum points...
-                </div>
-              </div>
-            </div>
-
-            <div>
-              <div style="padding:16px; background:var(--glass-subtle); border-radius:var(--radius-md); border:1px solid var(--border-subtle); margin-top:20px;">
-                <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-secondary); margin-bottom:6px;">
-                  Engine Recommendation
-                </div>
-                <div id="simRecommendationText" style="font-size:13px; color:var(--text-primary); line-height:1.5;">
-                  --
-                </div>
-              </div>
-            </div>
-          </div>
+        <div class="planner-task-list" id="plannerTaskList">
+          <!-- Populated dynamically -->
         </div>
       </section>
 
@@ -478,24 +473,20 @@
     <!-- Mobile Sticky Glass Bottom Navigation -->
     <nav class="mobile-nav-bar">
       <button class="mobile-nav-btn active" data-tab="overview">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
-        Overview
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
+        <span>Overview</span>
       </button>
       <button class="mobile-nav-btn" data-tab="pipeline">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/></svg>
-        Pipeline
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M6 6h10M6 10h10"/></svg>
+        <span>Subjects</span>
       </button>
-      <button class="mobile-nav-btn" data-tab="subject-view">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg>
-        Gradebook
-      </button>
-      <button class="mobile-nav-btn" data-tab="simulator">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="m10 15 5-3-5-3v6Z"/></svg>
-        Simulator
+      <button class="mobile-nav-btn" data-tab="planner">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/></svg>
+        <span>Planner</span>
       </button>
       <button class="mobile-nav-btn" data-tab="matrix">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 3h18v18H3z"/></svg>
-        Matrix
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 3h18v18H3zM3 9h18M3 15h18M9 3v18M15 3v18"/></svg>
+        <span>Transmutation</span>
       </button>
     </nav>
 
@@ -534,16 +525,13 @@
 
         <div class="form-group">
           <label class="form-label">Select Official Subject Title</label>
-          <select class="form-select" id="catalogSubjectSelect" size="6" style="height: 140px;">
-            <!-- Populated dynamically -->
-          </select>
+          <div class="catalog-options-container" id="catalogOptionsContainer">
+            <!-- Populated dynamically with comfortable options -->
+          </div>
+          <input type="hidden" id="selectedCatalogKey" value="">
         </div>
 
-        <div id="presetWeightInfo" style="font-size:11px; color:var(--status-emerald); padding:8px 12px; background:var(--status-emerald-bg); border-radius:var(--radius-sm); border:1px solid rgba(52,211,153,0.3);">
-          DepEd Standard Weight: WW 35%, PT 40%, QA 25%
-        </div>
-
-        <div class="form-group">
+        <div class="form-group" style="margin-top:14px;">
           <label class="form-label">Target Transmuted Grade (Default: 95)</label>
           <input type="number" class="form-input mono-input" id="subjectTargetGrade" min="75" max="100" value="95">
         </div>
@@ -585,12 +573,18 @@
         <button class="icon-btn" onclick="LuminaApp.closeModal(document.getElementById('logScoreModal'))">✕</button>
       </div>
       <div class="modal-body">
+        <!-- Written Work Sub-Type Switcher (Quiz vs Activity) -->
+        <div id="wwSubTypeContainer" style="display:none;">
+          <label class="form-label">Type</label>
+          <div class="log-category-toggle-group">
+            <button type="button" class="log-category-toggle-btn active" id="btnTypeQuiz" onclick="LuminaApp.setWWSubType('Quiz')">Quiz</button>
+            <button type="button" class="log-category-toggle-btn" id="btnTypeActivity" onclick="LuminaApp.setWWSubType('Activity')">Activity</button>
+          </div>
+        </div>
+
         <div class="form-group">
           <label class="form-label">Assessment Title</label>
-          <input type="text" class="form-input" id="logEntryTitle" placeholder="e.g. Unit Quiz 1, Titration Lab, Chapter Test">
-          <div class="quick-suggestion-chips" id="logTitleSuggestions">
-            <!-- Populated dynamically -->
-          </div>
+          <input type="text" class="form-input" id="logEntryTitle" placeholder="e.g. Quiz 1">
         </div>
 
         <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
@@ -604,15 +598,9 @@
           </div>
         </div>
 
-        <div style="display:grid; grid-template-columns: 1.4fr 1fr; gap:12px;">
-          <div class="form-group">
-            <label class="form-label">Date Administered</label>
-            <input type="date" class="form-input" id="logEntryDate">
-          </div>
-          <div class="form-group">
-            <label class="form-label">Multiplier</label>
-            <input type="number" class="form-input mono-input" id="logEntryMultiplier" value="1.0" step="0.5" min="0.5">
-          </div>
+        <div class="form-group">
+          <label class="form-label">Date Administered</label>
+          <input type="date" class="form-input" id="logEntryDate">
         </div>
 
         <div style="display:flex; align-items:center; gap:8px;">
@@ -625,6 +613,89 @@
       <div class="modal-footer">
         <button class="btn-ghost" onclick="LuminaApp.closeModal(document.getElementById('logScoreModal'))">Cancel</button>
         <button class="btn-primary" onclick="LuminaApp.saveAssessmentFromModal()">Record Assessment</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3b. Add Task Modal (Planner) -->
+  <div class="modal-overlay" id="addTaskModal">
+    <div class="modal-sheet" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <div class="modal-title">New Academic Task</div>
+        <button class="icon-btn" onclick="LuminaApp.closeModal(document.getElementById('addTaskModal'))">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Task Description</label>
+          <input type="text" class="form-input" id="taskInputTitle" placeholder="e.g. Quiz 3 Preparation, Acid-Base Lab Report">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Subject</label>
+          <select class="form-select" id="taskInputSubject">
+            <!-- Populated dynamically -->
+          </select>
+        </div>
+
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+          <div class="form-group">
+            <label class="form-label">Component Category</label>
+            <select class="form-select" id="taskInputCategory">
+              <option value="WW">Written Work</option>
+              <option value="PT">Performance Task (High Leverage)</option>
+              <option value="QA">Quarterly Exam</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Due Date</label>
+            <input type="date" class="form-input" id="taskInputDueDate">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Estimated Items (Optional)</label>
+          <input type="number" class="form-input mono-input" id="taskInputItems" placeholder="20" min="1">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-ghost" onclick="LuminaApp.closeModal(document.getElementById('addTaskModal'))">Cancel</button>
+        <button class="btn-primary" onclick="LuminaApp.saveTaskFromModal()">Create Task</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3c. Subject Settings Modal (Triple-Dots Action Menu) -->
+  <div class="modal-overlay" id="subjectSettingsModal">
+    <div class="modal-sheet" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <div class="modal-title" id="subjectSettingsTitle">Subject Options</div>
+        <button class="icon-btn" onclick="LuminaApp.closeModal(document.getElementById('subjectSettingsModal'))">✕</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="settingsTargetSubjectId" value="">
+        <div class="form-group">
+          <label class="form-label">Target Transmuted Grade</label>
+          <input type="number" class="form-input mono-input" id="settingsSubjectTargetInput" min="75" max="100" step="1">
+        </div>
+
+        <div style="border-top: 1px solid var(--border-hairline); padding-top: 16px; margin-top: 16px;">
+          <label class="form-label">Quick Actions</label>
+          <div style="display:flex; flex-direction:column; gap:8px;">
+            <button class="btn-ghost" style="justify-content:flex-start;" onclick="LuminaApp.quickLogFromSettings('WW')">+ Log Written Work</button>
+            <button class="btn-ghost" style="justify-content:flex-start;" onclick="LuminaApp.quickLogFromSettings('PT')">+ Log Performance Task</button>
+            <button class="btn-ghost" style="justify-content:flex-start;" onclick="LuminaApp.quickLogFromSettings('QA')">+ Log Quarterly Exam</button>
+          </div>
+        </div>
+
+        <div style="border-top: 1px solid var(--border-hairline); padding-top: 16px; margin-top: 16px;">
+          <button class="btn-ghost" style="color:var(--status-rose); border-color:rgba(244,63,94,0.3); width:100%; justify-content:center;" onclick="LuminaApp.deleteSubjectFromSettings()">
+            Delete Subject
+          </button>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-ghost" onclick="LuminaApp.closeModal(document.getElementById('subjectSettingsModal'))">Cancel</button>
+        <button class="btn-primary" onclick="LuminaApp.saveSubjectSettings()">Save Target</button>
       </div>
     </div>
   </div>

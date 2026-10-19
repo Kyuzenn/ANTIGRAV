@@ -15,6 +15,7 @@ window.LuminaApp = (function () {
     els.navPillContainer = document.getElementById('navPillContainer');
     els.navPillIndicator = document.getElementById('navPillIndicator');
     els.navTabs = document.querySelectorAll('.nav-tab-btn');
+    els.sidebarNavBtns = document.querySelectorAll('.sidebar-nav-btn');
     els.mobileNavBtns = document.querySelectorAll('.mobile-nav-btn');
     els.tabViews = document.querySelectorAll('.tab-view');
     els.themeToggleBtn = document.getElementById('themeToggleBtn');
@@ -27,9 +28,23 @@ window.LuminaApp = (function () {
     els.strandBadge = document.getElementById('strandBadge');
     els.targetAverageBadge = document.getElementById('targetAverageBadge');
 
+    // Sidebar Elements
+    els.appSidebar = document.getElementById('appSidebar');
+    els.sidebarSemesterBadge = document.getElementById('sidebarSemesterBadge');
+    els.sidebarProfileCard = document.getElementById('sidebarProfileCard');
+    els.sidebarStudentName = document.getElementById('sidebarStudentName');
+    els.sidebarStrandText = document.getElementById('sidebarStrandText');
+    els.sidebarTargetPill = document.getElementById('sidebarTargetPill');
+    els.sidebarTaskCount = document.getElementById('sidebarTaskCount');
+    els.sidebarCmdKTrigger = document.getElementById('sidebarCmdKTrigger');
+    els.sidebarAudioToggleBtn = document.getElementById('sidebarAudioToggleBtn');
+    els.sidebarThemeToggleBtn = document.getElementById('sidebarThemeToggleBtn');
+
     // Modals
     els.addSubjectModal = document.getElementById('addSubjectModal');
     els.logScoreModal = document.getElementById('logScoreModal');
+    els.addTaskModal = document.getElementById('addTaskModal');
+    els.subjectSettingsModal = document.getElementById('subjectSettingsModal');
     els.profileModal = document.getElementById('profileModal');
     els.gradeSlipModal = document.getElementById('gradeSlipModal');
     els.toastContainer = document.getElementById('toastContainer');
@@ -63,13 +78,18 @@ window.LuminaApp = (function () {
       LuminaStore.setActiveTab(tabName);
     }
 
-    // Update active tab buttons
+    // Update active tab buttons (header pill if present)
     els.navTabs.forEach(btn => {
       const isTarget = btn.getAttribute('data-tab') === tabName;
       btn.classList.toggle('active', isTarget);
       if (isTarget) {
         positionPillIndicator(btn);
       }
+    });
+
+    // Update desktop sidebar buttons
+    els.sidebarNavBtns.forEach(btn => {
+      btn.classList.toggle('active', btn.getAttribute('data-tab') === tabName);
     });
 
     // Update mobile nav buttons
@@ -128,11 +148,11 @@ window.LuminaApp = (function () {
       case 'pipeline':
         renderPipeline();
         break;
+      case 'planner':
+        renderPlanner();
+        break;
       case 'subject-view':
         renderSubjectDeepDive();
-        break;
-      case 'simulator':
-        renderSimulator();
         break;
       case 'matrix':
         renderMatrix();
@@ -142,14 +162,26 @@ window.LuminaApp = (function () {
 
   function renderGlobalHeaderBadges() {
     const profile = LuminaStore.getProfile();
-    if (els.semesterBadge) {
-      els.semesterBadge.textContent = `${profile.semester} • ${LuminaStore.getActiveQuarter()}`;
-    }
-    if (els.strandBadge) {
-      els.strandBadge.innerHTML = `<span class="dot"></span> ${profile.trackStrand} Track`;
-    }
-    if (els.targetAverageBadge) {
-      els.targetAverageBadge.textContent = `Target: ${Number(profile.targetGeneralAverage).toFixed(2)}`;
+    const termText = `${profile.semester} • ${LuminaStore.getActiveQuarter()}`;
+    const shortTermText = `Sem ${profile.semester.includes('2') ? '2' : '1'} • Q${LuminaStore.getActiveQuarter().includes('2') ? '2' : '1'}`;
+
+    if (els.semesterBadge) els.semesterBadge.textContent = termText;
+    if (els.sidebarSemesterBadge) els.sidebarSemesterBadge.textContent = shortTermText;
+
+    if (els.strandBadge) els.strandBadge.innerHTML = `<span class="dot"></span> ${profile.trackStrand} Track`;
+    if (els.sidebarStrandText) els.sidebarStrandText.textContent = `${profile.trackStrand} Track`;
+    if (els.sidebarStudentName) els.sidebarStudentName.textContent = profile.studentName || 'Student Profile';
+
+    const targetVal = Number(profile.targetGeneralAverage).toFixed(2);
+    const targetFormatted = `Target: ${targetVal}`;
+    if (els.targetAverageBadge) els.targetAverageBadge.textContent = targetFormatted;
+    if (els.sidebarTargetPill) els.sidebarTargetPill.textContent = targetFormatted;
+
+    // Update pending tasks badge count
+    const pendingTasks = LuminaStore.getTasks().filter(t => !t.completed).length;
+    if (els.sidebarTaskCount) {
+      els.sidebarTaskCount.textContent = pendingTasks;
+      els.sidebarTaskCount.style.display = pendingTasks > 0 ? 'inline-block' : 'none';
     }
   }
 
@@ -329,7 +361,9 @@ window.LuminaApp = (function () {
     filtered.forEach(subject => {
       const calc = LuminaEngine.calculateSubject(subject);
       const card = document.createElement('div');
-      card.className = 'glass-card interactive pipeline-subject-card';
+      const isPriority = calc.transmutedGrade < subject.targetGrade;
+
+      card.className = `glass-card interactive pipeline-subject-card ${isPriority ? 'priority-focus' : ''}`;
       card.onclick = (e) => {
         if (e.target.closest('.card-action-menu')) return;
         navigateToSubject(subject.id);
@@ -342,8 +376,11 @@ window.LuminaApp = (function () {
       const targetMet = calc.transmutedGrade >= subject.targetGrade;
       const statusPillClass = targetMet ? 'met' : 'pending';
       const statusPillText = targetMet
-        ? `Target Met • ${calc.transmutedGrade}/${subject.targetGrade}`
-        : `Needs +${calc.deficitIG} pts`;
+        ? `Target Met (${calc.transmutedGrade}/${subject.targetGrade})`
+        : `Priority Focus (-${calc.deficitIG} pts)`;
+
+      const semCalc = LuminaEngine.calculateSemestralGrade(subject.id);
+      const semGradeDisplay = semCalc ? `<span class="category-tag" title="Semestral Average (${LuminaStore.getProfile().semester})">Sem: ${semCalc.finalGrade}</span>` : '';
 
       card.innerHTML = `
         <div class="pipeline-card-header">
@@ -352,10 +389,11 @@ window.LuminaApp = (function () {
             <div class="pipeline-meta-row">
               <span class="category-tag">${subject.classification}</span>
               <span class="category-tag">${subject.strand}</span>
+              ${semGradeDisplay}
             </div>
           </div>
           <div class="card-action-menu">
-            <button class="icon-btn" title="Subject Options" onclick="LuminaApp.openSubjectSettings('${subject.id}')">
+            <button class="icon-btn" title="Subject Options" onclick="event.stopPropagation(); LuminaApp.openSubjectSettings('${subject.id}')">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>
             </button>
           </div>
@@ -377,11 +415,14 @@ window.LuminaApp = (function () {
         <div class="pipeline-metrics-row">
           <div class="pipeline-tg-box">
             <div class="pipeline-tg-number">${calc.transmutedGrade}</div>
-            <div class="pipeline-raw-ig">Raw: ${calc.effectiveInitialGrade}%</div>
+            <div class="pipeline-raw-ig">Raw: ${calc.effectiveInitialGrade}</div>
           </div>
-          <div class="target-status-pill ${statusPillClass}">
-            <span style="display:inline-block; width:5px; height:5px; border-radius:50%; background:currentColor;"></span>
-            ${statusPillText}
+          <div style="display:flex; flex-direction:column; align-items:flex-end; gap:6px;">
+            ${isPriority ? `<div class="priority-focus-badge">⚡ Priority Focus (-${calc.deficitIG} pts)</div>` : ''}
+            <div class="target-status-pill ${statusPillClass}">
+              <span style="display:inline-block; width:5px; height:5px; border-radius:50%; background:currentColor;"></span>
+              ${statusPillText}
+            </div>
           </div>
         </div>
       `;
@@ -424,12 +465,12 @@ window.LuminaApp = (function () {
           <span class="val" style="color:var(--status-emerald);">${calc.transmutedGrade}</span>
         </div>
         <div class="stat-item">
-          <span class="label">Initial Grade (Pace)</span>
-          <span class="val">${calc.effectiveInitialGrade}%</span>
+          <span class="label">Initial Grade</span>
+          <span class="val">Raw: ${calc.effectiveInitialGrade}</span>
         </div>
         <div class="stat-item">
           <span class="label">Target Transmuted</span>
-          <span class="val">${subject.targetGrade}</span>
+          <span class="val">${subject.targetGrade || 95}</span>
         </div>
         <div class="stat-item">
           <span class="label">Weight Finalized</span>
@@ -450,6 +491,9 @@ window.LuminaApp = (function () {
 
     // Populate Column 3: Quarterly Exam (QA)
     renderGradebookColumn('qa', calc.qa, assessments.filter(a => a.category === 'QA'), subject);
+
+    // Render interactive embedded simulator at the bottom
+    renderEmbeddedSimulator(subject);
   }
 
   function renderGradebookColumn(categoryKey, compCalc, items, subject) {
@@ -497,127 +541,302 @@ window.LuminaApp = (function () {
   }
 
   // --------------------------------------------------------------------------
-  // Tab 4: Simulation Laboratory ("What-If" Reverse-Solver Engine)
+  // Tab 4: Academic Action Planner (Tasks & Study Tracker)
   // --------------------------------------------------------------------------
 
-  let simTargetGrade = 95;
-  let simExamTotalItems = 50;
-  let simUpcomingWW = 92;
-  let simUpcomingPT = 95;
-  let simUpcomingQA = 85;
+  let currentTaskFilter = 'all';
 
-  function renderSimulator() {
-    const subject = LuminaStore.getActiveSubject();
-    const selectEl = document.getElementById('simSubjectSelect');
-    if (!subject || !selectEl) return;
+  function setTaskFilter(filter) {
+    currentTaskFilter = filter;
+    document.querySelectorAll('[data-task-filter]').forEach(btn => {
+      btn.classList.toggle('active', btn.getAttribute('data-task-filter') === filter);
+    });
+    renderPlanner();
+  }
 
-    // Populate subject select dropdown
+  function renderPlanner() {
+    const container = document.getElementById('plannerTaskList');
+    if (!container) return;
+
+    const tasks = LuminaStore.getTasks();
     const subjects = LuminaStore.getSubjects();
-    selectEl.innerHTML = subjects.map(s => `
-      <option value="${s.id}" ${s.id === subject.id ? 'selected' : ''}>${s.name} (${s.classification})</option>
-    `).join('');
+    const subjectMap = new Map(subjects.map(s => [s.id, s]));
 
-    // Update target stepper display
-    const stepperVal = document.getElementById('simTargetVal');
-    if (stepperVal) stepperVal.textContent = simTargetGrade;
-
-    // Run reverse solver
-    const solution = LuminaEngine.solveForExam(subject.id, simTargetGrade, simExamTotalItems);
-    if (!solution) return;
-
-    const bigNumber = document.getElementById('simBigScoreNumber');
-    const examPct = document.getElementById('simExamPctReadout');
-    const feasibilityTag = document.getElementById('simFeasibilityTag');
-    const recommendationText = document.getElementById('simRecommendationText');
-    const lockedWW = document.getElementById('simLockedWW');
-    const lockedPT = document.getElementById('simLockedPT');
-    const lockedTotal = document.getElementById('simLockedTotal');
-    const resultsCard = document.getElementById('simResultsCard');
-
-    if (bigNumber) {
-      if (solution.status === 'GUARANTEED') {
-        bigNumber.innerHTML = `0 <span>/ ${solution.examTotalItems}</span>`;
-      } else if (solution.status === 'UNREACHABLE') {
-        bigNumber.innerHTML = `Max ${solution.maxAchievableTG} <span>TG</span>`;
-      } else {
-        bigNumber.innerHTML = `${solution.requiredExamRawScore} <span>/ ${solution.examTotalItems}</span>`;
-      }
+    let filtered = tasks;
+    if (currentTaskFilter === 'pending') {
+      filtered = tasks.filter(t => !t.completed);
+    } else if (currentTaskFilter === 'completed') {
+      filtered = tasks.filter(t => t.completed);
+    } else if (currentTaskFilter === 'high-leverage') {
+      filtered = tasks.filter(t => t.category === 'PT' || t.category === 'QA');
     }
 
-    if (examPct) {
-      examPct.textContent = solution.status === 'GUARANTEED'
-        ? 'Already secured before taking the exam'
-        : (solution.status === 'UNREACHABLE'
-          ? `Requires ${solution.requiredExamPct}% (Unachievable)`
-          : `Minimum ${solution.requiredExamPct}% required on exam`);
+    container.innerHTML = '';
+    if (filtered.length === 0) {
+      container.innerHTML = `
+        <div style="padding:48px 20px; text-align:center; color:var(--text-secondary);" class="glass-card">
+          <p style="margin-bottom:12px;">No tasks found under "${currentTaskFilter}".</p>
+          <button class="btn-primary" onclick="LuminaApp.openAddTaskModal()">+ Add New Task</button>
+        </div>
+      `;
+      return;
     }
 
-    if (feasibilityTag) {
-      const tagClass = solution.status.toLowerCase().replace('_', '-');
-      feasibilityTag.className = `feasibility-tag ${tagClass}`;
-      feasibilityTag.textContent = solution.statusLabel;
-    }
+    filtered.forEach(task => {
+      const subject = subjectMap.get(task.subjectId) || { name: 'Unknown Subject', classification: 'General' };
+      const isHighLeverage = task.category === 'PT' || task.category === 'QA';
+      const catLabel = task.category === 'WW' ? 'Written Work' : (task.category === 'PT' ? 'Performance Task' : 'Quarterly Exam');
 
-    if (recommendationText) {
-      recommendationText.textContent = solution.recommendation;
-    }
+      const itemEl = document.createElement('div');
+      itemEl.className = `planner-task-item ${task.completed ? 'completed' : ''}`;
 
-    const calc = LuminaEngine.calculateSubject(subject);
-    if (lockedWW) lockedWW.textContent = `${calc.ww.weighted.toFixed(2)} pts`;
-    if (lockedPT) lockedPT.textContent = `${calc.pt.weighted.toFixed(2)} pts`;
-    if (lockedTotal) lockedTotal.textContent = `${calc.lockedPoints.toFixed(2)} / 100`;
-
-    // Trigger Aura Bloom if target met
-    if (solution.status === 'GUARANTEED' || solution.status === 'COMFORT') {
-      if (resultsCard) {
-        resultsCard.classList.remove('aura-bloom');
-        void resultsCard.offsetWidth; // force reflow
-        resultsCard.classList.add('aura-bloom');
-        LuminaAudio.playTargetChime();
-      }
-    }
-
-    // Render Multi-Variable Sandbox Sliders
-    renderSandboxSliders(subject);
+      itemEl.innerHTML = `
+        <div class="planner-task-left">
+          <input type="checkbox" class="planner-task-checkbox" ${task.completed ? 'checked' : ''} onchange="LuminaApp.toggleTaskItem('${task.id}')">
+          <div>
+            <div class="planner-task-title">${task.title}</div>
+            <div class="planner-task-meta">
+              <span class="category-tag">${subject.name}</span>
+              <span class="category-tag">${catLabel}</span>
+              ${isHighLeverage ? '<span class="planner-leverage-tag">⚡ High Leverage</span>' : ''}
+              ${task.dueDate ? `<span style="color:var(--text-secondary); font-family:var(--font-mono); font-size:11px;">Due: ${task.dueDate}</span>` : ''}
+              ${task.estimatedItems ? `<span style="color:var(--text-tertiary); font-family:var(--font-mono); font-size:11px;">(${task.estimatedItems} items)</span>` : ''}
+            </div>
+          </div>
+        </div>
+        <div class="planner-task-actions">
+          ${!task.completed ? `
+            <button class="btn-primary" style="font-size:11px; padding:4px 10px;" onclick="LuminaApp.logScoreFromTask('${task.id}')">
+              + Log Score
+            </button>
+          ` : ''}
+          <button class="icon-btn" title="Delete Task" onclick="LuminaApp.deleteTaskItem('${task.id}')">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
+          </button>
+        </div>
+      `;
+      container.appendChild(itemEl);
+    });
   }
 
-  function renderSandboxSliders(subject) {
-    const calc = LuminaEngine.calculateSubject(subject);
-    const wwSlider = document.getElementById('sandboxSliderWW');
-    const ptSlider = document.getElementById('sandboxSliderPT');
-    const qaSlider = document.getElementById('sandboxSliderQA');
-    const wwVal = document.getElementById('sandboxValWW');
-    const ptVal = document.getElementById('sandboxValPT');
-    const qaVal = document.getElementById('sandboxValQA');
-    const projectedTG = document.getElementById('sandboxProjectedTG');
-    const projectedIG = document.getElementById('sandboxProjectedIG');
+  function openAddTaskModal() {
+    const modal = document.getElementById('addTaskModal');
+    const subjSelect = document.getElementById('taskInputSubject');
+    const titleInput = document.getElementById('taskInputTitle');
+    const dateInput = document.getElementById('taskInputDueDate');
+    const itemsInput = document.getElementById('taskInputItems');
 
-    if (wwSlider) wwSlider.value = simUpcomingWW;
-    if (ptSlider) ptSlider.value = simUpcomingPT;
-    if (qaSlider) qaSlider.value = simUpcomingQA;
+    if (titleInput) titleInput.value = '';
+    if (dateInput) dateInput.value = '';
+    if (itemsInput) itemsInput.value = '20';
 
-    if (wwVal) wwVal.textContent = `${simUpcomingWW}%`;
-    if (ptVal) ptVal.textContent = `${simUpcomingPT}%`;
-    if (qaVal) qaVal.textContent = `${simUpcomingQA}%`;
+    if (subjSelect) {
+      const subjects = LuminaStore.getSubjects();
+      const activeSubj = LuminaStore.getActiveSubject();
+      subjSelect.innerHTML = subjects.map(s => `
+        <option value="${s.id}" ${activeSubj && activeSubj.id === s.id ? 'selected' : ''}>${s.name}</option>
+      `).join('');
+    }
 
-    // Projected calculation:
-    // Simulated weighted sum = (simWW * wwWeight) + (simPT * ptWeight) + (simQA * qaWeight)
-    const simulatedIG = +(
-      (simUpcomingWW * subject.weights.ww) +
-      (simUpcomingPT * subject.weights.pt) +
-      (simUpcomingQA * subject.weights.qa)
-    ).toFixed(2);
-
-    const simulatedTG = LuminaDepEd.initialToTransmuted(simulatedIG);
-
-    if (projectedTG) projectedTG.textContent = simulatedTG;
-    if (projectedIG) projectedIG.textContent = `Raw Initial: ${simulatedIG}%`;
+    openModal(modal);
   }
 
-  function adjustSimTarget(delta) {
-    simTargetGrade = Math.min(100, Math.max(75, simTargetGrade + delta));
-    renderSimulator();
-    LuminaAudio.playClick();
+  function saveTaskFromModal() {
+    const titleInput = document.getElementById('taskInputTitle');
+    const subjSelect = document.getElementById('taskInputSubject');
+    const catSelect = document.getElementById('taskInputCategory');
+    const dateInput = document.getElementById('taskInputDueDate');
+    const itemsInput = document.getElementById('taskInputItems');
+
+    const title = titleInput ? titleInput.value.trim() : '';
+    if (!title) {
+      alert('Please enter a task title or description.');
+      return;
+    }
+
+    const subjectId = subjSelect ? subjSelect.value : '';
+    const category = catSelect ? catSelect.value : 'WW';
+    const dueDate = dateInput ? dateInput.value : '';
+    const estimatedItems = Number(itemsInput ? itemsInput.value : 20) || 20;
+
+    LuminaStore.addTask({
+      title,
+      subjectId,
+      category,
+      dueDate,
+      estimatedItems
+    });
+
+    closeModal(document.getElementById('addTaskModal'));
+    showToast('Academic task added');
+    renderPlanner();
+    renderGlobalHeaderBadges();
+  }
+
+  function toggleTaskItem(taskId) {
+    LuminaStore.toggleTask(taskId);
+    renderPlanner();
+    renderGlobalHeaderBadges();
+  }
+
+  function deleteTaskItem(taskId) {
+    LuminaStore.deleteTask(taskId);
+    renderPlanner();
+    renderGlobalHeaderBadges();
+    showToast('Task removed');
+  }
+
+  function logScoreFromTask(taskId) {
+    const task = LuminaStore.getTasks().find(t => t.id === taskId);
+    if (!task) return;
+
+    LuminaStore.setActiveSubjectId(task.subjectId);
+    openLogScoreModal(task.category, {
+      title: task.title,
+      max: task.estimatedItems || 20
+    });
+  }
+
+  // --------------------------------------------------------------------------
+  // Embedded Reverse-Solver Target Simulator (Inside Subject Gradebook)
+  // --------------------------------------------------------------------------
+
+  let embeddedSimCategory = 'WW';
+  let embeddedSimItems = 20;
+  let embeddedSimTarget = 95;
+
+  function setEmbeddedSimCategory(cat) {
+    embeddedSimCategory = cat;
+    const label = document.getElementById('embeddedSimTotalItemsLabel');
+    const itemsInput = document.getElementById('embeddedSimTotalItems');
+    if (cat === 'WW') {
+      if (label) label.textContent = 'Quiz Total Items (Max)';
+      if (itemsInput && !itemsInput.dataset.userEdited) itemsInput.value = '20';
+    } else if (cat === 'PT') {
+      if (label) label.textContent = 'Performance Task Max Score';
+      if (itemsInput && !itemsInput.dataset.userEdited) itemsInput.value = '50';
+    } else if (cat === 'QA') {
+      if (label) label.textContent = 'Quarterly Exam Total Items';
+      if (itemsInput && !itemsInput.dataset.userEdited) itemsInput.value = '50';
+    }
+
+    document.querySelectorAll('#embeddedSimCategoryGroup .log-category-toggle-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.getAttribute('data-cat') === cat);
+    });
+
+    const subject = LuminaStore.getActiveSubject();
+    if (subject) renderEmbeddedSimulator(subject);
+  }
+
+  function setEmbeddedSimTarget(targetVal) {
+    embeddedSimTarget = Number(targetVal) || 95;
+    const customInput = document.getElementById('embeddedSimCustomTarget');
+    if (customInput) customInput.value = embeddedSimTarget;
+
+    document.querySelectorAll('#embeddedSimPresetChips .sim-preset-chip').forEach(btn => {
+      btn.classList.toggle('active', Number(btn.getAttribute('data-target')) === embeddedSimTarget);
+    });
+
+    const subject = LuminaStore.getActiveSubject();
+    if (subject) renderEmbeddedSimulator(subject);
+  }
+
+  function setEmbeddedSimItems(items) {
+    embeddedSimItems = Number(items) || 20;
+    const itemsInput = document.getElementById('embeddedSimTotalItems');
+    if (itemsInput) {
+      itemsInput.value = embeddedSimItems;
+      itemsInput.dataset.userEdited = 'true';
+    }
+
+    document.querySelectorAll('#embeddedSimItemPresets .sim-preset-chip').forEach(btn => {
+      btn.classList.toggle('active', Number(btn.getAttribute('data-items')) === embeddedSimItems);
+    });
+
+    const subject = LuminaStore.getActiveSubject();
+    if (subject) renderEmbeddedSimulator(subject);
+  }
+
+  function renderEmbeddedSimulator(subject) {
+    const resultCard = document.getElementById('embeddedSimResultCard');
+    if (!resultCard || !subject) return;
+
+    const itemsInput = document.getElementById('embeddedSimTotalItems');
+    const customTargetInput = document.getElementById('embeddedSimCustomTarget');
+
+    const items = Number(itemsInput ? itemsInput.value : embeddedSimItems) || 20;
+    const target = Number(customTargetInput ? customTargetInput.value : embeddedSimTarget) || subject.targetGrade || 95;
+
+    const sol = LuminaEngine.solveForAssessment(subject.id, embeddedSimCategory, items, target);
+    if (!sol) return;
+
+    const categoryName = embeddedSimCategory === 'WW' ? 'Quiz / Written Work' : (embeddedSimCategory === 'PT' ? 'Performance Task' : 'Quarterly Exam');
+
+    if (sol.status === 'IMPOSSIBLE') {
+      resultCard.className = 'embedded-sim-result-card impossible-card';
+      resultCard.innerHTML = `
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
+          <span class="feasibility-tag unreachable">Mathematically Impossible</span>
+          <span style="font-size:11px; font-family:var(--font-mono); color:var(--status-rose);">Target: ${target}</span>
+        </div>
+        <div class="embedded-sim-score-readout">
+          <span class="big-score" style="color:var(--status-rose);">--</span>
+          <span class="max-items">/ ${sol.totalItems} pts</span>
+        </div>
+        <div class="embedded-sim-status-desc" style="color:var(--status-rose); margin-top:8px;">
+          Even with a perfect score (100%), the maximum achievable transmuted grade for this quarter is <strong>${sol.maxAchievableTG}</strong>.
+        </div>
+        <div style="font-size:11px; color:var(--text-secondary); margin-top:12px; line-height:1.4;">
+          Current locked points: <strong>${sol.currentLockedPoints.toFixed(2)}</strong>. Required points (${sol.requiredRawScore.toFixed(1)}) exceed total available items.
+        </div>
+      `;
+      return;
+    }
+
+    if (sol.status === 'GUARANTEED') {
+      resultCard.className = 'embedded-sim-result-card guaranteed-card';
+      resultCard.innerHTML = `
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
+          <span class="feasibility-tag guaranteed">Target Secured</span>
+          <span style="font-size:11px; font-family:var(--font-mono); color:var(--status-emerald);">Target: ${target}</span>
+        </div>
+        <div class="embedded-sim-score-readout">
+          <span class="big-score" style="color:var(--status-emerald);">0</span>
+          <span class="max-items">/ ${sol.totalItems} pts</span>
+        </div>
+        <div class="embedded-sim-status-desc" style="color:var(--text-primary); margin-top:8px;">
+          You have already secured this target transmuted grade with your current logged scores.
+        </div>
+        <div style="font-size:11px; color:var(--text-secondary); margin-top:12px;">
+          Current initial grade pace: <strong>${sol.effectiveInitialGrade.toFixed(2)}%</strong>
+        </div>
+      `;
+      return;
+    }
+
+    // Reachable target
+    const isHighTension = sol.status === 'STRETCH';
+    resultCard.className = `embedded-sim-result-card ${isHighTension ? 'stretch-card' : ''}`;
+
+    resultCard.innerHTML = `
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
+        <span class="feasibility-tag ${sol.status.toLowerCase()}">${sol.statusLabel}</span>
+        <span style="font-size:11px; font-family:var(--font-mono); color:var(--text-secondary);">Target: ${target}</span>
+      </div>
+      <div class="embedded-sim-score-readout">
+        <span class="big-score">${sol.requiredRawScore}</span>
+        <span class="max-items">/ ${sol.totalItems} pts</span>
+      </div>
+      <div class="embedded-sim-status-desc" style="margin-top:6px;">
+        Minimum <strong>${sol.requiredPercentage}%</strong> needed on upcoming ${categoryName}.
+      </div>
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-top:16px;">
+        <span style="font-size:11px; color:var(--text-secondary);">Raw target: ${sol.requiredInitialGrade}%</span>
+        <button class="btn-primary" style="font-size:11px; padding:4px 12px;" onclick="LuminaApp.openLogScoreModal('${embeddedSimCategory}', { score: ${sol.requiredRawScore}, max: ${sol.totalItems} })">
+          + Log This Score
+        </button>
+      </div>
+    `;
   }
 
   // --------------------------------------------------------------------------
@@ -926,16 +1145,12 @@ window.LuminaApp = (function () {
 
   // Add Subject Modal with Curated Catalog
   function openAddSubjectModal() {
-    const catalogSelect = document.getElementById('catalogSubjectSelect');
     const catalogSearchInput = document.getElementById('catalogSearchInput');
-    const classificationSelect = document.getElementById('subjectClassification');
     const customWeightsGroup = document.getElementById('customWeightsGroup');
     const customWeightsToggle = document.getElementById('customWeightsToggle');
 
-    // Populate catalog
-    if (catalogSelect) {
-      renderCatalogOptions('');
-    }
+    if (catalogSearchInput) catalogSearchInput.value = '';
+    renderCatalogOptions('');
 
     if (customWeightsToggle) customWeightsToggle.checked = false;
     if (customWeightsGroup) customWeightsGroup.style.display = 'none';
@@ -944,59 +1159,100 @@ window.LuminaApp = (function () {
   }
 
   function renderCatalogOptions(filterText) {
-    const catalogSelect = document.getElementById('catalogSubjectSelect');
-    if (!catalogSelect) return;
+    const container = document.getElementById('catalogOptionsContainer');
+    const hiddenInput = document.getElementById('selectedCatalogKey');
+    if (!container) return;
+
     const q = (filterText || '').toLowerCase().trim();
-
     const catalog = LuminaDepEd.CURRICULUM_CATALOG;
-    const filtered = catalog.filter(s => !q || s.name.toLowerCase().includes(q) || (s.strand && s.strand.toLowerCase().includes(q)));
+    const filtered = catalog.filter(s => !q || s.name.toLowerCase().includes(q) || (s.strand && s.strand.toLowerCase().includes(q)) || s.classification.toLowerCase().includes(q));
 
-    catalogSelect.innerHTML = filtered.map(s => `
-      <option value="${s.id}" data-classification="${s.classification}" data-strand="${s.strand || ''}" data-preset="${s.defaultPreset}">
-        ${s.name} (${s.classification}${s.strand ? ' • ' + s.strand : ''})
-      </option>
-    `).join('');
+    container.innerHTML = '';
+    if (filtered.length === 0) {
+      container.innerHTML = '<div style="padding:16px; text-align:center; color:var(--text-tertiary); font-size:12px;">No matching DepEd subjects found.</div>';
+      return;
+    }
+
+    let selectedId = hiddenInput ? hiddenInput.value : '';
+    if (!filtered.some(f => f.id === selectedId)) {
+      selectedId = filtered[0].id;
+      if (hiddenInput) hiddenInput.value = selectedId;
+    }
+
+    filtered.forEach(item => {
+      const opt = document.createElement('div');
+      opt.className = `catalog-subject-option ${item.id === selectedId ? 'selected' : ''}`;
+      opt.setAttribute('data-id', item.id);
+      opt.onclick = () => selectCatalogItem(item.id);
+
+      const preset = LuminaDepEd.WEIGHT_PRESETS[item.defaultPreset] || LuminaDepEd.WEIGHT_PRESETS.core_language;
+      const weightSummary = `WW ${Math.round(preset.ww * 100)}% • PT ${Math.round(preset.pt * 100)}% • QA ${Math.round(preset.qa * 100)}%`;
+
+      opt.innerHTML = `
+        <div>
+          <div style="font-weight:400; color:var(--text-primary); font-size:13px;">${item.name}</div>
+          <div style="font-size:11px; color:var(--text-secondary); margin-top:2px;">
+            ${item.classification} ${item.strand ? '• ' + item.strand : ''}
+          </div>
+        </div>
+        <div style="font-size:11px; font-family:var(--font-mono); color:var(--text-tertiary); text-align:right;">
+          ${weightSummary}
+        </div>
+      `;
+      container.appendChild(opt);
+    });
+
+    onCatalogSelectionChange();
+  }
+
+  function selectCatalogItem(id) {
+    const hiddenInput = document.getElementById('selectedCatalogKey');
+    if (hiddenInput) hiddenInput.value = id;
+
+    const container = document.getElementById('catalogOptionsContainer');
+    if (container) {
+      container.querySelectorAll('.catalog-subject-option').forEach(el => {
+        el.classList.toggle('selected', el.getAttribute('data-id') === id);
+      });
+    }
 
     onCatalogSelectionChange();
   }
 
   function onCatalogSelectionChange() {
-    const catalogSelect = document.getElementById('catalogSubjectSelect');
-    const targetInput = document.getElementById('subjectTargetGrade');
-    if (!catalogSelect || !catalogSelect.selectedOptions[0]) return;
+    const hiddenInput = document.getElementById('selectedCatalogKey');
+    if (!hiddenInput || !hiddenInput.value) return;
 
-    const opt = catalogSelect.selectedOptions[0];
-    const presetKey = opt.getAttribute('data-preset') || 'core_language';
+    const catalogItem = LuminaDepEd.CURRICULUM_CATALOG.find(c => c.id === hiddenInput.value);
+    if (!catalogItem) return;
+
+    const presetKey = catalogItem.defaultPreset || 'core_language';
     const preset = LuminaDepEd.WEIGHT_PRESETS[presetKey] || LuminaDepEd.WEIGHT_PRESETS.core_language;
 
     const wwInput = document.getElementById('customWeightWW');
     const ptInput = document.getElementById('customWeightPT');
     const qaInput = document.getElementById('customWeightQA');
-    const presetInfo = document.getElementById('presetWeightInfo');
 
     if (wwInput) wwInput.value = Math.round(preset.ww * 100);
     if (ptInput) ptInput.value = Math.round(preset.pt * 100);
     if (qaInput) qaInput.value = Math.round(preset.qa * 100);
-
-    if (presetInfo) {
-      presetInfo.textContent = `DepEd Standard Weight: WW ${preset.wwLabel}, PT ${preset.ptLabel}, QA ${preset.qaLabel} (${preset.name})`;
-    }
   }
 
   function saveNewSubjectFromModal() {
-    const catalogSelect = document.getElementById('catalogSubjectSelect');
+    const hiddenInput = document.getElementById('selectedCatalogKey');
     const customToggle = document.getElementById('customWeightsToggle');
     const targetInput = document.getElementById('subjectTargetGrade');
 
-    if (!catalogSelect || !catalogSelect.selectedOptions[0]) {
+    if (!hiddenInput || !hiddenInput.value) {
       alert('Please select a subject from the DepEd catalog.');
       return;
     }
 
-    const opt = catalogSelect.selectedOptions[0];
-    const subjectId = opt.value;
-    const catalogItem = LuminaDepEd.CURRICULUM_CATALOG.find(c => c.id === subjectId);
-    if (!catalogItem) return;
+    const catalogItem = LuminaDepEd.CURRICULUM_CATALOG.find(c => c.id === hiddenInput.value);
+    if (!catalogItem) {
+      alert('Selected subject is invalid.');
+      return;
+    }
 
     let weights = { ww: 0.25, pt: 0.50, qa: 0.25 };
     const isCustom = customToggle && customToggle.checked;
@@ -1014,16 +1270,17 @@ window.LuminaApp = (function () {
       weights = { ww, pt, qa };
     } else {
       const presetKey = catalogItem.defaultPreset || 'core_language';
-      const preset = LuminaDepEd.WEIGHT_PRESETS[presetKey];
+      const preset = LuminaDepEd.WEIGHT_PRESETS[presetKey] || LuminaDepEd.WEIGHT_PRESETS.core_language;
       weights = { ww: preset.ww, pt: preset.pt, qa: preset.qa };
     }
 
-    const targetGrade = Number(targetInput ? targetInput.value : 95) || 95;
+    const profile = LuminaStore.getProfile();
+    const targetGrade = Number(targetInput ? targetInput.value : (profile.targetGeneralAverage || 95)) || 95;
 
     const newSubj = LuminaStore.addSubject({
       name: catalogItem.name,
       classification: catalogItem.classification,
-      strand: catalogItem.strand || LuminaStore.getProfile().trackStrand || 'STEM',
+      strand: catalogItem.strand || profile.trackStrand || 'STEM',
       weights,
       targetGrade,
       isCustomWeight: isCustom
@@ -1036,8 +1293,25 @@ window.LuminaApp = (function () {
 
   // Log Assessment Modal
   let activeLogCategory = 'WW';
+  let currentWWSubType = 'Quiz';
 
-  function openLogScoreModal(category) {
+  function setWWSubType(type) {
+    currentWWSubType = type;
+    const btnQuiz = document.getElementById('btnTypeQuiz');
+    const btnAct = document.getElementById('btnTypeActivity');
+    if (btnQuiz) btnQuiz.classList.toggle('active', type === 'Quiz');
+    if (btnAct) btnAct.classList.toggle('active', type === 'Activity');
+
+    const titleInput = document.getElementById('logEntryTitle');
+    const subject = LuminaStore.getActiveSubject();
+    if (titleInput && subject) {
+      const existing = LuminaStore.getAssessments(subject.id).filter(a => a.category === 'WW');
+      const count = existing.filter(a => a.title.toLowerCase().startsWith(type.toLowerCase())).length + 1;
+      titleInput.value = `${type} ${count}`;
+    }
+  }
+
+  function openLogScoreModal(category, options = {}) {
     activeLogCategory = category || 'WW';
     const titleLabel = document.getElementById('logModalCategoryTag');
     const titleInput = document.getElementById('logEntryTitle');
@@ -1045,29 +1319,40 @@ window.LuminaApp = (function () {
     const maxInput = document.getElementById('logEntryMax');
     const dateInput = document.getElementById('logEntryDate');
     const bonusToggle = document.getElementById('logEntryBonusToggle');
-    const suggestionsWrap = document.getElementById('logTitleSuggestions');
+    const wwSubTypeContainer = document.getElementById('wwSubTypeContainer');
+    const subject = LuminaStore.getActiveSubject();
 
     if (titleLabel) {
       titleLabel.textContent = category === 'WW' ? 'Written Work' : (category === 'PT' ? 'Performance Task' : 'Quarterly Exam');
     }
-    if (titleInput) titleInput.value = '';
-    if (scoreInput) scoreInput.value = '';
-    if (maxInput) maxInput.value = category === 'QA' ? '50' : (category === 'PT' ? '50' : '30');
+
+    if (category === 'WW') {
+      if (wwSubTypeContainer) wwSubTypeContainer.style.display = 'block';
+      currentWWSubType = options.subType || 'Quiz';
+      const btnQuiz = document.getElementById('btnTypeQuiz');
+      const btnAct = document.getElementById('btnTypeActivity');
+      if (btnQuiz) btnQuiz.classList.toggle('active', currentWWSubType === 'Quiz');
+      if (btnAct) btnAct.classList.toggle('active', currentWWSubType === 'Activity');
+
+      const existing = subject ? LuminaStore.getAssessments(subject.id).filter(a => a.category === 'WW') : [];
+      const count = existing.filter(a => a.title.toLowerCase().startsWith(currentWWSubType.toLowerCase())).length + 1;
+      if (titleInput) titleInput.value = options.title || `${currentWWSubType} ${count}`;
+      if (maxInput) maxInput.value = options.max || (currentWWSubType === 'Quiz' ? '20' : '30');
+    } else if (category === 'PT') {
+      if (wwSubTypeContainer) wwSubTypeContainer.style.display = 'none';
+      const existing = subject ? LuminaStore.getAssessments(subject.id).filter(a => a.category === 'PT') : [];
+      const count = existing.length + 1;
+      if (titleInput) titleInput.value = options.title || `Performance Task ${count}`;
+      if (maxInput) maxInput.value = options.max || '50';
+    } else if (category === 'QA') {
+      if (wwSubTypeContainer) wwSubTypeContainer.style.display = 'none';
+      if (titleInput) titleInput.value = options.title || 'Quarterly Examination';
+      if (maxInput) maxInput.value = options.max || '50';
+    }
+
+    if (scoreInput) scoreInput.value = options.score !== undefined ? options.score : '';
     if (dateInput) dateInput.value = new Date().toISOString().split('T')[0];
     if (bonusToggle) bonusToggle.checked = false;
-
-    // Quick suggestions based on category
-    if (suggestionsWrap) {
-      const suggestions = category === 'WW'
-        ? ['Unit Quiz 1', 'Problem Set 1', 'Unit Quiz 2', 'Chapter Test', 'Lab Write-up']
-        : (category === 'PT'
-          ? ['Practical Lab Report', 'Group Presentation', 'Project Portfolio', 'Research Defense']
-          : ['Quarterly Exam', 'Periodic Comprehensive Exam']);
-
-      suggestionsWrap.innerHTML = suggestions.map(s => `
-        <span class="suggestion-chip" onclick="document.getElementById('logEntryTitle').value='${s}'">${s}</span>
-      `).join('');
-    }
 
     openModal(els.logScoreModal);
     if (scoreInput) {
@@ -1083,7 +1368,6 @@ window.LuminaApp = (function () {
     const scoreInput = document.getElementById('logEntryScore');
     const maxInput = document.getElementById('logEntryMax');
     const dateInput = document.getElementById('logEntryDate');
-    const multiplierInput = document.getElementById('logEntryMultiplier');
     const bonusToggle = document.getElementById('logEntryBonusToggle');
 
     const score = Number(scoreInput ? scoreInput.value : 0);
@@ -1102,7 +1386,6 @@ window.LuminaApp = (function () {
 
     const title = (titleInput && titleInput.value.trim()) || `${activeLogCategory} Assessment`;
     const date = (dateInput && dateInput.value) || new Date().toISOString().split('T')[0];
-    const multiplier = Number(multiplierInput ? multiplierInput.value : 1.0) || 1.0;
 
     LuminaStore.addAssessment({
       subjectId: subject.id,
@@ -1110,14 +1393,14 @@ window.LuminaApp = (function () {
       title,
       score,
       max,
-      multiplier,
+      multiplier: 1.0,
       date,
       allowBonus
     });
 
     closeModal(els.logScoreModal);
-    showToast(`Logged "${title}" (${score}/${max})`);
-    LuminaAudio.playClick();
+    showToast(`Recorded "${title}" (${score}/${max})`);
+    LuminaAudio.playTargetChime();
   }
 
   function deleteAssessmentEntry(id) {
@@ -1134,6 +1417,57 @@ window.LuminaApp = (function () {
       LuminaStore.deleteSubject(subject.id);
       showToast(`Deleted ${subject.name}`);
       switchTab('pipeline');
+    }
+  }
+
+  // Subject Options (Triple-Dots Modal)
+  function openSubjectSettings(subjectId) {
+    const subject = LuminaStore.getSubject(subjectId);
+    if (!subject) return;
+
+    const modal = document.getElementById('subjectSettingsModal');
+    const titleEl = document.getElementById('subjectSettingsTitle');
+    const idInput = document.getElementById('settingsTargetSubjectId');
+    const targetInput = document.getElementById('settingsSubjectTargetInput');
+
+    if (titleEl) titleEl.textContent = `${subject.name} Options`;
+    if (idInput) idInput.value = subject.id;
+    if (targetInput) targetInput.value = subject.targetGrade || 95;
+
+    openModal(modal);
+  }
+
+  function saveSubjectSettings() {
+    const idInput = document.getElementById('settingsTargetSubjectId');
+    const targetInput = document.getElementById('settingsSubjectTargetInput');
+    if (!idInput || !idInput.value) return;
+
+    const newTarget = Number(targetInput ? targetInput.value : 95) || 95;
+    LuminaStore.updateSubject(idInput.value, { targetGrade: newTarget });
+    closeModal(document.getElementById('subjectSettingsModal'));
+    showToast('Subject target updated');
+    renderPipeline();
+  }
+
+  function quickLogFromSettings(category) {
+    const idInput = document.getElementById('settingsTargetSubjectId');
+    if (!idInput || !idInput.value) return;
+    LuminaStore.setActiveSubjectId(idInput.value);
+    closeModal(document.getElementById('subjectSettingsModal'));
+    openLogScoreModal(category);
+  }
+
+  function deleteSubjectFromSettings() {
+    const idInput = document.getElementById('settingsTargetSubjectId');
+    if (!idInput || !idInput.value) return;
+    const subject = LuminaStore.getSubject(idInput.value);
+    if (!subject) return;
+
+    if (confirm(`Are you sure you want to delete ${subject.name}? All logged scores will be removed.`)) {
+      LuminaStore.deleteSubject(subject.id);
+      closeModal(document.getElementById('subjectSettingsModal'));
+      showToast(`Deleted ${subject.name}`);
+      renderPipeline();
     }
   }
 
@@ -1159,15 +1493,19 @@ window.LuminaApp = (function () {
     const levelSelect = document.getElementById('profileGradeLevel');
     const targetInput = document.getElementById('profileTargetAverage');
 
+    const newTarget = Number(targetInput ? targetInput.value : 95) || 95;
+
     LuminaStore.updateProfile({
       studentName: nameInput ? nameInput.value : 'Student',
       trackStrand: strandSelect ? strandSelect.value : 'STEM',
       gradeLevel: levelSelect ? levelSelect.value : 'Grade 11',
-      targetGeneralAverage: Number(targetInput ? targetInput.value : 95) || 95
+      targetGeneralAverage: newTarget
     });
 
     closeModal(els.profileModal);
-    showToast('Academic profile updated');
+    renderGlobalHeaderBadges();
+    renderCurrentView();
+    showToast(`Academic profile updated (Target: ${newTarget})`);
   }
 
   function exportDataFile() {
@@ -1176,7 +1514,7 @@ window.LuminaApp = (function () {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `lumina-backup-${new Date().toISOString().split('T')[0]}.json`;
+    a.download = `bawi-backup-${new Date().toISOString().split('T')[0]}.json`;
     a.click();
     URL.revokeObjectURL(url);
     showToast('Academic record exported to JSON');
@@ -1277,7 +1615,6 @@ window.LuminaApp = (function () {
     function step(currentTime) {
       const elapsed = currentTime - startTime;
       const progress = Math.min(1, elapsed / duration);
-      // Ease out cubic
       const ease = 1 - Math.pow(1 - progress, 3);
       const current = startVal + diff * ease;
       element.textContent = current.toFixed(2);
@@ -1296,7 +1633,7 @@ window.LuminaApp = (function () {
   // --------------------------------------------------------------------------
 
   function setupEventListeners() {
-    // Navigation Pill Clicks
+    // Navigation Pill Clicks (Mobile top header if present)
     els.navTabs.forEach(btn => {
       btn.addEventListener('click', () => {
         const tab = btn.getAttribute('data-tab');
@@ -1305,7 +1642,7 @@ window.LuminaApp = (function () {
       });
     });
 
-    // Mobile Navigation Clicks
+    // Mobile Bottom Navigation Clicks
     els.mobileNavBtns.forEach(btn => {
       btn.addEventListener('click', () => {
         const tab = btn.getAttribute('data-tab');
@@ -1314,12 +1651,34 @@ window.LuminaApp = (function () {
       });
     });
 
-    // Header Badges Click Handlers
+    // Sidebar Navigation Clicks
+    const sidebarNavBtns = document.querySelectorAll('.sidebar-nav-btn');
+    sidebarNavBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const tab = btn.getAttribute('data-tab');
+        switchTab(tab);
+        LuminaAudio.playClick();
+      });
+    });
+
+    // Header Badges & Sidebar Profile Click Handlers
     if (els.themeToggleBtn) els.themeToggleBtn.addEventListener('click', toggleTheme);
     if (els.audioToggleBtn) els.audioToggleBtn.addEventListener('click', toggleAudio);
     if (els.cmdKTrigger) els.cmdKTrigger.addEventListener('click', openCommandPalette);
+
     if (els.strandBadge) els.strandBadge.addEventListener('click', openProfileModal);
+    if (els.targetAverageBadge) els.targetAverageBadge.addEventListener('click', openProfileModal);
+    if (els.sidebarProfileCard) els.sidebarProfileCard.addEventListener('click', openProfileModal);
+    if (els.sidebarTargetPill) els.sidebarTargetPill.addEventListener('click', openProfileModal);
+
     if (els.semesterBadge) els.semesterBadge.addEventListener('click', () => {
+      const currentQ = LuminaStore.getActiveQuarter();
+      const nextQ = currentQ === 'Quarter 1' ? 'Quarter 2' : 'Quarter 1';
+      LuminaStore.setActiveQuarter(nextQ);
+      showToast(`Switched active term to ${nextQ}`);
+    });
+
+    if (els.sidebarSemesterBadge) els.sidebarSemesterBadge.addEventListener('click', () => {
       const currentQ = LuminaStore.getActiveQuarter();
       const nextQ = currentQ === 'Quarter 1' ? 'Quarter 2' : 'Quarter 1';
       LuminaStore.setActiveQuarter(nextQ);
@@ -1341,11 +1700,6 @@ window.LuminaApp = (function () {
       });
     }
 
-    const catalogSelect = document.getElementById('catalogSubjectSelect');
-    if (catalogSelect) {
-      catalogSelect.addEventListener('change', onCatalogSelectionChange);
-    }
-
     const customWeightsToggle = document.getElementById('customWeightsToggle');
     const customWeightsGroup = document.getElementById('customWeightsGroup');
     if (customWeightsToggle && customWeightsGroup) {
@@ -1354,41 +1708,57 @@ window.LuminaApp = (function () {
       });
     }
 
-    // Simulator Subject Change
-    const simSelect = document.getElementById('simSubjectSelect');
-    if (simSelect) {
-      simSelect.addEventListener('change', (e) => {
-        LuminaStore.setActiveSubjectId(e.target.value);
-        renderSimulator();
-      });
-    }
+    // Setup Embedded Simulator Listeners
+    setupEmbeddedSimulatorListeners();
 
-    // Sandbox Sliders
-    const wwSlider = document.getElementById('sandboxSliderWW');
-    const ptSlider = document.getElementById('sandboxSliderPT');
-    const qaSlider = document.getElementById('sandboxSliderQA');
-
-    if (wwSlider) wwSlider.addEventListener('input', (e) => {
-      simUpcomingWW = Number(e.target.value);
-      const subj = LuminaStore.getActiveSubject();
-      if (subj) renderSandboxSliders(subj);
-    });
-    if (ptSlider) ptSlider.addEventListener('input', (e) => {
-      simUpcomingPT = Number(e.target.value);
-      const subj = LuminaStore.getActiveSubject();
-      if (subj) renderSandboxSliders(subj);
-    });
-    if (qaSlider) qaSlider.addEventListener('input', (e) => {
-      simUpcomingQA = Number(e.target.value);
-      const subj = LuminaStore.getActiveSubject();
-      if (subj) renderSandboxSliders(subj);
-    });
+    // Setup Keyboard Shortcuts
+    setupKeyboardShortcuts();
 
     // Window Resize -> Reposition pill indicator
     window.addEventListener('resize', () => {
       const activeBtn = document.querySelector('.nav-tab-btn.active');
       if (activeBtn) positionPillIndicator(activeBtn);
     });
+  }
+
+  function setupEmbeddedSimulatorListeners() {
+    // Category toggle buttons
+    document.querySelectorAll('#embeddedSimCategoryGroup .log-category-toggle-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        setEmbeddedSimCategory(btn.getAttribute('data-cat'));
+      });
+    });
+
+    // Preset chips for target
+    document.querySelectorAll('#embeddedSimPresetChips .sim-preset-chip').forEach(btn => {
+      btn.addEventListener('click', () => {
+        setEmbeddedSimTarget(btn.getAttribute('data-target'));
+      });
+    });
+
+    // Custom target input
+    const customTargetInput = document.getElementById('embeddedSimCustomTarget');
+    if (customTargetInput) {
+      customTargetInput.addEventListener('input', (e) => {
+        setEmbeddedSimTarget(e.target.value);
+      });
+    }
+
+    // Preset chips for total items
+    document.querySelectorAll('#embeddedSimItemPresets .sim-preset-chip').forEach(btn => {
+      btn.addEventListener('click', () => {
+        setEmbeddedSimItems(btn.getAttribute('data-items'));
+      });
+    });
+
+    // Total items input
+    const itemsInput = document.getElementById('embeddedSimTotalItems');
+    if (itemsInput) {
+      itemsInput.addEventListener('input', (e) => {
+        const subject = LuminaStore.getActiveSubject();
+        if (subject) renderEmbeddedSimulator(subject);
+      });
+    }
   }
 
   function setupKeyboardShortcuts() {
@@ -1446,11 +1816,22 @@ window.LuminaApp = (function () {
     navigateToSubject,
     cycleSubject,
     setPipelineFilter,
-    adjustSimTarget,
+    setTaskFilter,
     openAddSubjectModal,
     saveNewSubjectFromModal,
+    selectCatalogItem,
     openLogScoreModal,
     saveAssessmentFromModal,
+    setWWSubType,
+    openAddTaskModal,
+    saveTaskFromModal,
+    toggleTaskItem,
+    deleteTaskItem,
+    logScoreFromTask,
+    openSubjectSettings,
+    saveSubjectSettings,
+    quickLogFromSettings,
+    deleteSubjectFromSettings,
     deleteAssessmentEntry,
     deleteCurrentSubject,
     openProfileModal,
