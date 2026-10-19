@@ -77,7 +77,7 @@ window.LuminaEngine = (function () {
     const targetGrade = subject.targetGrade || profile.targetGeneralAverage || 95;
     const targetMet = transmutedGrade >= targetGrade;
     const minIGForTarget = LuminaDepEd.transmutedToMinInitial(targetGrade);
-    const deficitIG = Math.max(0, +(minRequiredIG - effectiveInitialGrade).toFixed(2));
+    const deficitIG = Math.max(0, +(minIGForTarget - effectiveInitialGrade).toFixed(2));
 
     // Progress in weight completion (0% to 100%)
     const completedWeightRatio = activeWeight; // e.g. 0.75 if QA is 0.25 pending
@@ -340,6 +340,10 @@ window.LuminaEngine = (function () {
       totalItems: items,
       requiredRawScore,
       requiredPct,
+      requiredPercentage: requiredPct,
+      requiredInitialGrade: minRequiredIG,
+      currentLockedPoints: calc.lockedPoints,
+      effectiveInitialGrade: calc.effectiveInitialGrade,
       maxAchievableTG,
       status,
       statusLabel,

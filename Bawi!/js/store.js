@@ -343,16 +343,6 @@ window.LuminaStore = (function () {
     }
   ];
 
-  let state = {
-    profile: JSON.parse(JSON.stringify(DEFAULT_PROFILE)),
-    subjects: JSON.parse(JSON.stringify(DEFAULT_SUBJECTS)),
-    assessments: JSON.parse(JSON.stringify(DEFAULT_ASSESSMENTS)),
-    tasks: JSON.parse(JSON.stringify(DEFAULT_TASKS)),
-    activeSubjectId: 'subj-gen-chem-1',
-    activeTab: 'overview', // 'overview', 'subjects', 'planner', 'matrix'
-    activeQuarter: 'Quarter 1'
-  };
-
   const DEFAULT_TASKS = [
     {
       id: 'task-1',
@@ -382,6 +372,16 @@ window.LuminaStore = (function () {
       estimatedItems: 50
     }
   ];
+
+  let state = {
+    profile: JSON.parse(JSON.stringify(DEFAULT_PROFILE)),
+    subjects: JSON.parse(JSON.stringify(DEFAULT_SUBJECTS)),
+    assessments: JSON.parse(JSON.stringify(DEFAULT_ASSESSMENTS)),
+    tasks: JSON.parse(JSON.stringify(DEFAULT_TASKS)),
+    activeSubjectId: 'subj-gen-chem-1',
+    activeTab: 'overview', // 'overview', 'subjects', 'planner', 'matrix'
+    activeQuarter: 'Quarter 1'
+  };
 
   function init() {
     try {

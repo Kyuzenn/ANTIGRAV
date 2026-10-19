@@ -787,7 +787,7 @@ window.LuminaApp = (function () {
           Even with a perfect score (100%), the maximum achievable transmuted grade for this quarter is <strong>${sol.maxAchievableTG}</strong>.
         </div>
         <div style="font-size:11px; color:var(--text-secondary); margin-top:12px; line-height:1.4;">
-          Current locked points: <strong>${sol.currentLockedPoints.toFixed(2)}</strong>. Required points (${sol.requiredRawScore.toFixed(1)}) exceed total available items.
+          Current locked points: <strong>${Number(sol.currentLockedPoints || 0).toFixed(2)}</strong>. Required points (${Number(sol.requiredRawScore || 0).toFixed(1)}) exceed total available items.
         </div>
       `;
       return;
@@ -808,7 +808,7 @@ window.LuminaApp = (function () {
           You have already secured this target transmuted grade with your current logged scores.
         </div>
         <div style="font-size:11px; color:var(--text-secondary); margin-top:12px;">
-          Current initial grade pace: <strong>${sol.effectiveInitialGrade.toFixed(2)}%</strong>
+          Current initial grade pace: <strong>${Number(sol.effectiveInitialGrade || 0).toFixed(2)}%</strong>
         </div>
       `;
       return;
@@ -828,10 +828,10 @@ window.LuminaApp = (function () {
         <span class="max-items">/ ${sol.totalItems} pts</span>
       </div>
       <div class="embedded-sim-status-desc" style="margin-top:6px;">
-        Minimum <strong>${sol.requiredPercentage}%</strong> needed on upcoming ${categoryName}.
+        Minimum <strong>${sol.requiredPercentage != null ? sol.requiredPercentage : (sol.requiredPct != null ? sol.requiredPct : 0)}%</strong> needed on upcoming ${categoryName}.
       </div>
       <div style="display:flex; justify-content:space-between; align-items:center; margin-top:16px;">
-        <span style="font-size:11px; color:var(--text-secondary);">Raw target: ${sol.requiredInitialGrade}%</span>
+        <span style="font-size:11px; color:var(--text-secondary);">Raw target: ${sol.requiredInitialGrade || 0}%</span>
         <button class="btn-primary" style="font-size:11px; padding:4px 12px;" onclick="LuminaApp.openLogScoreModal('${embeddedSimCategory}', { score: ${sol.requiredRawScore}, max: ${sol.totalItems} })">
           + Log This Score
         </button>
@@ -1565,10 +1565,11 @@ window.LuminaApp = (function () {
   }
 
   function updateThemeIcon(theme) {
-    if (!els.themeToggleBtn) return;
-    els.themeToggleBtn.innerHTML = theme === 'dark'
+    const iconHtml = theme === 'dark'
       ? `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>`
       : `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>`;
+    if (els.themeToggleBtn) els.themeToggleBtn.innerHTML = iconHtml;
+    if (els.sidebarThemeToggleBtn) els.sidebarThemeToggleBtn.innerHTML = iconHtml;
   }
 
   function toggleAudio() {
@@ -1578,11 +1579,12 @@ window.LuminaApp = (function () {
   }
 
   function updateAudioButtonState() {
-    if (!els.audioToggleBtn) return;
     const isMuted = LuminaAudio.getMuted();
-    els.audioToggleBtn.innerHTML = isMuted
+    const iconHtml = isMuted
       ? `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M11 5L6 9H2v6h4l5 4V5zM23 9l-6 6M17 9l6 6"/></svg>`
       : `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>`;
+    if (els.audioToggleBtn) els.audioToggleBtn.innerHTML = iconHtml;
+    if (els.sidebarAudioToggleBtn) els.sidebarAudioToggleBtn.innerHTML = iconHtml;
   }
 
   function showToast(message) {
@@ -1663,8 +1665,13 @@ window.LuminaApp = (function () {
 
     // Header Badges & Sidebar Profile Click Handlers
     if (els.themeToggleBtn) els.themeToggleBtn.addEventListener('click', toggleTheme);
+    if (els.sidebarThemeToggleBtn) els.sidebarThemeToggleBtn.addEventListener('click', toggleTheme);
+
     if (els.audioToggleBtn) els.audioToggleBtn.addEventListener('click', toggleAudio);
+    if (els.sidebarAudioToggleBtn) els.sidebarAudioToggleBtn.addEventListener('click', toggleAudio);
+
     if (els.cmdKTrigger) els.cmdKTrigger.addEventListener('click', openCommandPalette);
+    if (els.sidebarCmdKTrigger) els.sidebarCmdKTrigger.addEventListener('click', openCommandPalette);
 
     if (els.strandBadge) els.strandBadge.addEventListener('click', openProfileModal);
     if (els.targetAverageBadge) els.targetAverageBadge.addEventListener('click', openProfileModal);
