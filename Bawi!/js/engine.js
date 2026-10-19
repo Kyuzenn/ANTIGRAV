@@ -254,7 +254,7 @@ window.LuminaEngine = (function () {
 
   /**
    * Section 5.3: Flexible Assessment Solver (WW Quiz, PT, or QA).
-   * Calculates exact raw points needed out of totalItems.
+   * Calculates exact raw points needed out of totalItems based on current standing & pacing.
    */
   function solveForAssessment(subjectId, category = 'WW', totalItems = 20, targetTransmutedGrade) {
     const subject = LuminaStore.getSubject(subjectId);
@@ -266,48 +266,78 @@ window.LuminaEngine = (function () {
     const minRequiredIG = LuminaDepEd.transmutedToMinInitial(targetTG);
 
     const cat = (category || 'WW').toUpperCase();
-    const items = Number(totalItems) || (cat === 'QA' ? 100 : (cat === 'PT' ? 50 : 20));
-    const weight = subject.weights[cat.toLowerCase()] || 0.25;
+    const items = Number(totalItems) || (cat === 'QA' ? 50 : (cat === 'PT' ? 50 : 20));
+    const catWeight = subject.weights[cat.toLowerCase()] || 0.25;
+
+    // Determine active weights and scores of OTHER components
+    let otherActiveWeight = 0;
+    let otherActiveWeighted = 0;
+
+    if (cat === 'QA') {
+      if (calc.hasWW) {
+        otherActiveWeight += subject.weights.ww;
+        otherActiveWeighted += calc.ww.weighted;
+      }
+      if (calc.hasPT) {
+        otherActiveWeight += subject.weights.pt;
+        otherActiveWeighted += calc.pt.weighted;
+      }
+    } else if (cat === 'PT') {
+      if (calc.hasWW) {
+        otherActiveWeight += subject.weights.ww;
+        otherActiveWeighted += calc.ww.weighted;
+      }
+      if (calc.hasQA) {
+        otherActiveWeight += subject.weights.qa;
+        otherActiveWeighted += calc.qa.weighted;
+      }
+    } else { // WW
+      if (calc.hasPT) {
+        otherActiveWeight += subject.weights.pt;
+        otherActiveWeighted += calc.pt.weighted;
+      }
+      if (calc.hasQA) {
+        otherActiveWeight += subject.weights.qa;
+        otherActiveWeighted += calc.qa.weighted;
+      }
+    }
+
+    const totalActiveWeight = catWeight + otherActiveWeight;
+    const neededWeighted = (minRequiredIG * totalActiveWeight) - otherActiveWeighted;
+    const neededPct = +(neededWeighted / catWeight).toFixed(2);
 
     let requiredRawScore = 0;
-    let requiredPct = 0;
     let maxAchievableIG = 0;
     let maxAchievableTG = 0;
 
     if (cat === 'QA') {
-      const lockedPoints = calc.lockedPoints;
-      const deficitPoints = minRequiredIG - lockedPoints;
-      requiredPct = +(deficitPoints / weight).toFixed(2);
-      requiredRawScore = Math.ceil((requiredPct / 100) * items);
-      maxAchievableIG = +(lockedPoints + (weight * 100)).toFixed(2);
-      maxAchievableTG = LuminaDepEd.initialToTransmuted(maxAchievableIG);
-    } else if (cat === 'WW') {
-      const otherLocked = calc.pt.weighted + (calc.hasQA ? calc.qa.weighted : 0);
-      const neededWWWeighted = minRequiredIG - otherLocked;
-      const neededWWPct = neededWWWeighted / subject.weights.ww;
-      const currentScore = calc.ww.score;
-      const newMax = calc.ww.max + items;
-      const neededTotalScore = (neededWWPct / 100) * newMax;
-      requiredRawScore = Math.ceil(neededTotalScore - currentScore);
-      requiredPct = +((requiredRawScore / items) * 100).toFixed(1);
-
-      const maxWWPct = ((currentScore + items) / newMax) * 100;
-      maxAchievableIG = +(otherLocked + (maxWWPct * subject.weights.ww)).toFixed(2);
+      requiredRawScore = Math.ceil((neededPct / 100) * items);
+      const maxQAWeighted = 100 * catWeight;
+      maxAchievableIG = +((maxQAWeighted + otherActiveWeighted) / totalActiveWeight).toFixed(2);
       maxAchievableTG = LuminaDepEd.initialToTransmuted(maxAchievableIG);
     } else if (cat === 'PT') {
-      const otherLocked = calc.ww.weighted + (calc.hasQA ? calc.qa.weighted : 0);
-      const neededPTWeighted = minRequiredIG - otherLocked;
-      const neededPTPct = neededPTWeighted / subject.weights.pt;
       const currentScore = calc.pt.score;
       const newMax = calc.pt.max + items;
-      const neededTotalScore = (neededPTPct / 100) * newMax;
+      const neededTotalScore = (neededPct / 100) * newMax;
       requiredRawScore = Math.ceil(neededTotalScore - currentScore);
-      requiredPct = +((requiredRawScore / items) * 100).toFixed(1);
 
-      const maxPTPct = ((currentScore + items) / newMax) * 100;
-      maxAchievableIG = +(otherLocked + (maxPTPct * subject.weights.pt)).toFixed(2);
+      const maxPTPct = newMax > 0 ? ((currentScore + items) / newMax) * 100 : 100;
+      const maxPTWeighted = maxPTPct * catWeight;
+      maxAchievableIG = +((maxPTWeighted + otherActiveWeighted) / totalActiveWeight).toFixed(2);
+      maxAchievableTG = LuminaDepEd.initialToTransmuted(maxAchievableIG);
+    } else { // WW
+      const currentScore = calc.ww.score;
+      const newMax = calc.ww.max + items;
+      const neededTotalScore = (neededPct / 100) * newMax;
+      requiredRawScore = Math.ceil(neededTotalScore - currentScore);
+
+      const maxWWPct = newMax > 0 ? ((currentScore + items) / newMax) * 100 : 100;
+      const maxWWWeighted = maxWWPct * catWeight;
+      maxAchievableIG = +((maxWWWeighted + otherActiveWeighted) / totalActiveWeight).toFixed(2);
       maxAchievableTG = LuminaDepEd.initialToTransmuted(maxAchievableIG);
     }
+
+    const requiredPercentage = items > 0 ? +((requiredRawScore / items) * 100).toFixed(1) : 0;
 
     let status = 'HIGH_RIGOR'; // 'GUARANTEED', 'COMFORT', 'HIGH_RIGOR', 'IMPOSSIBLE'
     let statusLabel = '';
@@ -315,22 +345,22 @@ window.LuminaEngine = (function () {
 
     if (requiredRawScore <= 0) {
       status = 'GUARANTEED';
-      statusLabel = 'Target Guaranteed';
-      recommendation = `Target ${targetTG} is already mathematically guaranteed based on current standing, even with 0 on this ${cat === 'QA' ? 'Exam' : (cat === 'PT' ? 'Task' : 'Quiz')}.`;
+      statusLabel = 'Target Secured';
+      recommendation = `You are already on track for ${targetTG} with your current scores! Even a 0 on this assessment keeps you above target.`;
       requiredRawScore = 0;
     } else if (requiredRawScore <= Math.floor(items * 0.75)) {
       status = 'COMFORT';
       statusLabel = 'Comfort Zone';
       const margin = items - requiredRawScore;
-      recommendation = `Need ${requiredRawScore} / ${items} items (${requiredPct}%). Safe cushion of ${margin} mistake${margin === 1 ? '' : 's'}.`;
+      recommendation = `You need at least ${requiredRawScore} out of ${items} points to stay on track. You can miss up to ${margin} question${margin === 1 ? '' : 's'}.`;
     } else if (requiredRawScore <= items) {
       status = 'HIGH_RIGOR';
-      statusLabel = 'High Rigor';
-      recommendation = `Focused precision required: Need ${requiredRawScore} / ${items} items (${requiredPct}%) to hit ${targetTG}.`;
+      statusLabel = 'Stay Focused';
+      recommendation = `You need at least ${requiredRawScore} out of ${items} points to stay on track for ${targetTG}.`;
     } else {
       status = 'IMPOSSIBLE';
-      statusLabel = 'Mathematically Impossible';
-      recommendation = `Target ${targetTG} requires ${requiredRawScore} / ${items} items (${requiredPct}%), which exceeds the total. Highest possible grade with 100% on this is ${maxAchievableTG}.`;
+      statusLabel = 'Catch-Up Needed';
+      recommendation = `Scoring a perfect ${items} out of ${items} yields a grade of ${maxAchievableTG}. You will need extra points on future assessments to reach ${targetTG}.`;
     }
 
     return {
@@ -339,15 +369,82 @@ window.LuminaEngine = (function () {
       targetTG,
       totalItems: items,
       requiredRawScore,
-      requiredPct,
-      requiredPercentage: requiredPct,
+      requiredPct: requiredPercentage,
+      requiredPercentage,
       requiredInitialGrade: minRequiredIG,
-      currentLockedPoints: calc.lockedPoints,
+      currentPaceGrade: calc.transmutedGrade,
       effectiveInitialGrade: calc.effectiveInitialGrade,
       maxAchievableTG,
       status,
       statusLabel,
       recommendation
+    };
+  }
+
+  /**
+   * Live What-If Assessment Simulator for the Interactive Slider.
+   * Predicts projected Transmuted Grade and standing based on a hypothetical score.
+   */
+  function projectAssessmentScore(subjectId, category = 'WW', score = 0, totalItems = 20) {
+    const subject = LuminaStore.getSubject(subjectId);
+    if (!subject) return null;
+
+    const calc = calculateSubject(subject);
+    const cat = (category || 'WW').toUpperCase();
+    const items = Number(totalItems) || 20;
+    const clampedScore = Math.max(0, Math.min(items, Number(score) || 0));
+
+    let simScore = 0;
+    let simMax = 0;
+    let simPct = 0;
+    let simWeighted = 0;
+    let otherWeighted = 0;
+    let otherActiveWeight = 0;
+    const catWeight = subject.weights[cat.toLowerCase()] || 0.25;
+
+    if (cat === 'QA') {
+      simScore = clampedScore;
+      simMax = items;
+      simPct = items > 0 ? (simScore / simMax) * 100 : 0;
+      simWeighted = simPct * catWeight;
+      otherWeighted = (calc.hasWW ? calc.ww.weighted : 0) + (calc.hasPT ? calc.pt.weighted : 0);
+      otherActiveWeight = (calc.hasWW ? subject.weights.ww : 0) + (calc.hasPT ? subject.weights.pt : 0);
+    } else if (cat === 'PT') {
+      simScore = calc.pt.score + clampedScore;
+      simMax = calc.pt.max + items;
+      simPct = simMax > 0 ? (simScore / simMax) * 100 : 0;
+      simWeighted = simPct * catWeight;
+      otherWeighted = (calc.hasWW ? calc.ww.weighted : 0) + (calc.hasQA ? calc.qa.weighted : 0);
+      otherActiveWeight = (calc.hasWW ? subject.weights.ww : 0) + (calc.hasQA ? subject.weights.qa : 0);
+    } else { // WW
+      simScore = calc.ww.score + clampedScore;
+      simMax = calc.ww.max + items;
+      simPct = simMax > 0 ? (simScore / simMax) * 100 : 0;
+      simWeighted = simPct * catWeight;
+      otherWeighted = (calc.hasPT ? calc.pt.weighted : 0) + (calc.hasQA ? calc.qa.weighted : 0);
+      otherActiveWeight = (calc.hasPT ? subject.weights.pt : 0) + (calc.hasQA ? subject.weights.qa : 0);
+    }
+
+    const totalActiveWeight = catWeight + otherActiveWeight;
+    const projectedIG = totalActiveWeight > 0 ? (simWeighted + otherWeighted) / totalActiveWeight : 0;
+    const projectedTG = LuminaDepEd.initialToTransmuted(projectedIG);
+    const currentTG = calc.transmutedGrade;
+    const deltaTG = projectedTG - currentTG;
+    const standing = LuminaDepEd.getHonorsTier ? LuminaDepEd.getHonorsTier(projectedTG) : { title: 'Good Standing', color: '#34d399' };
+    const targetTG = subject.targetGrade || 95;
+
+    return {
+      score: clampedScore,
+      totalItems: items,
+      scorePct: items > 0 ? Math.round((clampedScore / items) * 100) : 0,
+      projectedIG: +projectedIG.toFixed(2),
+      projectedTG,
+      currentTG,
+      deltaTG,
+      standingLabel: standing.title,
+      standingColor: standing.color,
+      targetMet: projectedTG >= targetTG,
+      targetTG
     };
   }
 
@@ -460,6 +557,7 @@ window.LuminaEngine = (function () {
     calculateSemestralGrade,
     solveForExam,
     solveForAssessment,
+    projectAssessmentScore,
     getHighLeverageRecommendations
   };
 })();

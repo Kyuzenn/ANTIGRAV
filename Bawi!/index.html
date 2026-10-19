@@ -334,53 +334,99 @@
           </div>
         </div>
 
-        <!-- Embedded Reverse-Solver Target Simulator -->
+        <!-- Embedded Reverse-Solver Target Simulator (Step 1-2-3 Wizard) -->
         <div class="embedded-simulator-section" id="embeddedSimulatorSection">
+          <!-- Wizard Header -->
           <div class="embedded-sim-header">
             <div>
-              <div class="embedded-sim-title">Target Simulation & Assessment Solver</div>
-              <p style="font-size:12px; color:var(--text-secondary); margin:0;">
-                Calculate the exact raw points needed on upcoming quizzes, performance tasks, or the quarterly exam to reach your target.
+              <div class="sim-wizard-tag">Step 1-2-3 Calculator</div>
+              <h2 class="embedded-sim-title">Assessment Target Solver & Live Simulator</h2>
+              <p class="embedded-sim-subtitle">
+                Plan ahead for upcoming assessments and see exactly how every point shifts your final grade in real time.
               </p>
             </div>
-            <div style="display:flex; align-items:center; gap:8px;">
-              <span style="font-size:12px; color:var(--text-secondary);">Target:</span>
+            <div class="sim-target-header-control">
+              <span class="sim-target-label">Target Grade:</span>
               <div class="sim-preset-chips" id="embeddedSimPresetChips">
-                <button class="sim-preset-chip" data-target="90">90</button>
-                <button class="sim-preset-chip active" data-target="95">95</button>
-                <button class="sim-preset-chip" data-target="98">98</button>
+                <button type="button" class="sim-preset-chip" data-target="90">90 (Honors)</button>
+                <button type="button" class="sim-preset-chip active" data-target="95">95 (High)</button>
+                <button type="button" class="sim-preset-chip" data-target="98">98 (Highest)</button>
               </div>
-              <input type="number" class="form-input mono-input" id="embeddedSimCustomTarget" value="95" min="75" max="100" style="width:70px; padding:4px 8px; font-size:12px;">
+              <input type="number" class="form-input mono-input sim-target-input" id="embeddedSimCustomTarget" value="95" min="75" max="100" title="Custom target transmuted grade">
             </div>
           </div>
 
-          <div class="embedded-sim-grid">
-            <div class="embedded-sim-inputs">
-              <div class="form-group">
-                <label class="form-label">Assessment Type to Simulate</label>
-                <div class="log-category-toggle-group" id="embeddedSimCategoryGroup">
-                  <button class="log-category-toggle-btn active" data-cat="WW">Written Work (Quiz)</button>
-                  <button class="log-category-toggle-btn" data-cat="PT">Performance Task</button>
-                  <button class="log-category-toggle-btn" data-cat="QA">Quarterly Exam</button>
+          <!-- Wizard Step Flow -->
+          <div class="sim-wizard-layout">
+            <!-- Left Pane: Wizard Steps 1 & 2 -->
+            <div class="sim-wizard-inputs">
+              <!-- Step 1: Choose upcoming test -->
+              <div class="sim-wizard-step">
+                <div class="sim-step-indicator">
+                  <span class="sim-step-number">1</span>
+                  <span class="sim-step-title">Choose upcoming test</span>
+                </div>
+                <div class="sim-type-cards-grid" id="embeddedSimCategoryGroup">
+                  <button type="button" class="sim-type-card active" data-cat="WW" id="simCardWW">
+                    <div class="sim-card-header">
+                      <span class="sim-card-icon">📝</span>
+                      <span class="sim-card-weight" id="simCardWeightWW">35%</span>
+                    </div>
+                    <div class="sim-card-name">Written Work</div>
+                    <div class="sim-card-sub">Quizzes, activities, seatworks</div>
+                  </button>
+                  <button type="button" class="sim-type-card" data-cat="PT" id="simCardPT">
+                    <div class="sim-card-header">
+                      <span class="sim-card-icon">🏆</span>
+                      <span class="sim-card-weight" id="simCardWeightPT">40%</span>
+                    </div>
+                    <div class="sim-card-name">Performance Task</div>
+                    <div class="sim-card-sub">Projects, labs, essays, outputs</div>
+                  </button>
+                  <button type="button" class="sim-type-card" data-cat="QA" id="simCardQA">
+                    <div class="sim-card-header">
+                      <span class="sim-card-icon">🎯</span>
+                      <span class="sim-card-weight" id="simCardWeightQA">25%</span>
+                    </div>
+                    <div class="sim-card-name">Quarterly Exam</div>
+                    <div class="sim-card-sub">Summative periodical exam</div>
+                  </button>
                 </div>
               </div>
 
-              <div class="form-group">
-                <label class="form-label" id="embeddedSimTotalItemsLabel">Total Possible Items (Max)</label>
-                <div style="display:flex; gap:8px; align-items:center;">
-                  <input type="number" class="form-input mono-input" id="embeddedSimTotalItems" value="20" min="1" step="1">
+              <!-- Step 2: Enter items -->
+              <div class="sim-wizard-step">
+                <div class="sim-step-indicator">
+                  <span class="sim-step-number">2</span>
+                  <span class="sim-step-title" id="embeddedSimTotalItemsLabel">Enter total items</span>
+                </div>
+                <div class="sim-items-input-row">
+                  <div class="sim-items-field">
+                    <input type="number" class="form-input mono-input sim-items-input" id="embeddedSimTotalItems" value="20" min="1" step="1">
+                    <span class="sim-items-suffix">total items</span>
+                  </div>
                   <div class="sim-preset-chips" id="embeddedSimItemPresets">
-                    <button class="sim-preset-chip" data-items="20">20</button>
-                    <button class="sim-preset-chip" data-items="50">50</button>
-                    <button class="sim-preset-chip" data-items="100">100</button>
+                    <button type="button" class="sim-preset-chip" data-items="15">15</button>
+                    <button type="button" class="sim-preset-chip active" data-items="20">20</button>
+                    <button type="button" class="sim-preset-chip" data-items="30">30</button>
+                    <button type="button" class="sim-preset-chip" data-items="50">50</button>
+                    <button type="button" class="sim-preset-chip" data-items="100">100</button>
                   </div>
                 </div>
               </div>
             </div>
 
-            <!-- Result Card -->
-            <div class="embedded-sim-result-card" id="embeddedSimResultCard">
-              <!-- Populated dynamically by LuminaApp -->
+            <!-- Right Pane: Step 3: Score Needed & Interactive Live Slider -->
+            <div class="sim-wizard-output">
+              <div class="sim-step-indicator" style="margin-bottom:12px;">
+                <span class="sim-step-number">3</span>
+                <span class="sim-step-title">Score needed & live simulator</span>
+              </div>
+
+              <!-- Result Card (Populated dynamically) -->
+              <div class="embedded-sim-result-card" id="embeddedSimResultCard">
+                <!-- Dynamically rendered -->
+              </div>
             </div>
           </div>
         </div>

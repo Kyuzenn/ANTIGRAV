@@ -704,13 +704,14 @@ window.LuminaApp = (function () {
   let embeddedSimCategory = 'WW';
   let embeddedSimItems = 20;
   let embeddedSimTarget = 95;
+  let embeddedSimLiveScore = null;
 
   function setEmbeddedSimCategory(cat) {
     embeddedSimCategory = cat;
     const label = document.getElementById('embeddedSimTotalItemsLabel');
     const itemsInput = document.getElementById('embeddedSimTotalItems');
     if (cat === 'WW') {
-      if (label) label.textContent = 'Quiz Total Items (Max)';
+      if (label) label.textContent = 'Quiz Total Items';
       if (itemsInput && !itemsInput.dataset.userEdited) itemsInput.value = '20';
     } else if (cat === 'PT') {
       if (label) label.textContent = 'Performance Task Max Score';
@@ -720,10 +721,16 @@ window.LuminaApp = (function () {
       if (itemsInput && !itemsInput.dataset.userEdited) itemsInput.value = '50';
     }
 
-    document.querySelectorAll('#embeddedSimCategoryGroup .log-category-toggle-btn').forEach(btn => {
+    const currentItems = Number(itemsInput ? itemsInput.value : embeddedSimItems) || 20;
+    document.querySelectorAll('#embeddedSimItemPresets .sim-preset-chip').forEach(btn => {
+      btn.classList.toggle('active', Number(btn.getAttribute('data-items')) === currentItems);
+    });
+
+    document.querySelectorAll('#embeddedSimCategoryGroup .sim-type-card, #embeddedSimCategoryGroup .log-category-toggle-btn').forEach(btn => {
       btn.classList.toggle('active', btn.getAttribute('data-cat') === cat);
     });
 
+    embeddedSimLiveScore = null;
     const subject = LuminaStore.getActiveSubject();
     if (subject) renderEmbeddedSimulator(subject);
   }
@@ -753,13 +760,86 @@ window.LuminaApp = (function () {
       btn.classList.toggle('active', Number(btn.getAttribute('data-items')) === embeddedSimItems);
     });
 
+    embeddedSimLiveScore = null;
     const subject = LuminaStore.getActiveSubject();
     if (subject) renderEmbeddedSimulator(subject);
+  }
+
+  function setSimSliderScore(val) {
+    const slider = document.getElementById('simLiveSlider');
+    const itemsInput = document.getElementById('embeddedSimTotalItems');
+    const items = Number(itemsInput ? itemsInput.value : embeddedSimItems) || 20;
+    const clamped = Math.max(0, Math.min(items, Number(val) || 0));
+    embeddedSimLiveScore = clamped;
+    if (slider) slider.value = clamped;
+    const subject = LuminaStore.getActiveSubject();
+    if (subject) updateLiveSliderProjection(subject, items);
+  }
+
+  function updateLiveSliderProjection(subject, items) {
+    const slider = document.getElementById('simLiveSlider');
+    if (!slider || !subject) return;
+
+    const score = Number(slider.value);
+    const proj = LuminaEngine.projectAssessmentScore(subject.id, embeddedSimCategory, score, items);
+    if (!proj) return;
+
+    // Update score readout
+    const scoreVal = document.getElementById('simSliderScoreVal');
+    const maxVal = document.getElementById('simSliderMaxVal');
+    const pctVal = document.getElementById('simSliderPctVal');
+    if (scoreVal) scoreVal.textContent = proj.score;
+    if (maxVal) maxVal.textContent = proj.totalItems;
+    if (pctVal) pctVal.textContent = `${proj.scorePct}%`;
+
+    // Update projected grade & badge
+    const gradeVal = document.getElementById('simSliderProjectedGrade');
+    const standingPill = document.getElementById('simSliderStandingPill');
+    const deltaBadge = document.getElementById('simSliderDeltaBadge');
+    const statusNote = document.getElementById('simSliderStatusNote');
+
+    if (gradeVal) gradeVal.textContent = proj.projectedTG;
+    if (standingPill) {
+      standingPill.textContent = proj.standingLabel;
+      standingPill.style.color = proj.standingColor;
+    }
+    if (deltaBadge) {
+      if (proj.deltaTG > 0) {
+        deltaBadge.className = 'sim-delta-badge positive';
+        deltaBadge.textContent = `▲ +${proj.deltaTG} pts (${proj.currentTG} → ${proj.projectedTG})`;
+      } else if (proj.deltaTG < 0) {
+        deltaBadge.className = 'sim-delta-badge negative';
+        deltaBadge.textContent = `▼ ${proj.deltaTG} pts (${proj.currentTG} → ${proj.projectedTG})`;
+      } else {
+        deltaBadge.className = 'sim-delta-badge neutral';
+        deltaBadge.textContent = `● Same pace (${proj.currentTG})`;
+      }
+    }
+    if (statusNote) {
+      if (proj.targetMet) {
+        statusNote.innerHTML = `<span style="color:var(--status-emerald); font-weight:600;">Target ${proj.targetTG} Reached! 🎉</span>`;
+      } else {
+        const gap = proj.targetTG - proj.projectedTG;
+        statusNote.innerHTML = `<span style="color:var(--text-secondary);">${gap} pt${gap === 1 ? '' : 's'} away from Target ${proj.targetTG}</span>`;
+      }
+    }
   }
 
   function renderEmbeddedSimulator(subject) {
     const resultCard = document.getElementById('embeddedSimResultCard');
     if (!resultCard || !subject) return;
+
+    // Sync weight pills on cards if present
+    const wwWeightLabel = document.getElementById('simCardWeightWW');
+    const ptWeightLabel = document.getElementById('simCardWeightPT');
+    const qaWeightLabel = document.getElementById('simCardWeightQA');
+    if (wwWeightLabel) wwWeightLabel.textContent = `${Math.round(subject.weights.ww * 100)}%`;
+    if (ptWeightLabel) ptWeightLabel.textContent = `${Math.round(subject.weights.pt * 100)}%`;
+    if (qaWeightLabel) qaWeightLabel.textContent = `${Math.round(subject.weights.qa * 100)}%`;
+
+    document.querySelectorAll('#embeddedSimCategoryGroup .sim-type-card, #embeddedSimCategoryGroup .log-category-toggle-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.getAttribute('data-cat') === embeddedSimCategory);
+    });
 
     const itemsInput = document.getElementById('embeddedSimTotalItems');
     const customTargetInput = document.getElementById('embeddedSimCustomTarget');
@@ -772,71 +852,143 @@ window.LuminaApp = (function () {
 
     const categoryName = embeddedSimCategory === 'WW' ? 'Quiz / Written Work' : (embeddedSimCategory === 'PT' ? 'Performance Task' : 'Quarterly Exam');
 
-    if (sol.status === 'IMPOSSIBLE') {
-      resultCard.className = 'embedded-sim-result-card impossible-card';
-      resultCard.innerHTML = `
-        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
-          <span class="feasibility-tag unreachable">Mathematically Impossible</span>
-          <span style="font-size:11px; font-family:var(--font-mono); color:var(--status-rose);">Target: ${target}</span>
-        </div>
-        <div class="embedded-sim-score-readout">
-          <span class="big-score" style="color:var(--status-rose);">--</span>
-          <span class="max-items">/ ${sol.totalItems} pts</span>
-        </div>
-        <div class="embedded-sim-status-desc" style="color:var(--status-rose); margin-top:8px;">
-          Even with a perfect score (100%), the maximum achievable transmuted grade for this quarter is <strong>${sol.maxAchievableTG}</strong>.
-        </div>
-        <div style="font-size:11px; color:var(--text-secondary); margin-top:12px; line-height:1.4;">
-          Current locked points: <strong>${Number(sol.currentLockedPoints || 0).toFixed(2)}</strong>. Required points (${Number(sol.requiredRawScore || 0).toFixed(1)}) exceed total available items.
-        </div>
-      `;
-      return;
+    // Default slider position
+    let initialSliderScore;
+    if (embeddedSimLiveScore !== null && embeddedSimLiveScore <= items) {
+      initialSliderScore = embeddedSimLiveScore;
+    } else if (sol.status === 'GUARANTEED') {
+      initialSliderScore = items;
+    } else if (sol.status === 'IMPOSSIBLE') {
+      initialSliderScore = items;
+    } else {
+      initialSliderScore = Math.max(0, Math.min(items, sol.requiredRawScore));
     }
+    const initialSliderPct = items > 0 ? Math.round((initialSliderScore / items) * 100) : 0;
+    const initialProj = LuminaEngine.projectAssessmentScore(subject.id, embeddedSimCategory, initialSliderScore, items);
+
+    // Build the hero status & plain English message
+    let heroNumber = '';
+    let heroClass = '';
+    let statusBadgeText = '';
+    let statusBadgeClass = '';
+    let plainEnglishMsg = '';
+    let plainEnglishSub = '';
+    let logScoreValue = sol.requiredRawScore;
 
     if (sol.status === 'GUARANTEED') {
-      resultCard.className = 'embedded-sim-result-card guaranteed-card';
-      resultCard.innerHTML = `
-        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
-          <span class="feasibility-tag guaranteed">Target Secured</span>
-          <span style="font-size:11px; font-family:var(--font-mono); color:var(--status-emerald);">Target: ${target}</span>
-        </div>
-        <div class="embedded-sim-score-readout">
-          <span class="big-score" style="color:var(--status-emerald);">0</span>
-          <span class="max-items">/ ${sol.totalItems} pts</span>
-        </div>
-        <div class="embedded-sim-status-desc" style="color:var(--text-primary); margin-top:8px;">
-          You have already secured this target transmuted grade with your current logged scores.
-        </div>
-        <div style="font-size:11px; color:var(--text-secondary); margin-top:12px;">
-          Current initial grade pace: <strong>${Number(sol.effectiveInitialGrade || 0).toFixed(2)}%</strong>
-        </div>
-      `;
-      return;
+      heroClass = 'guaranteed-card';
+      statusBadgeText = 'Target Secured';
+      statusBadgeClass = 'guaranteed';
+      heroNumber = `<span class="sim-hero-number" style="color:var(--status-emerald);">0</span>`;
+      plainEnglishMsg = `You are already on track for <strong>${target}</strong> with your current scores!`;
+      plainEnglishSub = `Even with 0 points on this ${categoryName}, your grade stays comfortably above target.`;
+      logScoreValue = items;
+    } else if (sol.status === 'IMPOSSIBLE') {
+      heroClass = 'impossible-card';
+      statusBadgeText = 'Catch-Up Needed';
+      statusBadgeClass = 'unreachable';
+      heroNumber = `<span class="sim-hero-number" style="color:var(--status-rose);">${items}</span>`;
+      plainEnglishMsg = `A perfect score of <strong>${items} out of ${items} (100%)</strong> reaches a grade of <strong>${sol.maxAchievableTG}</strong> on current standing.`;
+      plainEnglishSub = `To reach <strong>${target}</strong>, you will need to catch up across other upcoming assessments this quarter.`;
+      logScoreValue = items;
+    } else {
+      // Reachable
+      const isComfort = sol.status === 'COMFORT';
+      heroClass = isComfort ? 'comfort-card' : 'stretch-card';
+      statusBadgeText = isComfort ? 'Comfort Zone' : 'Stay Focused';
+      statusBadgeClass = isComfort ? 'comfort' : 'high-rigor';
+      heroNumber = `<span class="sim-hero-number">${sol.requiredRawScore}</span>`;
+      plainEnglishMsg = `You need at least <strong>${sol.requiredRawScore} out of ${sol.totalItems} points</strong> (${sol.requiredPercentage}%) to stay on track.`;
+      const margin = items - sol.requiredRawScore;
+      if (margin > 0) {
+        plainEnglishSub = `Safe cushion: You can miss up to <strong>${margin} question${margin === 1 ? '' : 's'}</strong> and still maintain your target.`;
+      } else {
+        plainEnglishSub = `Precision required: A perfect score is needed on this assessment to keep up with your target.`;
+      }
     }
 
-    // Reachable target
-    const isHighTension = sol.status === 'STRETCH';
-    resultCard.className = `embedded-sim-result-card ${isHighTension ? 'stretch-card' : ''}`;
+    resultCard.className = `embedded-sim-result-card ${heroClass}`;
 
     resultCard.innerHTML = `
-      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
-        <span class="feasibility-tag ${sol.status.toLowerCase()}">${sol.statusLabel}</span>
-        <span style="font-size:11px; font-family:var(--font-mono); color:var(--text-secondary);">Target: ${target}</span>
+      <div>
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
+          <span class="feasibility-tag ${statusBadgeClass}">${statusBadgeText}</span>
+          <span style="font-size:11px; font-family:var(--font-mono); color:var(--text-secondary);">Target: ${target}</span>
+        </div>
+
+        <div class="sim-hero-score-box">
+          ${heroNumber}
+          <span class="sim-hero-total">/ ${sol.totalItems} pts needed</span>
+        </div>
+
+        <div class="sim-plain-english-msg">
+          ${plainEnglishMsg}
+        </div>
+        <div class="sim-plain-english-sub">
+          ${plainEnglishSub}
+        </div>
+
+        <div style="margin-top:14px; display:flex; justify-content:flex-end;">
+          <button class="btn-primary" style="font-size:12px; padding:6px 14px;" onclick="LuminaApp.openLogScoreModal('${embeddedSimCategory}', { score: ${logScoreValue}, max: ${sol.totalItems} })">
+            + Log This Score
+          </button>
+        </div>
       </div>
-      <div class="embedded-sim-score-readout">
-        <span class="big-score">${sol.requiredRawScore}</span>
-        <span class="max-items">/ ${sol.totalItems} pts</span>
-      </div>
-      <div class="embedded-sim-status-desc" style="margin-top:6px;">
-        Minimum <strong>${sol.requiredPercentage != null ? sol.requiredPercentage : (sol.requiredPct != null ? sol.requiredPct : 0)}%</strong> needed on upcoming ${categoryName}.
-      </div>
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-top:16px;">
-        <span style="font-size:11px; color:var(--text-secondary);">Raw target: ${sol.requiredInitialGrade || 0}%</span>
-        <button class="btn-primary" style="font-size:11px; padding:4px 12px;" onclick="LuminaApp.openLogScoreModal('${embeddedSimCategory}', { score: ${sol.requiredRawScore}, max: ${sol.totalItems} })">
-          + Log This Score
-        </button>
+
+      <!-- Interactive What-If Slider Section -->
+      <div class="sim-slider-wrap">
+        <div class="sim-slider-header">
+          <div class="sim-slider-title">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+            Live What-If Slider
+          </div>
+          <div class="sim-slider-score-callout">
+            Score: <span id="simSliderScoreVal" style="color:var(--status-emerald); font-weight:700;">${initialSliderScore}</span> / <span id="simSliderMaxVal">${items}</span> (<span id="simSliderPctVal">${initialSliderPct}%</span>)
+          </div>
+        </div>
+
+        <input type="range" id="simLiveSlider" class="sim-slider" min="0" max="${items}" value="${initialSliderScore}" step="1">
+
+        <div class="sim-slider-labels">
+          <span>0 pts</span>
+          <span>Passing 75% (${Math.ceil(items * 0.75)})</span>
+          <span>Max (${items})</span>
+        </div>
+
+        <div class="sim-slider-snaps">
+          <button type="button" class="sim-snap-btn" onclick="LuminaApp.setSimSliderScore(${Math.ceil(items * 0.75)})">Passing 75%</button>
+          <button type="button" class="sim-snap-btn" onclick="LuminaApp.setSimSliderScore(${Math.min(items, Math.max(0, sol.requiredRawScore))})">Target Needed</button>
+          <button type="button" class="sim-snap-btn" onclick="LuminaApp.setSimSliderScore(${items})">Perfect 100%</button>
+        </div>
+
+        <div class="sim-live-outcome-box">
+          <div>
+            <div class="sim-outcome-grade-label">Projected Final Grade</div>
+            <div class="sim-outcome-grade-group">
+              <span class="sim-outcome-grade-val" id="simSliderProjectedGrade">${initialProj ? initialProj.projectedTG : '--'}</span>
+              <span id="simSliderStandingPill" style="font-size:11px; font-weight:600; color:${initialProj ? initialProj.standingColor : 'inherit'};">${initialProj ? initialProj.standingLabel : ''}</span>
+            </div>
+          </div>
+          <div style="text-align:right;">
+            <div id="simSliderDeltaBadge" class="sim-delta-badge ${initialProj && initialProj.deltaTG > 0 ? 'positive' : (initialProj && initialProj.deltaTG < 0 ? 'negative' : 'neutral')}">
+              ${initialProj ? (initialProj.deltaTG > 0 ? `▲ +${initialProj.deltaTG} pts (${initialProj.currentTG} → ${initialProj.projectedTG})` : (initialProj.deltaTG < 0 ? `▼ ${initialProj.deltaTG} pts (${initialProj.currentTG} → ${initialProj.projectedTG})` : `● Same pace (${initialProj.currentTG})`)) : ''}
+            </div>
+            <div id="simSliderStatusNote" style="font-size:11px; margin-top:4px;">
+              ${initialProj ? (initialProj.targetMet ? `<span style="color:var(--status-emerald); font-weight:600;">Target ${target} Reached! 🎉</span>` : `<span style="color:var(--text-secondary);">${target - initialProj.projectedTG} pt away from Target ${target}</span>`) : ''}
+            </div>
+          </div>
+        </div>
       </div>
     `;
+
+    // Attach slider live dragging event listener
+    const liveSlider = document.getElementById('simLiveSlider');
+    if (liveSlider) {
+      liveSlider.addEventListener('input', (e) => {
+        embeddedSimLiveScore = Number(e.target.value);
+        updateLiveSliderProjection(subject, items);
+      });
+    }
   }
 
   // --------------------------------------------------------------------------
@@ -1729,8 +1881,8 @@ window.LuminaApp = (function () {
   }
 
   function setupEmbeddedSimulatorListeners() {
-    // Category toggle buttons
-    document.querySelectorAll('#embeddedSimCategoryGroup .log-category-toggle-btn').forEach(btn => {
+    // Step 1: Category selection cards / buttons
+    document.querySelectorAll('#embeddedSimCategoryGroup .sim-type-card, #embeddedSimCategoryGroup .log-category-toggle-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         setEmbeddedSimCategory(btn.getAttribute('data-cat'));
       });
@@ -1751,7 +1903,7 @@ window.LuminaApp = (function () {
       });
     }
 
-    // Preset chips for total items
+    // Step 2: Preset chips for total items
     document.querySelectorAll('#embeddedSimItemPresets .sim-preset-chip').forEach(btn => {
       btn.addEventListener('click', () => {
         setEmbeddedSimItems(btn.getAttribute('data-items'));
@@ -1762,6 +1914,7 @@ window.LuminaApp = (function () {
     const itemsInput = document.getElementById('embeddedSimTotalItems');
     if (itemsInput) {
       itemsInput.addEventListener('input', (e) => {
+        embeddedSimLiveScore = null;
         const subject = LuminaStore.getActiveSubject();
         if (subject) renderEmbeddedSimulator(subject);
       });
@@ -1854,7 +2007,11 @@ window.LuminaApp = (function () {
     exportDataFile,
     importDataFile,
     resetToDemoData,
-    showToast
+    showToast,
+    setSimSliderScore,
+    setEmbeddedSimCategory,
+    setEmbeddedSimTarget,
+    setEmbeddedSimItems
   };
 })();
 

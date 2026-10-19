@@ -2167,64 +2167,567 @@ h1, h2, h3, h4, .font-display {
 }
 
 /* Embedded Simulator Section in Subject View */
+/* ===================================================================
+   Embedded Reverse-Solver Target Simulator (Step 1-2-3 Wizard)
+   =================================================================== */
+
 .embedded-simulator-section {
   margin-top: 40px;
-  padding: 28px;
+  padding: 32px;
   background: var(--glass-card);
+  backdrop-filter: var(--blur-card);
+  -webkit-backdrop-filter: var(--blur-card);
   border: 1px solid var(--border-hairline);
   border-radius: var(--radius-xl);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.4);
+}
+
+.sim-wizard-tag {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: var(--radius-pill);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  background: rgba(16, 185, 129, 0.12);
+  color: var(--status-emerald);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  margin-bottom: 8px;
 }
 
 .embedded-sim-header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  margin-bottom: 20px;
+  gap: 20px;
+  margin-bottom: 28px;
+  flex-wrap: wrap;
 }
 
 .embedded-sim-title {
-  font-size: 18px;
-  font-weight: 400;
+  font-size: 20px;
+  font-weight: 500;
   color: var(--text-primary);
-  letter-spacing: -0.015em;
-  margin-bottom: 4px;
+  letter-spacing: -0.02em;
+  margin: 0 0 6px 0;
 }
 
-.embedded-sim-grid {
+.embedded-sim-subtitle {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin: 0;
+  max-width: 620px;
+}
+
+.sim-target-header-control {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  background: rgba(0, 0, 0, 0.3);
+  padding: 6px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-pill);
+}
+
+.sim-target-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.sim-target-input {
+  width: 70px;
+  padding: 4px 8px;
+  font-size: 13px;
+  font-weight: 600;
+  text-align: center;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+/* Beautiful Pill Chips */
+.sim-preset-chips {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.sim-preset-chip {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-secondary);
+  border-radius: var(--radius-pill);
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  white-space: nowrap;
+}
+
+.sim-preset-chip:hover {
+  background: rgba(255, 255, 255, 0.09);
+  color: var(--text-primary);
+  border-color: rgba(255, 255, 255, 0.22);
+  transform: translateY(-1px);
+}
+
+.sim-preset-chip.active {
+  background: rgba(16, 185, 129, 0.16);
+  color: #34d399;
+  border-color: rgba(16, 185, 129, 0.45);
+  font-weight: 600;
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.2);
+}
+
+/* Category Toggle Switcher (e.g. in Modals) */
+.log-category-toggle-group {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-md);
+}
+
+.log-category-toggle-btn {
+  flex: 1;
+  padding: 8px 14px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: calc(var(--radius-md) - 3px);
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  text-align: center;
+}
+
+.log-category-toggle-btn:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-primary);
+}
+
+.log-category-toggle-btn.active {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.16);
+  color: var(--text-primary);
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+}
+
+/* Wizard Layout */
+.sim-wizard-layout {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 20px;
+  grid-template-columns: 1.15fr 1fr;
+  gap: 24px;
+  align-items: stretch;
 }
 
-.embedded-sim-inputs {
+@media (max-width: 960px) {
+  .sim-wizard-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.sim-wizard-inputs {
   display: flex;
   flex-direction: column;
   gap: 16px;
 }
 
+.sim-wizard-step {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: var(--radius-lg);
+  padding: 18px 20px;
+  transition: border-color 0.2s;
+}
+
+.sim-wizard-step:hover {
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.sim-step-indicator {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.sim-step-number {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--status-emerald);
+  color: #000;
+  font-weight: 700;
+  font-size: 11px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.35);
+}
+
+.sim-step-title {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-primary);
+}
+
+/* Step 1: Assessment Type Cards */
+.sim-type-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+@media (max-width: 600px) {
+  .sim-type-cards-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.sim-type-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-md);
+  padding: 14px 12px;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sim-type-card:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.18);
+  transform: translateY(-2px);
+}
+
+.sim-type-card.active {
+  background: rgba(16, 185, 129, 0.09);
+  border-color: rgba(16, 185, 129, 0.45);
+  box-shadow: 0 4px 20px rgba(16, 185, 129, 0.15);
+}
+
+.sim-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2px;
+}
+
+.sim-card-icon {
+  font-size: 18px;
+}
+
+.sim-card-weight {
+  font-size: 11px;
+  font-weight: 600;
+  background: rgba(255, 255, 255, 0.08);
+  padding: 2px 7px;
+  border-radius: 6px;
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+}
+
+.sim-type-card.active .sim-card-weight {
+  background: rgba(16, 185, 129, 0.2);
+  color: #34d399;
+}
+
+.sim-card-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-top: 4px;
+}
+
+.sim-card-sub {
+  font-size: 11px;
+  color: var(--text-secondary);
+  line-height: 1.35;
+}
+
+/* Step 2: Items Row */
+.sim-items-input-row {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.sim-items-field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sim-items-input {
+  width: 100px;
+  padding: 8px 12px;
+  font-size: 16px;
+  font-weight: 600;
+  border-radius: var(--radius-sm);
+  text-align: center;
+}
+
+.sim-items-suffix {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+/* Step 3: Result Card & Output */
+.sim-wizard-output {
+  display: flex;
+  flex-direction: column;
+}
+
 .embedded-sim-result-card {
-  padding: 20px;
+  flex: 1;
+  padding: 24px;
   background: var(--canvas-base);
   border: 1px solid var(--border-hairline);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-xl);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.embedded-sim-result-card.impossible {
+.embedded-sim-result-card.impossible-card {
   border-color: rgba(244, 63, 94, 0.4);
-  background: rgba(244, 63, 94, 0.06);
+  background: linear-gradient(180deg, rgba(244, 63, 94, 0.08) 0%, var(--canvas-base) 100%);
 }
 
-.embedded-sim-result-card.comfort {
+.embedded-sim-result-card.guaranteed-card {
   border-color: rgba(52, 211, 153, 0.4);
-  background: rgba(52, 211, 153, 0.06);
+  background: linear-gradient(180deg, rgba(52, 211, 153, 0.08) 0%, var(--canvas-base) 100%);
 }
 
-.embedded-sim-result-card.high-rigor {
+.embedded-sim-result-card.comfort-card {
+  border-color: rgba(52, 211, 153, 0.35);
+  background: linear-gradient(180deg, rgba(52, 211, 153, 0.05) 0%, var(--canvas-base) 100%);
+}
+
+.embedded-sim-result-card.stretch-card {
   border-color: rgba(245, 158, 11, 0.4);
-  background: rgba(245, 158, 11, 0.06);
+  background: linear-gradient(180deg, rgba(245, 158, 11, 0.07) 0%, var(--canvas-base) 100%);
+}
+
+.sim-hero-score-box {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: 10px 0 8px 0;
+}
+
+.sim-hero-number {
+  font-size: 52px;
+  font-weight: 300;
+  font-family: var(--font-display);
+  line-height: 1;
+  color: var(--text-primary);
+  letter-spacing: -0.03em;
+}
+
+.sim-hero-total {
+  font-size: 16px;
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+}
+
+.sim-plain-english-msg {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+  line-height: 1.45;
+  margin-bottom: 6px;
+}
+
+.sim-plain-english-sub {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+/* Interactive Slider Box */
+.sim-slider-wrap {
+  margin-top: 18px;
+  padding: 16px;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: var(--radius-lg);
+}
+
+.sim-slider-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.sim-slider-title {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.sim-slider-score-callout {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  white-space: nowrap;
+}
+
+.sim-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 8px;
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.12);
+  outline: none;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.sim-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #34d399;
+  border: 3px solid #064e3b;
+  box-shadow: 0 0 14px rgba(52, 211, 153, 0.6);
+  cursor: grab;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.sim-slider::-webkit-slider-thumb:active {
+  cursor: grabbing;
+  transform: scale(1.18);
+  box-shadow: 0 0 20px rgba(52, 211, 153, 0.9);
+}
+
+.sim-slider::-moz-range-thumb {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #34d399;
+  border: 3px solid #064e3b;
+  box-shadow: 0 0 14px rgba(52, 211, 153, 0.6);
+  cursor: grab;
+}
+
+.sim-slider-labels {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 6px;
+  font-size: 10px;
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+}
+
+.sim-live-outcome-box {
+  margin-top: 14px;
+  padding: 12px 14px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.sim-outcome-grade-group {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.sim-outcome-grade-label {
+  font-size: 11px;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.sim-outcome-grade-val {
+  font-size: 24px;
+  font-weight: 700;
+  font-family: var(--font-display);
+  color: var(--text-primary);
+  line-height: 1;
+}
+
+.sim-delta-badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.sim-delta-badge.positive {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+}
+
+.sim-delta-badge.neutral {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-secondary);
+}
+
+.sim-delta-badge.negative {
+  background: rgba(244, 63, 94, 0.15);
+  color: #fb7185;
+}
+
+.sim-slider-snaps {
+  display: flex;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.sim-snap-btn {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-size: 10px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.sim-snap-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-primary);
 }
 
 /* Card Action Menu Dropdown (Triple Dots) */
