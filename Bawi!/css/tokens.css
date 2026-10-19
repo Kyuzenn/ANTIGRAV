@@ -1,0 +1,142 @@
+/* ==========================================================================
+   LUMINA // Senior High School Target Grade & Transmuted Grade OS
+   Design System Tokens — Linear & Attio-Inspired Hyper-Minimalism
+   ========================================================================== */
+
+:root {
+  /* Canvas & Glass Surfaces (Dark Mode Default) */
+  --canvas-base: #090A0F;
+  --canvas-surface: #0e1017;
+  --glass-panel: rgba(18, 20, 29, 0.65);
+  --glass-card: rgba(26, 29, 42, 0.45);
+  --glass-card-hover: rgba(36, 40, 58, 0.60);
+  --glass-elevated: rgba(30, 34, 50, 0.75);
+  --glass-subtle: rgba(255, 255, 255, 0.03);
+  
+  /* 1px Hairline Borders */
+  --border-hairline: rgba(255, 255, 255, 0.08);
+  --border-hairline-hover: rgba(255, 255, 255, 0.16);
+  --border-hairline-focus: rgba(255, 255, 255, 0.28);
+  --border-subtle: rgba(255, 255, 255, 0.04);
+  
+  /* Typography Colors */
+  --text-primary: #F4F4F6;
+  --text-secondary: #A1A1AA;
+  --text-tertiary: #52525B;
+  --text-quaternary: #3F3F46;
+  --text-inverse: #090A0F;
+
+  /* Component Accents (DepEd SHS Tripartite Grading) */
+  --ww-accent: rgba(96, 165, 250, 0.95);
+  --ww-accent-glow: rgba(96, 165, 250, 0.25);
+  --ww-accent-bg: rgba(96, 165, 250, 0.10);
+  --ww-accent-border: rgba(96, 165, 250, 0.25);
+
+  --pt-accent: rgba(168, 85, 247, 0.95);
+  --pt-accent-glow: rgba(168, 85, 247, 0.25);
+  --pt-accent-bg: rgba(168, 85, 247, 0.10);
+  --pt-accent-border: rgba(168, 85, 247, 0.25);
+
+  --qa-accent: rgba(244, 63, 94, 0.95);
+  --qa-accent-glow: rgba(244, 63, 94, 0.25);
+  --qa-accent-bg: rgba(244, 63, 94, 0.10);
+  --qa-accent-border: rgba(244, 63, 94, 0.25);
+
+  /* Status & Honors Accents */
+  --status-emerald: rgba(52, 211, 153, 0.95);
+  --status-emerald-glow: rgba(52, 211, 153, 0.30);
+  --status-emerald-bg: rgba(52, 211, 153, 0.10);
+
+  --status-amber: rgba(245, 158, 11, 0.95);
+  --status-amber-glow: rgba(245, 158, 11, 0.30);
+  --status-amber-bg: rgba(245, 158, 11, 0.10);
+
+  --status-rose: rgba(244, 63, 94, 0.95);
+  --status-rose-glow: rgba(244, 63, 94, 0.30);
+  --status-rose-bg: rgba(244, 63, 94, 0.10);
+
+  --status-opal-1: #38bdf8;
+  --status-opal-2: #c084fc;
+  --status-opal-3: #f472b6;
+
+  /* Blur & Backdrop */
+  --blur-panel: blur(24px) saturate(180%);
+  --blur-card: blur(20px) saturate(180%);
+  --blur-modal: blur(32px) saturate(190%);
+
+  /* Border Radii */
+  --radius-xs: 4px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 22px;
+  --radius-pill: 9999px;
+
+  /* Typography Scales */
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-display: 'Inter Display', 'Inter', -apple-system, sans-serif;
+  --font-mono: 'Geist Mono', 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
+
+  /* Spring Physics Timing */
+  --spring-micro: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  --spring-smooth: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  --spring-modal: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
+  
+  /* Shadow Elevation */
+  --shadow-subtle: 0 4px 20px -2px rgba(0, 0, 0, 0.35);
+  --shadow-elevated: 0 12px 36px -4px rgba(0, 0, 0, 0.55);
+  --shadow-bloom: 0 0 30px rgba(52, 211, 153, 0.35);
+}
+
+/* Light Theme Variables (Crystalline Clean Alabaster) */
+[data-theme="light"] {
+  --canvas-base: #F8F9FC;
+  --canvas-surface: #EFF1F7;
+  --glass-panel: rgba(255, 255, 255, 0.80);
+  --glass-card: rgba(255, 255, 255, 0.65);
+  --glass-card-hover: rgba(255, 255, 255, 0.90);
+  --glass-elevated: rgba(255, 255, 255, 0.95);
+  --glass-subtle: rgba(0, 0, 0, 0.02);
+
+  --border-hairline: rgba(0, 0, 0, 0.08);
+  --border-hairline-hover: rgba(0, 0, 0, 0.16);
+  --border-hairline-focus: rgba(0, 0, 0, 0.28);
+  --border-subtle: rgba(0, 0, 0, 0.04);
+
+  --text-primary: #0F1117;
+  --text-secondary: #52525B;
+  --text-tertiary: #A1A1AA;
+  --text-quaternary: #D4D4D8;
+  --text-inverse: #F4F4F6;
+
+  --ww-accent: rgba(37, 99, 235, 0.95);
+  --ww-accent-glow: rgba(37, 99, 235, 0.18);
+  --ww-accent-bg: rgba(37, 99, 235, 0.08);
+  --ww-accent-border: rgba(37, 99, 235, 0.20);
+
+  --pt-accent: rgba(147, 51, 234, 0.95);
+  --pt-accent-glow: rgba(147, 51, 234, 0.18);
+  --pt-accent-bg: rgba(147, 51, 234, 0.08);
+  --pt-accent-border: rgba(147, 51, 234, 0.20);
+
+  --qa-accent: rgba(225, 29, 72, 0.95);
+  --qa-accent-glow: rgba(225, 29, 72, 0.18);
+  --qa-accent-bg: rgba(225, 29, 72, 0.08);
+  --qa-accent-border: rgba(225, 29, 72, 0.20);
+
+  --status-emerald: rgba(16, 185, 129, 0.95);
+  --status-emerald-glow: rgba(16, 185, 129, 0.20);
+  --status-emerald-bg: rgba(16, 185, 129, 0.08);
+
+  --status-amber: rgba(217, 119, 6, 0.95);
+  --status-amber-glow: rgba(217, 119, 6, 0.20);
+  --status-amber-bg: rgba(217, 119, 6, 0.08);
+
+  --status-rose: rgba(225, 29, 72, 0.95);
+  --status-rose-glow: rgba(225, 29, 72, 0.20);
+  --status-rose-bg: rgba(225, 29, 72, 0.08);
+
+  --shadow-subtle: 0 4px 20px -2px rgba(0, 0, 0, 0.06);
+  --shadow-elevated: 0 12px 36px -4px rgba(0, 0, 0, 0.12);
+  --shadow-bloom: 0 0 25px rgba(16, 185, 129, 0.25);
+}
