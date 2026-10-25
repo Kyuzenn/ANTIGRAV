@@ -492,6 +492,16 @@ window.LuminaApp = (function () {
     // Populate Column 3: Quarterly Exam (QA)
     renderGradebookColumn('qa', calc.qa, assessments.filter(a => a.category === 'QA'), subject);
 
+    // Default simulator target grade to the active subject's specific target
+    embeddedSimTarget = subject.targetGrade || 95;
+    const customTargetInput = document.getElementById('embeddedSimCustomTarget');
+    if (customTargetInput) {
+      customTargetInput.value = embeddedSimTarget;
+    }
+    document.querySelectorAll('#embeddedSimPresetChips .sim-preset-chip').forEach(btn => {
+      btn.classList.toggle('active', Number(btn.getAttribute('data-target')) === embeddedSimTarget);
+    });
+
     // Render interactive embedded simulator at the bottom
     renderEmbeddedSimulator(subject);
   }

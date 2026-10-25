@@ -279,7 +279,7 @@
             <div class="col-action-bar">
               <button class="btn-add-entry" onclick="LuminaApp.openLogScoreModal('WW')">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                + Log Written Work (Key: 1)
+                Log Written Work
               </button>
             </div>
             <div class="col-entries-list" id="colList-ww">
@@ -302,7 +302,7 @@
             <div class="col-action-bar">
               <button class="btn-add-entry" onclick="LuminaApp.openLogScoreModal('PT')">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                + Log Performance Task (Key: 2)
+                Log Performance Task
               </button>
             </div>
             <div class="col-entries-list" id="colList-pt">
@@ -325,7 +325,7 @@
             <div class="col-action-bar">
               <button class="btn-add-entry" onclick="LuminaApp.openLogScoreModal('QA')">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                + Log Quarterly Exam (Key: 3)
+                Log Quarterly Exam
               </button>
             </div>
             <div class="col-entries-list" id="colList-qa">
@@ -339,10 +339,10 @@
           <!-- Wizard Header -->
           <div class="embedded-sim-header">
             <div>
-              <div class="sim-wizard-tag">Step 1-2-3 Calculator</div>
-              <h2 class="embedded-sim-title">Assessment Target Solver & Live Simulator</h2>
+              <div class="sim-wizard-tag">Target Solver</div>
+              <h2 class="embedded-sim-title">Target Simulator</h2>
               <p class="embedded-sim-subtitle">
-                Plan ahead for upcoming assessments and see exactly how every point shifts your final grade in real time.
+                Calculate the exact score needed to reach your target grade in real time.
               </p>
             </div>
             <div class="sim-target-header-control">
@@ -369,7 +369,9 @@
                 <div class="sim-type-cards-grid" id="embeddedSimCategoryGroup">
                   <button type="button" class="sim-type-card active" data-cat="WW" id="simCardWW">
                     <div class="sim-card-header">
-                      <span class="sim-card-icon">📝</span>
+                      <span class="sim-card-icon">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                      </span>
                       <span class="sim-card-weight" id="simCardWeightWW">35%</span>
                     </div>
                     <div class="sim-card-name">Written Work</div>
@@ -377,7 +379,9 @@
                   </button>
                   <button type="button" class="sim-type-card" data-cat="PT" id="simCardPT">
                     <div class="sim-card-header">
-                      <span class="sim-card-icon">🏆</span>
+                      <span class="sim-card-icon">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
+                      </span>
                       <span class="sim-card-weight" id="simCardWeightPT">40%</span>
                     </div>
                     <div class="sim-card-name">Performance Task</div>
@@ -385,7 +389,9 @@
                   </button>
                   <button type="button" class="sim-type-card" data-cat="QA" id="simCardQA">
                     <div class="sim-card-header">
-                      <span class="sim-card-icon">🎯</span>
+                      <span class="sim-card-icon">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+                      </span>
                       <span class="sim-card-weight" id="simCardWeightQA">25%</span>
                     </div>
                     <div class="sim-card-name">Quarterly Exam</div>
@@ -633,12 +639,12 @@
           <input type="text" class="form-input" id="logEntryTitle" placeholder="e.g. Quiz 1">
         </div>
 
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
-          <div class="form-group">
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; width:100%;">
+          <div class="form-group" style="min-width: 0;">
             <label class="form-label">Score Earned</label>
             <input type="number" class="form-input mono-input" id="logEntryScore" placeholder="28" min="0" step="any">
           </div>
-          <div class="form-group">
+          <div class="form-group" style="min-width: 0;">
             <label class="form-label">Total Possible (Max)</label>
             <input type="number" class="form-input mono-input" id="logEntryMax" placeholder="30" min="1" step="any">
           </div>

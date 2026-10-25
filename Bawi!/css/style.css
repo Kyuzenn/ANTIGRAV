@@ -18,7 +18,7 @@ html, body {
   background-color: var(--canvas-base);
   color: var(--text-primary);
   font-family: var(--font-sans);
-  font-size: 13px;
+  font-size: 15px;
   line-height: 1.5;
   font-weight: 400;
   min-height: 100vh;
@@ -292,10 +292,10 @@ h1, h2, h3, h4, .font-display {
 
 .main-content {
   flex: 1;
-  max-width: 1240px;
+  max-width: 1440px;
   width: 100%;
   margin: 0 auto;
-  padding: 32px 24px 64px;
+  padding: 32px 32px 64px;
 }
 
 .tab-view {
@@ -328,8 +328,8 @@ h1, h2, h3, h4, .font-display {
 }
 
 .section-title {
-  font-size: 24px;
-  font-weight: 300;
+  font-size: 28px;
+  font-weight: 400;
   letter-spacing: -0.025em;
   color: var(--text-primary);
   display: flex;
@@ -338,7 +338,7 @@ h1, h2, h3, h4, .font-display {
 }
 
 .section-subtitle {
-  font-size: 13px;
+  font-size: 14px;
   color: var(--text-secondary);
   margin-top: 4px;
   font-weight: 400;
@@ -1496,6 +1496,7 @@ h1, h2, h3, h4, .font-display {
   display: flex;
   flex-direction: column;
   gap: 6px;
+  min-width: 0;
 }
 
 .form-label {
@@ -1507,12 +1508,14 @@ h1, h2, h3, h4, .font-display {
 }
 
 .form-input, .form-select {
+  width: 100%;
+  box-sizing: border-box;
   background: var(--glass-card);
   border: 1px solid var(--border-hairline);
   border-radius: var(--radius-sm);
-  padding: 8px 12px;
+  padding: 10px 14px;
   font-family: var(--font-sans);
-  font-size: 13px;
+  font-size: 14px;
   color: var(--text-primary);
   outline: none;
   transition: var(--spring-micro);
@@ -1774,22 +1777,31 @@ h1, h2, h3, h4, .font-display {
 }
 
 @media (min-width: 900px) {
+  html, body {
+    height: 100%;
+    overflow: hidden;
+  }
+
   .app-shell {
     flex-direction: row;
+    height: 100vh;
+    width: 100vw;
+    overflow: hidden;
   }
 
   .app-sidebar {
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    width: 250px;
-    min-width: 250px;
-    height: 100vh;
-    position: sticky;
-    top: 0;
+    width: 270px;
+    min-width: 270px;
+    height: 100%;
+    overflow-y: auto;
+    position: relative;
+    flex-shrink: 0;
     background: var(--canvas-surface);
     border-right: 1px solid var(--border-hairline);
-    padding: 24px 16px;
+    padding: 24px 18px;
     z-index: 95;
     box-shadow: var(--shadow-subtle);
   }
@@ -1805,8 +1817,10 @@ h1, h2, h3, h4, .font-display {
   .main-content {
     flex: 1;
     min-width: 0;
-    padding: 36px 44px 80px;
-    max-width: 1240px;
+    height: 100%;
+    overflow-y: auto;
+    padding: 40px 52px 100px;
+    max-width: 1440px;
     margin: 0 auto;
     width: 100%;
   }
