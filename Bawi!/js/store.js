@@ -615,6 +615,31 @@ window.LuminaStore = (function () {
     return added;
   }
 
+  function setSemesterSubjects(subjectsArray, semester) {
+    const sem = semester || state.profile.semester || 'Semester 1';
+    
+    // Find all subject IDs currently in this semester to remove their assessments
+    const idsToRemove = new Set(
+      state.subjects
+        .filter(s => (s.semester || 'Semester 1') === sem)
+        .map(s => s.id)
+    );
+
+    // Keep only subjects from other semesters
+    state.subjects = state.subjects.filter(s => (s.semester || 'Semester 1') !== sem);
+    // Purge assessments belonging to replaced subjects
+    state.assessments = state.assessments.filter(a => !idsToRemove.has(a.subjectId));
+
+    if (!Array.isArray(subjectsArray) || subjectsArray.length === 0) {
+      const remainingSemSubjects = getSubjects(sem);
+      state.activeSubjectId = remainingSemSubjects[0] ? remainingSemSubjects[0].id : null;
+      persist();
+      return [];
+    }
+
+    return addSubjectsBatch(subjectsArray);
+  }
+
   function getCompletedSubjectNames(excludeSemester) {
     const list = state.subjects.filter(s => !s.archived && (!excludeSemester || s.semester !== excludeSemester));
     return new Set(list.map(s => s.name.trim().toLowerCase()));
@@ -786,6 +811,7 @@ window.LuminaStore = (function () {
   init();
 
   return {
+    init,
     getState,
     getProfile,
     updateProfile,
@@ -801,6 +827,7 @@ window.LuminaStore = (function () {
     setActiveSubjectId,
     addSubject,
     addSubjectsBatch,
+    setSemesterSubjects,
     getCompletedSubjectNames,
     updateSubject,
     deleteSubject,
@@ -815,6 +842,7 @@ window.LuminaStore = (function () {
     toggleTask,
     deleteTask,
     resetToDemo,
+    resetToDemoData: resetToDemo,
     resetToBlank,
     exportJSON,
     importJSON,

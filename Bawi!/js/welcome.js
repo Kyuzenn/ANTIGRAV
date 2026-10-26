@@ -344,32 +344,91 @@ window.WelcomeApp = (function () {
   }
 
   function launchOS() {
-    const profile = LuminaStore.getProfile();
-    const semester = profile.semester || 'Semester 1';
+    try {
+      const nameInput = document.getElementById('onboardStudentName');
+      const strandSelect = document.getElementById('onboardStrandSelect');
+      const gradeSelect = document.getElementById('onboardGradeLevel');
+      const semSelect = document.getElementById('onboardSemesterSelect');
+      const targetInput = document.getElementById('onboardTargetAverage');
 
-    const subjectsToEnroll = Array.from(selectedSubjects.values()).map(s => Object.assign({}, s, {
-      semester,
-      quarter: 'Quarter 1'
-    }));
+      const currentProfile = LuminaStore.getProfile();
+      const studentName = (nameInput && nameInput.value.trim()) ? nameInput.value.trim() : (currentProfile.studentName || 'Student Profile');
+      const trackStrand = strandSelect ? strandSelect.value : (currentProfile.trackStrand || 'STEM');
+      const gradeLevel = gradeSelect ? gradeSelect.value : (currentProfile.gradeLevel || 'Grade 11');
+      const semester = semSelect ? semSelect.value : (currentProfile.semester || 'Semester 1');
+      const targetGeneralAverage = Number(targetInput ? targetInput.value : (currentProfile.targetGeneralAverage || 95)) || 95;
 
-    if (subjectsToEnroll.length > 0) {
-      LuminaStore.addSubjectsBatch(subjectsToEnroll);
+      // Update academic profile
+      LuminaStore.updateProfile({
+        studentName,
+        trackStrand,
+        gradeLevel,
+        semester,
+        targetGeneralAverage,
+        onboardingCompleted: true
+      });
+
+      // Prepare subjects to enroll
+      const subjectsToEnroll = Array.from(selectedSubjects.values()).map(s => Object.assign({}, s, {
+        semester,
+        quarter: 'Quarter 1'
+      }));
+
+      // Atomically set enrolled subjects for this semester (replaces stale demo data or prior duplicates)
+      LuminaStore.setSemesterSubjects(subjectsToEnroll, semester);
+
+      // Safe audio celebration
+      if (window.LuminaAudio) {
+        if (typeof LuminaAudio.playCelebration === 'function') {
+          try { LuminaAudio.playCelebration(); } catch (e) {}
+        } else if (typeof LuminaAudio.playTargetChime === 'function') {
+          try { LuminaAudio.playTargetChime(); } catch (e) {}
+        }
+      }
+    } catch (err) {
+      console.error('Error during launchOS:', err);
+    } finally {
+      window.location.href = 'index.html';
     }
-
-    LuminaStore.updateProfile({ onboardingCompleted: true });
-    if (window.LuminaAudio) LuminaAudio.playCelebration();
-    window.location.href = 'index.html';
   }
 
   function startBlank() {
-    LuminaStore.updateProfile({ onboardingCompleted: true });
-    window.location.href = 'index.html';
+    try {
+      const nameInput = document.getElementById('onboardStudentName');
+      const strandSelect = document.getElementById('onboardStrandSelect');
+      const gradeSelect = document.getElementById('onboardGradeLevel');
+      const semSelect = document.getElementById('onboardSemesterSelect');
+      const targetInput = document.getElementById('onboardTargetAverage');
+
+      const currentProfile = LuminaStore.getProfile();
+      const semester = semSelect ? semSelect.value : (currentProfile.semester || 'Semester 1');
+
+      LuminaStore.updateProfile({
+        studentName: (nameInput && nameInput.value.trim()) ? nameInput.value.trim() : (currentProfile.studentName || 'Student Profile'),
+        trackStrand: strandSelect ? strandSelect.value : (currentProfile.trackStrand || 'STEM'),
+        gradeLevel: gradeSelect ? gradeSelect.value : (currentProfile.gradeLevel || 'Grade 11'),
+        semester,
+        targetGeneralAverage: Number(targetInput ? targetInput.value : (currentProfile.targetGeneralAverage || 95)) || 95,
+        onboardingCompleted: true
+      });
+
+      LuminaStore.setSemesterSubjects([], semester);
+    } catch (e) {
+      console.warn('startBlank error:', e);
+    } finally {
+      window.location.href = 'index.html';
+    }
   }
 
   function exploreDemo() {
-    LuminaStore.resetToDemo();
-    LuminaStore.updateProfile({ onboardingCompleted: true });
-    window.location.href = 'index.html';
+    try {
+      LuminaStore.resetToDemo();
+      LuminaStore.updateProfile({ onboardingCompleted: true });
+    } catch (e) {
+      console.warn('exploreDemo error:', e);
+    } finally {
+      window.location.href = 'index.html';
+    }
   }
 
   function returnToDashboard() {
