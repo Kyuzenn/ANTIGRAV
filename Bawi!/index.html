@@ -13,8 +13,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 
   <!-- Stylesheets (with cache-busting query strings) -->
-  <link rel="stylesheet" href="css/tokens.css?v=2.4">
-  <link rel="stylesheet" href="css/style.css?v=2.4">
+  <link rel="stylesheet" href="css/tokens.css?v=2.5">
+  <link rel="stylesheet" href="css/style.css?v=2.5">
   <link rel="manifest" href="manifest.json">
   <script>
     // Development Cache Buster: unregister any lingering service workers and purge caches
@@ -451,7 +451,7 @@
         <div class="section-header-row">
           <div>
             <h1 class="section-title">Academic Action Planner</h1>
-            <p class="section-subtitle">Stay ahead of upcoming quizzes, performance tasks, and exams with high-leverage prioritization.</p>
+            <p class="section-subtitle">Chronological academic action tracker with date grouping, time targets, and instant gradebook sync.</p>
           </div>
           <button class="btn-primary" onclick="LuminaApp.openAddTaskModal()">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -461,15 +461,31 @@
 
         <div class="planner-toolbar">
           <div class="filter-chip-group">
-            <button class="filter-chip active" data-task-filter="all" onclick="LuminaApp.setTaskFilter('all')">All Tasks</button>
-            <button class="filter-chip" data-task-filter="pending" onclick="LuminaApp.setTaskFilter('pending')">Pending</button>
-            <button class="filter-chip" data-task-filter="high-leverage" onclick="LuminaApp.setTaskFilter('high-leverage')">⚡ High Leverage</button>
+            <button class="filter-chip active" data-task-filter="all" onclick="LuminaApp.setTaskFilter('all')">All Active</button>
+            <button class="filter-chip" data-task-filter="today" onclick="LuminaApp.setTaskFilter('today')">Due Today</button>
+            <button class="filter-chip" data-task-filter="upcoming" onclick="LuminaApp.setTaskFilter('upcoming')">Upcoming</button>
             <button class="filter-chip" data-task-filter="completed" onclick="LuminaApp.setTaskFilter('completed')">Completed</button>
           </div>
+          <div class="planner-summary-pill" id="plannerTasksSummary"></div>
         </div>
 
         <div class="planner-task-list" id="plannerTaskList">
-          <!-- Populated dynamically -->
+          <!-- Populated dynamically with date groupings -->
+        </div>
+
+        <!-- Collapsible Completed Tasks Section -->
+        <div class="planner-completed-section" id="plannerCompletedSection" style="display:none;">
+          <div class="completed-section-header" onclick="LuminaApp.toggleCompletedTasksDrawer()">
+            <div class="completed-header-left">
+              <svg class="completed-chevron" id="completedChevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+              <span class="completed-section-title">Completed Tasks</span>
+              <span class="completed-count-badge" id="completedCountBadge">0</span>
+            </div>
+            <span class="completed-toggle-hint" id="completedToggleHint">Show</span>
+          </div>
+          <div class="completed-section-body" id="completedSectionBody" style="display:none;">
+            <!-- Completed task items -->
+          </div>
         </div>
       </section>
 
@@ -700,24 +716,78 @@
             <label class="form-label">Component Category</label>
             <select class="form-select" id="taskInputCategory">
               <option value="WW">Written Work</option>
-              <option value="PT">Performance Task (High Leverage)</option>
+              <option value="PT">Performance Task</option>
               <option value="QA">Quarterly Exam</option>
             </select>
           </div>
           <div class="form-group">
-            <label class="form-label">Due Date</label>
-            <input type="date" class="form-input" id="taskInputDueDate">
+            <label class="form-label">Total Items (Optional)</label>
+            <input type="number" class="form-input mono-input" id="taskInputItems" placeholder="20" min="1">
           </div>
         </div>
 
-        <div class="form-group">
-          <label class="form-label">Estimated Items (Optional)</label>
-          <input type="number" class="form-input mono-input" id="taskInputItems" placeholder="20" min="1">
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+          <div class="form-group">
+            <label class="form-label">Due Date</label>
+            <input type="date" class="form-input" id="taskInputDueDate">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Due Time (Optional)</label>
+            <input type="time" class="form-input" id="taskInputDueTime" value="23:59">
+          </div>
         </div>
       </div>
       <div class="modal-footer">
         <button class="btn-ghost" onclick="LuminaApp.closeModal(document.getElementById('addTaskModal'))">Cancel</button>
         <button class="btn-primary" onclick="LuminaApp.saveTaskFromModal()">Create Task</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3b-2. Smart Complete & Quick Score Modal -->
+  <div class="modal-overlay" id="smartCompleteModal">
+    <div class="modal-sheet" style="max-width: 520px;" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <div class="modal-title" style="display:flex; align-items:center; gap:8px;">
+          <span style="font-size:18px;">🎉</span>
+          <span>Task Complete!</span>
+        </div>
+        <button class="icon-btn" onclick="LuminaApp.closeModal(document.getElementById('smartCompleteModal'))">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="smart-complete-banner">
+          <div class="smart-complete-task-title" id="smartCompleteTaskTitle">Task Title</div>
+          <div class="smart-complete-meta" id="smartCompleteTaskMeta"></div>
+        </div>
+
+        <div class="smart-complete-prompt">
+          <p>Would you like to record your graded score into your <strong><span id="smartCompleteSubjectName">Subject</span></strong> gradebook now?</p>
+        </div>
+
+        <div class="smart-complete-score-card">
+          <div class="score-input-grid">
+            <div class="form-group" style="margin:0;">
+              <label class="form-label">Your Score</label>
+              <input type="number" class="form-input mono-input" id="smartCompleteScoreInput" placeholder="0" min="0" step="0.5">
+            </div>
+            <div class="score-slash">/</div>
+            <div class="form-group" style="margin:0;">
+              <label class="form-label">Total Items</label>
+              <input type="number" class="form-input mono-input" id="smartCompleteMaxInput" placeholder="20" min="1">
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+        <button class="btn-ghost" onclick="LuminaApp.completeTaskWithoutScore()">
+          Mark Complete Only (Ungraded)
+        </button>
+        <div style="display:flex; gap:8px;">
+          <button class="btn-ghost" onclick="LuminaApp.closeModal(document.getElementById('smartCompleteModal'))">Cancel</button>
+          <button class="btn-primary" onclick="LuminaApp.submitSmartCompleteScore()">
+            ✓ Log Score & Complete
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -844,10 +914,10 @@
   <div class="toast-container" id="toastContainer"></div>
 
   <!-- Scripts (cache-busted) -->
-  <script src="js/deped-data.js?v=2.4"></script>
-  <script src="js/audio.js?v=2.4"></script>
-  <script src="js/store.js?v=2.4"></script>
-  <script src="js/engine.js?v=2.4"></script>
-  <script src="js/app.js?v=2.4"></script>
+  <script src="js/deped-data.js?v=2.5"></script>
+  <script src="js/audio.js?v=2.5"></script>
+  <script src="js/store.js?v=2.5"></script>
+  <script src="js/engine.js?v=2.5"></script>
+  <script src="js/app.js?v=2.5"></script>
 </body>
 </html>

@@ -349,7 +349,8 @@ window.LuminaStore = (function () {
       subjectId: 'subj-basic-calculus',
       title: 'Practice Limits & Derivatives Problem Set',
       category: 'WW',
-      dueDate: new Date(Date.now() + 86400000).toISOString().split('T')[0],
+      dueDate: new Date().toISOString().split('T')[0],
+      dueTime: '17:00',
       completed: false,
       estimatedItems: 20
     },
@@ -358,16 +359,28 @@ window.LuminaStore = (function () {
       subjectId: 'subj-gen-chem-1',
       title: 'Titration Experiment Lab Documentation',
       category: 'PT',
-      dueDate: new Date(Date.now() + 172800000).toISOString().split('T')[0],
+      dueDate: new Date(Date.now() + 86400000).toISOString().split('T')[0],
+      dueTime: '23:59',
       completed: false,
       estimatedItems: 50
     },
     {
       id: 'task-3',
+      subjectId: 'subj-general-physics-1',
+      title: 'Two-Dimensional Kinematics Vector Analysis',
+      category: 'WW',
+      dueDate: new Date(Date.now() + 86400000).toISOString().split('T')[0],
+      dueTime: '14:30',
+      completed: false,
+      estimatedItems: 25
+    },
+    {
+      id: 'task-4',
       subjectId: 'subj-oral-comm',
       title: 'Extemporaneous Speech Outline & Practice',
       category: 'PT',
       dueDate: new Date(Date.now() + 259200000).toISOString().split('T')[0],
+      dueTime: '23:59',
       completed: true,
       estimatedItems: 50
     }
@@ -581,6 +594,7 @@ window.LuminaStore = (function () {
       title: task.title.trim() || 'Untitled Task',
       category: task.category || 'WW',
       dueDate: task.dueDate || new Date().toISOString().split('T')[0],
+      dueTime: task.dueTime || '23:59',
       completed: !!task.completed,
       estimatedItems: Number(task.estimatedItems) || 20
     };

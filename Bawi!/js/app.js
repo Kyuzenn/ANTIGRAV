@@ -617,77 +617,342 @@ window.LuminaApp = (function () {
 
   let currentTaskFilter = 'all';
 
+  // --------------------------------------------------------------------------
+  // Tab 4: Academic Action Planner (Tasks & Chronological Tracker)
+  // --------------------------------------------------------------------------
+
+  let isCompletedTasksDrawerOpen = false;
+  let activeSmartCompleteTaskId = null;
+
   function setTaskFilter(filter) {
     currentTaskFilter = filter;
     document.querySelectorAll('[data-task-filter]').forEach(btn => {
       btn.classList.toggle('active', btn.getAttribute('data-task-filter') === filter);
     });
+    if (filter === 'completed') {
+      isCompletedTasksDrawerOpen = true;
+    }
     renderPlanner();
+  }
+
+  function toggleCompletedTasksDrawer() {
+    isCompletedTasksDrawerOpen = !isCompletedTasksDrawerOpen;
+    const body = document.getElementById('completedSectionBody');
+    const chevron = document.getElementById('completedChevron');
+    const hint = document.getElementById('completedToggleHint');
+    if (body) body.style.display = isCompletedTasksDrawerOpen ? 'flex' : 'none';
+    if (chevron) chevron.classList.toggle('open', isCompletedTasksDrawerOpen);
+    if (hint) hint.textContent = isCompletedTasksDrawerOpen ? 'Hide' : 'Show';
+  }
+
+  function formatTaskTime(timeStr) {
+    if (!timeStr) return '';
+    const parts = timeStr.split(':');
+    if (parts.length < 2) return timeStr;
+    let hours = parseInt(parts[0], 10);
+    const mins = parts[1].padStart(2, '0');
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    hours = hours % 12;
+    hours = hours ? hours : 12;
+    return `${hours}:${mins} ${ampm}`;
+  }
+
+  function formatPlannerDateHeader(dateStr) {
+    if (!dateStr) return { title: 'No Due Date', badge: null, badgeLabel: null };
+
+    const today = new Date();
+    const todayStr = today.toISOString().split('T')[0];
+    const tomorrow = new Date(Date.now() + 86400000);
+    const tomorrowStr = tomorrow.toISOString().split('T')[0];
+
+    const [y, m, d] = dateStr.split('-').map(Number);
+    const taskDate = new Date(y, m - 1, d);
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const formattedDate = `${monthNames[taskDate.getMonth()]} ${taskDate.getDate()}`;
+
+    if (dateStr === todayStr) {
+      return { title: `Today • ${formattedDate}`, badge: 'today', badgeLabel: 'Due Today' };
+    } else if (dateStr === tomorrowStr) {
+      return { title: `Tomorrow • ${formattedDate}`, badge: 'upcoming', badgeLabel: 'Tomorrow' };
+    } else if (dateStr < todayStr) {
+      return { title: `Past Due • ${formattedDate}`, badge: 'overdue', badgeLabel: 'Overdue' };
+    } else {
+      const dayOfWeek = dayNames[taskDate.getDay()];
+      return { title: `${dayOfWeek} • ${formattedDate}`, badge: null, badgeLabel: null };
+    }
   }
 
   function renderPlanner() {
     const container = document.getElementById('plannerTaskList');
+    const summaryPill = document.getElementById('plannerTasksSummary');
+    const completedSection = document.getElementById('plannerCompletedSection');
+    const completedBody = document.getElementById('completedSectionBody');
+    const completedCountBadge = document.getElementById('completedCountBadge');
+    const completedChevron = document.getElementById('completedChevron');
+    const completedHint = document.getElementById('completedToggleHint');
+
     if (!container) return;
 
     const tasks = LuminaStore.getTasks();
     const subjects = LuminaStore.getSubjects();
     const subjectMap = new Map(subjects.map(s => [s.id, s]));
 
-    let filtered = tasks;
-    if (currentTaskFilter === 'pending') {
-      filtered = tasks.filter(t => !t.completed);
-    } else if (currentTaskFilter === 'completed') {
-      filtered = tasks.filter(t => t.completed);
-    } else if (currentTaskFilter === 'high-leverage') {
-      filtered = tasks.filter(t => t.category === 'PT' || t.category === 'QA');
+    const todayStr = new Date().toISOString().split('T')[0];
+    const activeTasks = tasks.filter(t => !t.completed);
+    const completedTasks = tasks.filter(t => t.completed);
+
+    if (summaryPill) {
+      summaryPill.textContent = `${activeTasks.length} Active • ${completedTasks.length} Completed`;
     }
 
+    // Filter active tasks
+    let filteredActive = activeTasks;
+    if (currentTaskFilter === 'today') {
+      filteredActive = activeTasks.filter(t => t.dueDate === todayStr || (t.dueDate && t.dueDate < todayStr));
+    } else if (currentTaskFilter === 'upcoming') {
+      filteredActive = activeTasks.filter(t => t.dueDate && t.dueDate > todayStr);
+    } else if (currentTaskFilter === 'completed') {
+      filteredActive = [];
+    }
+
+    // Render Active Tasks Grouped by Date
     container.innerHTML = '';
-    if (filtered.length === 0) {
+    if (filteredActive.length === 0 && currentTaskFilter !== 'completed') {
       container.innerHTML = `
         <div style="padding:48px 20px; text-align:center; color:var(--text-secondary);" class="glass-card">
-          <p style="margin-bottom:12px;">No tasks found under "${currentTaskFilter}".</p>
+          <p style="margin-bottom:12px; font-size:15px;">No active tasks found under "${currentTaskFilter}".</p>
           <button class="btn-primary" onclick="LuminaApp.openAddTaskModal()">+ Add New Task</button>
         </div>
       `;
+    } else if (filteredActive.length > 0) {
+      // Group by date
+      const groups = {};
+      filteredActive.forEach(task => {
+        const dKey = task.dueDate || 'no-date';
+        if (!groups[dKey]) {
+          groups[dKey] = {
+            dateStr: task.dueDate,
+            meta: formatPlannerDateHeader(task.dueDate),
+            tasks: []
+          };
+        }
+        groups[dKey].tasks.push(task);
+      });
+
+      // Sort dates: past due / today first, then chronological, no-date last
+      const sortedKeys = Object.keys(groups).sort((a, b) => {
+        if (a === 'no-date') return 1;
+        if (b === 'no-date') return -1;
+        return a.localeCompare(b);
+      });
+
+      sortedKeys.forEach(key => {
+        const group = groups[key];
+        group.tasks.sort((a, b) => (a.dueTime || '99:99').localeCompare(b.dueTime || '99:99'));
+
+        const groupEl = document.createElement('div');
+        groupEl.className = 'planner-date-group';
+
+        groupEl.innerHTML = `
+          <div class="planner-date-header">
+            <div class="date-header-left">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                <line x1="16" y1="2" x2="16" y2="6"/>
+                <line x1="8" y1="2" x2="8" y2="6"/>
+                <line x1="3" y1="10" x2="21" y2="10"/>
+              </svg>
+              <span class="date-header-title">${group.meta.title}</span>
+              ${group.meta.badge ? `<span class="date-header-badge ${group.meta.badge}">${group.meta.badgeLabel}</span>` : ''}
+            </div>
+            <span class="date-header-count">${group.tasks.length} ${group.tasks.length === 1 ? 'task' : 'tasks'}</span>
+          </div>
+          <div class="planner-group-cards" id="group-cards-${key}"></div>
+        `;
+
+        const cardsContainer = groupEl.querySelector(`#group-cards-${key}`);
+        group.tasks.forEach(task => {
+          cardsContainer.appendChild(createTaskCardElement(task, subjectMap));
+        });
+
+        container.appendChild(groupEl);
+      });
+    }
+
+    // Render Completed Tasks Drawer
+    if (completedSection && completedBody) {
+      if (completedTasks.length > 0 || currentTaskFilter === 'completed') {
+        completedSection.style.display = 'block';
+        if (completedCountBadge) completedCountBadge.textContent = completedTasks.length;
+        if (completedChevron) completedChevron.classList.toggle('open', isCompletedTasksDrawerOpen);
+        if (completedHint) completedHint.textContent = isCompletedTasksDrawerOpen ? 'Hide' : 'Show';
+        completedBody.style.display = isCompletedTasksDrawerOpen ? 'flex' : 'none';
+
+        completedBody.innerHTML = '';
+        if (completedTasks.length === 0) {
+          completedBody.innerHTML = `<div style="padding:20px; text-align:center; color:var(--text-secondary); font-size:13px;">No completed tasks yet.</div>`;
+        } else {
+          completedTasks.forEach(task => {
+            completedBody.appendChild(createTaskCardElement(task, subjectMap));
+          });
+        }
+      } else {
+        completedSection.style.display = 'none';
+      }
+    }
+  }
+
+  function createTaskCardElement(task, subjectMap) {
+    const subject = subjectMap.get(task.subjectId) || { name: 'Unknown Subject', classification: 'General' };
+    const catLabel = task.category === 'WW' ? 'Written Work' : (task.category === 'PT' ? 'Performance Task' : (task.category === 'QA' ? 'Quarterly Exam' : 'Study Task'));
+
+    const card = document.createElement('div');
+    card.className = `planner-task-card ${task.completed ? 'completed' : ''}`;
+    card.setAttribute('data-task-id', task.id);
+
+    card.innerHTML = `
+      <div class="planner-task-left">
+        <button class="task-tactile-checkbox ${task.completed ? 'checked' : ''}"
+                onclick="LuminaApp.handleTaskCheck('${task.id}', event)"
+                title="${task.completed ? 'Click to mark as active' : 'Click to complete task'}">
+          ${task.completed ? `
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+          ` : ''}
+        </button>
+        <div class="task-content-block">
+          <div class="task-title-row">
+            <span class="task-text-title">${task.title}</span>
+            ${task.dueTime ? `
+              <span class="task-time-pill" title="Due Time">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                </svg>
+                ${formatTaskTime(task.dueTime)}
+              </span>
+            ` : ''}
+          </div>
+          <div class="task-meta-pills">
+            <span class="category-tag subject-tag">${subject.name}</span>
+            <span class="category-tag ${task.category.toLowerCase()}-tag">${catLabel}</span>
+            ${task.estimatedItems ? `<span class="task-items-badge">${task.estimatedItems} items</span>` : ''}
+          </div>
+        </div>
+      </div>
+      <div class="planner-task-actions">
+        ${!task.completed ? `
+          <button class="task-btn-log-score" onclick="LuminaApp.logScoreFromTask('${task.id}')" title="Log score directly to gradebook">
+            + Log Score
+          </button>
+        ` : ''}
+        <button class="icon-btn task-btn-delete" title="Delete Task" onclick="LuminaApp.deleteTaskItem('${task.id}')">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+    `;
+    return card;
+  }
+
+  function handleTaskCheck(taskId, event) {
+    if (event) event.stopPropagation();
+    const task = LuminaStore.getTasks().find(t => t.id === taskId);
+    if (!task) return;
+
+    if (task.completed) {
+      // Uncheck task: restore to active
+      LuminaStore.updateTask(taskId, { completed: false });
+      LuminaAudio.playClick();
+      showToast('Task moved back to active');
+      renderPlanner();
+      renderGlobalHeaderBadges();
       return;
     }
 
-    filtered.forEach(task => {
-      const subject = subjectMap.get(task.subjectId) || { name: 'Unknown Subject', classification: 'General' };
-      const isHighLeverage = task.category === 'PT' || task.category === 'QA';
-      const catLabel = task.category === 'WW' ? 'Written Work' : (task.category === 'PT' ? 'Performance Task' : 'Quarterly Exam');
+    // Pending task -> Trigger Smart Complete Modal
+    activeSmartCompleteTaskId = taskId;
+    const subject = LuminaStore.getSubject(task.subjectId) || { name: 'Subject' };
+    const catLabel = task.category === 'WW' ? 'Written Work' : (task.category === 'PT' ? 'Performance Task' : 'Quarterly Exam');
 
-      const itemEl = document.createElement('div');
-      itemEl.className = `planner-task-item ${task.completed ? 'completed' : ''}`;
+    const titleEl = document.getElementById('smartCompleteTaskTitle');
+    const subjNameEl = document.getElementById('smartCompleteSubjectName');
+    const metaEl = document.getElementById('smartCompleteTaskMeta');
+    const scoreInput = document.getElementById('smartCompleteScoreInput');
+    const maxInput = document.getElementById('smartCompleteMaxInput');
 
-      itemEl.innerHTML = `
-        <div class="planner-task-left">
-          <input type="checkbox" class="planner-task-checkbox" ${task.completed ? 'checked' : ''} onchange="LuminaApp.toggleTaskItem('${task.id}')">
-          <div>
-            <div class="planner-task-title">${task.title}</div>
-            <div class="planner-task-meta">
-              <span class="category-tag">${subject.name}</span>
-              <span class="category-tag">${catLabel}</span>
-              ${isHighLeverage ? '<span class="planner-leverage-tag">⚡ High Leverage</span>' : ''}
-              ${task.dueDate ? `<span style="color:var(--text-secondary); font-family:var(--font-mono); font-size:11px;">Due: ${task.dueDate}</span>` : ''}
-              ${task.estimatedItems ? `<span style="color:var(--text-tertiary); font-family:var(--font-mono); font-size:11px;">(${task.estimatedItems} items)</span>` : ''}
-            </div>
-          </div>
-        </div>
-        <div class="planner-task-actions">
-          ${!task.completed ? `
-            <button class="btn-primary" style="font-size:11px; padding:4px 10px;" onclick="LuminaApp.logScoreFromTask('${task.id}')">
-              + Log Score
-            </button>
-          ` : ''}
-          <button class="icon-btn" title="Delete Task" onclick="LuminaApp.deleteTaskItem('${task.id}')">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
-          </button>
-        </div>
+    if (titleEl) titleEl.textContent = task.title;
+    if (subjNameEl) subjNameEl.textContent = subject.name;
+    if (metaEl) {
+      metaEl.innerHTML = `
+        <span class="category-tag subject-tag">${subject.name}</span>
+        <span class="category-tag">${catLabel}</span>
       `;
-      container.appendChild(itemEl);
+    }
+    if (scoreInput) scoreInput.value = '';
+    if (maxInput) maxInput.value = task.estimatedItems || 20;
+
+    openModal(document.getElementById('smartCompleteModal'));
+  }
+
+  function completeTaskWithoutScore() {
+    if (!activeSmartCompleteTaskId) return;
+    LuminaStore.updateTask(activeSmartCompleteTaskId, { completed: true });
+    closeModal(document.getElementById('smartCompleteModal'));
+    LuminaAudio.playTargetChime();
+    showToast('Task completed! 🎉');
+    activeSmartCompleteTaskId = null;
+    renderPlanner();
+    renderGlobalHeaderBadges();
+  }
+
+  function submitSmartCompleteScore() {
+    if (!activeSmartCompleteTaskId) return;
+    const task = LuminaStore.getTasks().find(t => t.id === activeSmartCompleteTaskId);
+    if (!task) return;
+
+    const scoreInput = document.getElementById('smartCompleteScoreInput');
+    const maxInput = document.getElementById('smartCompleteMaxInput');
+
+    const rawScore = scoreInput ? scoreInput.value.trim() : '';
+    const score = parseFloat(rawScore);
+    const max = parseFloat(maxInput ? maxInput.value : 20) || 20;
+
+    if (rawScore === '' || isNaN(score)) {
+      alert('Please enter your score (or choose "Mark Complete Only" if ungraded).');
+      return;
+    }
+
+    if (score < 0 || score > max) {
+      alert(`Score must be between 0 and ${max}.`);
+      return;
+    }
+
+    // 1. Add assessment score to Gradebook
+    LuminaStore.addAssessment({
+      subjectId: task.subjectId,
+      category: task.category,
+      title: task.title,
+      score: score,
+      max: max,
+      date: new Date().toISOString().split('T')[0]
     });
+
+    // 2. Mark task complete
+    LuminaStore.updateTask(activeSmartCompleteTaskId, { completed: true });
+
+    closeModal(document.getElementById('smartCompleteModal'));
+    LuminaAudio.playTargetChime();
+
+    const subject = LuminaStore.getSubject(task.subjectId) || { name: 'Subject' };
+    showToast(`Score of ${score}/${max} logged to ${subject.name}! Task completed 🎉`);
+    activeSmartCompleteTaskId = null;
+
+    // Refresh all affected views
+    renderPlanner();
+    renderExecutiveDashboard();
+    renderPipeline();
+    renderGlobalHeaderBadges();
   }
 
   function openAddTaskModal() {
@@ -695,10 +960,12 @@ window.LuminaApp = (function () {
     const subjSelect = document.getElementById('taskInputSubject');
     const titleInput = document.getElementById('taskInputTitle');
     const dateInput = document.getElementById('taskInputDueDate');
+    const timeInput = document.getElementById('taskInputDueTime');
     const itemsInput = document.getElementById('taskInputItems');
 
     if (titleInput) titleInput.value = '';
-    if (dateInput) dateInput.value = '';
+    if (dateInput) dateInput.value = new Date().toISOString().split('T')[0];
+    if (timeInput) timeInput.value = '23:59';
     if (itemsInput) itemsInput.value = '20';
 
     if (subjSelect) {
@@ -717,6 +984,7 @@ window.LuminaApp = (function () {
     const subjSelect = document.getElementById('taskInputSubject');
     const catSelect = document.getElementById('taskInputCategory');
     const dateInput = document.getElementById('taskInputDueDate');
+    const timeInput = document.getElementById('taskInputDueTime');
     const itemsInput = document.getElementById('taskInputItems');
 
     const title = titleInput ? titleInput.value.trim() : '';
@@ -728,6 +996,7 @@ window.LuminaApp = (function () {
     const subjectId = subjSelect ? subjSelect.value : '';
     const category = catSelect ? catSelect.value : 'WW';
     const dueDate = dateInput ? dateInput.value : '';
+    const dueTime = timeInput ? timeInput.value : '23:59';
     const estimatedItems = Number(itemsInput ? itemsInput.value : 20) || 20;
 
     LuminaStore.addTask({
@@ -735,6 +1004,7 @@ window.LuminaApp = (function () {
       subjectId,
       category,
       dueDate,
+      dueTime,
       estimatedItems
     });
 
@@ -745,9 +1015,7 @@ window.LuminaApp = (function () {
   }
 
   function toggleTaskItem(taskId) {
-    LuminaStore.toggleTask(taskId);
-    renderPlanner();
-    renderGlobalHeaderBadges();
+    handleTaskCheck(taskId);
   }
 
   function deleteTaskItem(taskId) {
@@ -2057,6 +2325,10 @@ window.LuminaApp = (function () {
     openAddTaskModal,
     saveTaskFromModal,
     toggleTaskItem,
+    handleTaskCheck,
+    toggleCompletedTasksDrawer,
+    completeTaskWithoutScore,
+    submitSmartCompleteScore,
     deleteTaskItem,
     logScoreFromTask,
     openSubjectSettings,
