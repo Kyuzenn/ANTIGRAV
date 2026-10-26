@@ -27,6 +27,30 @@ html, body {
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
+/* Custom Sleek Scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.16) transparent;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.16);
+  border-radius: var(--radius-pill);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.32);
+}
+
 /* Background Subtle Mesh Glow */
 body::before {
   content: '';
@@ -292,14 +316,17 @@ h1, h2, h3, h4, .font-display {
 
 .main-content {
   flex: 1;
-  max-width: 1440px;
+  min-width: 0;
   width: 100%;
-  margin: 0 auto;
+  box-sizing: border-box;
   padding: 32px 32px 64px;
 }
 
 .tab-view {
   display: none;
+  width: 100%;
+  max-width: 1680px;
+  margin: 0 auto;
   animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -1820,12 +1847,12 @@ h1, h2, h3, h4, .font-display {
   .main-content {
     flex: 1;
     min-width: 0;
+    width: 100%;
     height: 100%;
     overflow-y: auto;
-    padding: 44px 60px 120px;
-    max-width: 1560px;
-    margin: 0 auto;
-    width: 100%;
+    overflow-x: hidden;
+    padding: 36px 48px 120px;
+    box-sizing: border-box;
   }
 }
 
