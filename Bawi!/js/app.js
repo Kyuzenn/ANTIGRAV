@@ -68,8 +68,15 @@ window.LuminaApp = (function () {
     switchTab(activeTab, false);
     renderGlobalHeaderBadges();
 
-    // Check if first-time user / blank slate needing guided onboarding
-    checkOnboardingStatus();
+    // Check if first-time user / blank slate needing guided onboarding or hash navigation
+    if (window.location.hash === '#step2') {
+      showIntroPage(false);
+      setTimeout(() => goToOnboardingStep(2), 150);
+    } else if (window.location.hash === '#intro' || window.location.hash === '#welcome') {
+      showIntroPage(true);
+    } else {
+      checkOnboardingStatus();
+    }
   }
 
   // ==========================================================================
@@ -1788,14 +1795,29 @@ window.LuminaApp = (function () {
     const profile = LuminaStore.getProfile();
     const allSubjects = LuminaStore.getAllSubjects();
     if (!profile.onboardingCompleted && allSubjects.length === 0) {
-      setTimeout(() => openOnboardingModal(), 350);
+      showIntroPage(false);
+    } else {
+      hideIntroPage();
     }
   }
 
-  function openOnboardingModal() {
-    const modal = document.getElementById('onboardingModal');
-    if (!modal) return;
+  function showIntroPage(allowReturn = true) {
+    document.body.classList.add('intro-active');
+    const intro = document.getElementById('introPage');
+    const appShell = document.getElementById('appShell');
+    const returnBtn = document.getElementById('introReturnToDashboardBtn');
 
+    if (intro) {
+      intro.style.display = 'flex';
+      intro.classList.remove('hidden');
+    }
+    if (appShell) {
+      appShell.style.display = 'none';
+    }
+
+    if (returnBtn) {
+      returnBtn.style.display = allowReturn ? 'inline-flex' : 'none';
+    }
     const profile = LuminaStore.getProfile();
     const nameInput = document.getElementById('onboardStudentName');
     const strandSelect = document.getElementById('onboardStrandSelect');
@@ -1811,7 +1833,23 @@ window.LuminaApp = (function () {
 
     updateOnboardHonorsPreview();
     goToOnboardingStep(1);
-    openModal(modal);
+  }
+
+  function hideIntroPage() {
+    document.body.classList.remove('intro-active');
+    const intro = document.getElementById('introPage');
+    const appShell = document.getElementById('appShell');
+    if (intro) {
+      intro.style.display = 'none';
+      intro.classList.add('hidden');
+    }
+    if (appShell) {
+      appShell.style.display = 'flex';
+    }
+  }
+
+  function openOnboardingModal() {
+    showIntroPage(true);
   }
 
   function updateOnboardHonorsPreview() {
@@ -2128,7 +2166,7 @@ window.LuminaApp = (function () {
     }
 
     LuminaStore.updateProfile({ onboardingCompleted: true });
-    closeModal(document.getElementById('onboardingModal'));
+    hideIntroPage();
 
     LuminaAudio.playCelebration();
     showToast(`Enrolled ${subjectsToEnroll.length} subjects for ${semester}! Welcome to Bawi!`);
@@ -2143,11 +2181,23 @@ window.LuminaApp = (function () {
 
   function skipOnboardingToBlank() {
     LuminaStore.updateProfile({ onboardingCompleted: true });
-    closeModal(document.getElementById('onboardingModal'));
+    hideIntroPage();
     showToast('Starting with empty workspace. Use "+ Add Subject" whenever ready.');
     renderGlobalHeaderBadges();
     renderDashboard();
     renderPipeline();
+  }
+
+  function resetToDemoDataAndLaunch() {
+    LuminaStore.resetToDemoData();
+    LuminaStore.updateProfile({ onboardingCompleted: true });
+    hideIntroPage();
+    LuminaAudio.playCelebration();
+    showToast('Sample workspace loaded! Exploring Maria Santos (STEM Track).');
+    renderGlobalHeaderBadges();
+    renderDashboard();
+    renderPipeline();
+    renderSubjectDeepDive();
   }
 
   // ==========================================================================
@@ -2518,7 +2568,8 @@ window.LuminaApp = (function () {
       { type: 'nav', title: 'Pipeline Subjects', desc: 'Manage Course Load', action: () => switchTab('pipeline') },
       { type: 'nav', title: 'Simulation Laboratory', desc: 'Reverse Target Solver', action: () => switchTab('simulator') },
       { type: 'nav', title: 'Transmutation Matrix', desc: 'DepEd Table 4 Reference', action: () => switchTab('matrix') },
-      { type: 'nav', title: 'Export Grade Slip', desc: 'Generate printable summary', action: () => openGradeSlipModal() }
+      { type: 'nav', title: 'Export Grade Slip', desc: 'Generate printable summary', action: () => openGradeSlipModal() },
+      { type: 'nav', title: 'Welcome Intro & Setup Guide', desc: 'View platform overview & course setup', action: () => showIntroPage(true) }
     ];
 
     navItems.forEach(item => {
@@ -3366,6 +3417,9 @@ window.LuminaApp = (function () {
     saveProfileFromModal,
     openGradeSlipModal,
     printGradeSlip,
+    showIntroPage,
+    hideIntroPage,
+    resetToDemoDataAndLaunch,
     openOnboardingModal,
     goToOnboardingStep,
     onOnboardStrandChange,

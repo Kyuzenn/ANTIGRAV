@@ -35,6 +35,228 @@
   <!-- Top Ambient Prismatic Light Streak -->
   <div class="prismatic-pulse-bar" id="prismaticPulseBar"></div>
 
+  <!-- Slice 5: Standalone Intro Page & Split-Screen Command Center (Concept A) -->
+  <div class="intro-page-wrapper" id="introPage">
+    <!-- Top Navbar inside Intro -->
+    <header class="intro-navbar">
+      <div class="intro-brand-row">
+        <div class="intro-logo-pill" onclick="location.reload()">
+          <span class="symbol">[λ]</span>
+          <span class="brand-title">Bawi!</span>
+        </div>
+        <span class="intro-deped-tag">DepEd Table 4 Certified</span>
+      </div>
+
+      <div class="intro-nav-actions">
+        <button class="btn-ghost" onclick="LuminaApp.resetToDemoDataAndLaunch()" title="Load Maria Santos (STEM Track) sample workspace">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+          <span>Explore Sample Demo</span>
+        </button>
+        <button class="btn-primary" id="introReturnToDashboardBtn" style="display:none;" onclick="LuminaApp.hideIntroPage()">
+          <span>Return to Dashboard →</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Split-Screen Body Container -->
+    <main class="intro-split-container">
+      <!-- Left Pane: Brand, Value Pillars, & Pedagogical Context -->
+      <section class="intro-left-pane">
+        <div class="intro-hero-badge">
+          <span class="pulse-dot"></span>
+          <span>Philippine Senior High School Academic OS</span>
+        </div>
+
+        <h1 class="intro-hero-title">
+          Turn <span class="gradient-text">"Bawi tayo next quarter"</span> into an algorithmic reality.
+        </h1>
+
+        <p class="intro-hero-desc">
+          Never guess what score you need to retain honors or pass a subject. Bawi! combines DepEd Table 4 step-function transmutation, closed-form reverse target solving, and high-leverage study optimization into a local-first, distraction-free command center.
+        </p>
+
+        <!-- 4 Key Pillars Grid -->
+        <div class="intro-features-grid">
+          <div class="intro-feature-card">
+            <div class="intro-feature-icon">🎯</div>
+            <div class="intro-feature-content">
+              <div class="intro-feature-title">The Bawi Target Formula</div>
+              <div class="intro-feature-text">
+                Reverse-solves required Q2 scores (Q₂ = 2 × Target − Q₁) taking into account DepEd half-point round-offs.
+              </div>
+            </div>
+          </div>
+
+          <div class="intro-feature-card">
+            <div class="intro-feature-icon">📊</div>
+            <div class="intro-feature-content">
+              <div class="intro-feature-title">DepEd Table 4 Step Matrix</div>
+              <div class="intro-feature-text">
+                Official 41-bracket step transmutation. Standardized weights for Specialized (25/45/30) and Core (25/50/25).
+              </div>
+            </div>
+          </div>
+
+          <div class="intro-feature-card">
+            <div class="intro-feature-icon">📜</div>
+            <div class="intro-feature-content">
+              <div class="intro-feature-title">DepEd Form 138-SHS (SF 9-SHS)</div>
+              <div class="intro-feature-text">
+                1-click official progress report card with quarterly ratings, semestral general average, and DO 36, s. 2016 honors awards.
+              </div>
+            </div>
+          </div>
+
+          <div class="intro-feature-card">
+            <div class="intro-feature-icon">🔒</div>
+            <div class="intro-feature-content">
+              <div class="intro-feature-title">100% Local-First & Private</div>
+              <div class="intro-feature-text">
+                Zero sign-up, zero server telemetry, zero tracking. All your grades and assessments remain encrypted on your device.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- DepEd Policy Citation Card -->
+        <div class="intro-quote-card">
+          <div class="intro-quote-text">
+            "Assessment should be holistic and authentic... students must be informed of the results of their learning to reflect and improve."
+          </div>
+          <div class="intro-quote-author">— DepEd Order No. 8, s. 2015 Policy Guidelines</div>
+        </div>
+      </section>
+
+      <!-- Right Pane: Integrated Setup Console -->
+      <section class="intro-right-pane">
+        <div class="intro-wizard-card">
+          <!-- Step Progress Tabs -->
+          <div class="onboarding-progress-bar">
+            <div class="onboarding-step-indicator active" id="onboardingStepIndicator1" onclick="LuminaApp.goToOnboardingStep(1)">1. Academic Profile</div>
+            <div class="onboarding-step-indicator" id="onboardingStepIndicator2" onclick="LuminaApp.goToOnboardingStep(2)">2. Subject Checklist</div>
+          </div>
+
+          <!-- Step 1: Profile & Strand Selection -->
+          <div class="onboarding-step-content" id="onboardingStep1">
+            <div class="onboarding-header">
+              <h2 class="onboarding-title">Set Up Your Academic Profile</h2>
+              <p class="onboarding-subtitle">Configure your Philippine Senior High School track, grade level, and honors target to personalize your workspace.</p>
+            </div>
+
+            <div class="form-group" style="margin-bottom:14px;">
+              <label class="form-label">Student Name</label>
+              <input type="text" class="form-input" id="onboardStudentName" placeholder="e.g. Maria Santos" value="Maria Santos">
+            </div>
+
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom:14px;">
+              <div class="form-group">
+                <label class="form-label">Track & Strand</label>
+                <select class="form-select" id="onboardStrandSelect" onchange="LuminaApp.onOnboardStrandChange()">
+                  <option value="STEM">STEM (Science, Tech, Eng, Math)</option>
+                  <option value="ABM">ABM (Accountancy, Business & Management)</option>
+                  <option value="HUMSS">HUMSS (Humanities & Social Sciences)</option>
+                  <option value="GAS">GAS (General Academic Strand)</option>
+                  <option value="TVL">TVL (Technical-Vocational-Livelihood)</option>
+                  <option value="Arts">Arts and Design Track</option>
+                  <option value="Sports">Sports Track</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Grade Level</label>
+                <select class="form-select" id="onboardGradeLevel">
+                  <option value="Grade 11">Grade 11</option>
+                  <option value="Grade 12">Grade 12</option>
+                </select>
+              </div>
+            </div>
+
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom:18px;">
+              <div class="form-group">
+                <label class="form-label">Starting Semester</label>
+                <select class="form-select" id="onboardSemesterSelect" onchange="LuminaApp.onOnboardStrandChange()">
+                  <option value="Semester 1">Semester 1</option>
+                  <option value="Semester 2">Semester 2</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Target General Average</label>
+                <div style="display:flex; gap:8px; align-items:center;">
+                  <input type="number" class="form-input mono-input" id="onboardTargetAverage" min="75" max="100" step="0.5" value="95" oninput="LuminaApp.updateOnboardHonorsPreview()">
+                  <span class="honors-badge-pill badge-high-honors" id="onboardHonorsBadge" style="font-size:11px; white-space:nowrap; padding:4px 10px;">With High Honors</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="modal-footer" style="padding:0; margin-top:20px; display:flex; justify-content:space-between; align-items:center;">
+              <button class="btn-ghost" onclick="LuminaApp.skipOnboardingToBlank()">Start with Blank Slate</button>
+              <button class="btn-primary" onclick="LuminaApp.goToOnboardingStep(2)">
+                Continue to Subject Selection →
+              </button>
+            </div>
+          </div>
+
+          <!-- Step 2: Multi-Select Subject Checklist -->
+          <div class="onboarding-step-content" id="onboardingStep2" style="display:none;">
+            <div class="onboarding-header">
+              <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px;">
+                <div>
+                  <h2 class="onboarding-title">Select Your Enrolled Subjects</h2>
+                  <p class="onboarding-subtitle">Check off only the subjects on your school schedule. Official DepEd weights will apply automatically.</p>
+                </div>
+                <div class="onboarding-selected-badge" id="onboardingSelectedCounter">
+                  <span id="onboardingSelectedCount">0</span> Subjects Selected
+                </div>
+              </div>
+            </div>
+
+            <!-- Filter & Search Toolbar -->
+            <div class="checklist-toolbar">
+              <div class="checklist-search-box">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+                <input type="text" class="checklist-search-input" id="onboardingChecklistSearch" placeholder="Filter subjects (e.g. 'Calculus', 'Oral', 'Science')..." oninput="LuminaApp.filterOnboardingChecklist()">
+              </div>
+              <div style="display:flex; gap:8px;">
+                <button class="btn-ghost" style="font-size:11.5px; padding:4px 10px;" onclick="LuminaApp.selectStrandRecommendedSubjects()">Select Strand Typical Load</button>
+                <button class="btn-ghost" style="font-size:11.5px; padding:4px 10px;" onclick="LuminaApp.clearAllChecklistSelections()">Clear All</button>
+              </div>
+            </div>
+
+            <!-- Checklist scroll container -->
+            <div class="checklist-scroll-area" id="onboardingChecklistContainer">
+              <!-- Populated dynamically: Specialized, Core, Applied -->
+            </div>
+
+            <!-- Custom Subject Quick-Add Drawer -->
+            <div class="custom-subject-drawer" id="onboardCustomDrawer">
+              <button class="custom-subject-toggle-btn" onclick="LuminaApp.toggleOnboardCustomDrawer()">
+                <span>+ Add Institutional / School-Specific Subject</span>
+                <span id="customDrawerArrow">▼</span>
+              </button>
+              <div class="custom-subject-form" id="onboardCustomForm" style="display:none; margin-top:10px;">
+                <div style="display:grid; grid-template-columns: 2fr 1fr; gap:10px; margin-bottom:8px;">
+                  <input type="text" class="form-input" id="onboardCustomName" placeholder="Subject Name (e.g. Christian Living / Robotics)">
+                  <select class="form-select" id="onboardCustomClassification">
+                    <option value="Specialized">Specialized (25/45/30)</option>
+                    <option value="Core">Core Curriculum (25/50/25)</option>
+                    <option value="Applied">Applied Track (25/50/25)</option>
+                  </select>
+                </div>
+                <button class="btn-ghost" style="font-size:11px; padding:4px 12px;" onclick="LuminaApp.addCustomSubjectToChecklist()">+ Add to Checklist</button>
+              </div>
+            </div>
+
+            <div class="modal-footer" style="padding:0; margin-top:20px; display:flex; justify-content:space-between; align-items:center;">
+              <button class="btn-ghost" onclick="LuminaApp.goToOnboardingStep(1)">← Back to Profile</button>
+              <button class="btn-primary" id="onboardSubmitBtn" onclick="LuminaApp.completeOnboardingAndLaunch()">
+                Launch Academic OS 🚀
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
   <div class="app-shell" id="appShell">
 
     <!-- Desktop Left Glass Sidebar -->
@@ -95,6 +317,9 @@
           <button class="cmd-k-trigger" id="sidebarCmdKTrigger" style="flex:1; justify-content:space-between;" title="Command Palette (⌘K)">
             <span>Search</span>
             <kbd>⌘K</kbd>
+          </button>
+          <button class="icon-btn" id="sidebarIntroToggleBtn" onclick="LuminaApp.showIntroPage(true)" title="Welcome & Intro Page">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
           </button>
           <button class="icon-btn" id="sidebarAudioToggleBtn" title="Toggle Sound">
             <!-- Populated by JS -->
@@ -971,136 +1196,7 @@
     </div>
   </div>
 
-  <!-- 4b. First-Time Setup & Multi-Select Subject Checklist Wizard Modal -->
-  <div class="modal-overlay" id="onboardingModal">
-    <div class="modal-sheet onboarding-sheet" onclick="event.stopPropagation()">
-      <div class="onboarding-progress-bar">
-        <div class="onboarding-step-indicator active" id="onboardingStepIndicator1">1. Academic Profile</div>
-        <div class="onboarding-step-indicator" id="onboardingStepIndicator2">2. Subject Checklist</div>
-      </div>
-
-      <!-- Step 1: Profile & Academic Strand -->
-      <div class="onboarding-step-content" id="onboardingStep1">
-        <div class="onboarding-header">
-          <div class="brand-monogram" style="margin-bottom:8px;">
-            <span class="symbol">[λ]</span>
-            <span class="brand-title" style="letter-spacing:normal; text-transform:none; font-weight:700; font-size:18px;">Bawi! Academic OS</span>
-          </div>
-          <h2 class="onboarding-title">Set Up Your Academic Profile</h2>
-          <p class="onboarding-subtitle">Configure your Philippine Senior High School track, grade level, and honors target to personalize your workspace.</p>
-        </div>
-
-        <div class="form-group" style="margin-bottom:14px;">
-          <label class="form-label">Student Name</label>
-          <input type="text" class="form-input" id="onboardStudentName" placeholder="e.g. Maria Santos" value="Maria Santos">
-        </div>
-
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom:14px;">
-          <div class="form-group">
-            <label class="form-label">Track & Strand</label>
-            <select class="form-select" id="onboardStrandSelect" onchange="LuminaApp.onOnboardStrandChange()">
-              <option value="STEM">STEM (Science, Tech, Eng, Math)</option>
-              <option value="ABM">ABM (Accountancy, Business & Management)</option>
-              <option value="HUMSS">HUMSS (Humanities & Social Sciences)</option>
-              <option value="GAS">GAS (General Academic Strand)</option>
-              <option value="TVL">TVL (Technical-Vocational-Livelihood)</option>
-              <option value="Arts">Arts and Design Track</option>
-              <option value="Sports">Sports Track</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Grade Level</label>
-            <select class="form-select" id="onboardGradeLevel">
-              <option value="Grade 11">Grade 11</option>
-              <option value="Grade 12">Grade 12</option>
-            </select>
-          </div>
-        </div>
-
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom:18px;">
-          <div class="form-group">
-            <label class="form-label">Starting Semester</label>
-            <select class="form-select" id="onboardSemesterSelect" onchange="LuminaApp.onOnboardStrandChange()">
-              <option value="Semester 1">Semester 1</option>
-              <option value="Semester 2">Semester 2</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Target General Average</label>
-            <div style="display:flex; gap:8px; align-items:center;">
-              <input type="number" class="form-input mono-input" id="onboardTargetAverage" min="75" max="100" step="0.5" value="95" oninput="LuminaApp.updateOnboardHonorsPreview()">
-              <span class="honors-badge-pill badge-high-honors" id="onboardHonorsBadge" style="font-size:11px; white-space:nowrap; padding:4px 10px;">With High Honors</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="modal-footer" style="padding:0; margin-top:20px; display:flex; justify-content:space-between; align-items:center;">
-          <button class="btn-ghost" onclick="LuminaApp.skipOnboardingToBlank()">Start with Blank Slate</button>
-          <button class="btn-primary" onclick="LuminaApp.goToOnboardingStep(2)">
-            Continue to Subject Selection →
-          </button>
-        </div>
-      </div>
-
-      <!-- Step 2: Multi-Select Subject Checklist -->
-      <div class="onboarding-step-content" id="onboardingStep2" style="display:none;">
-        <div class="onboarding-header">
-          <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px;">
-            <div>
-              <h2 class="onboarding-title">Select Your Enrolled Subjects</h2>
-              <p class="onboarding-subtitle">Check off only the subjects on your school schedule. Official DepEd weights will apply automatically.</p>
-            </div>
-            <div class="onboarding-selected-badge" id="onboardingSelectedCounter">
-              <span id="onboardingSelectedCount">0</span> Subjects Selected
-            </div>
-          </div>
-        </div>
-
-        <!-- Filter & Search Toolbar -->
-        <div class="checklist-toolbar">
-          <div class="checklist-search-box">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-            <input type="text" class="checklist-search-input" id="onboardingChecklistSearch" placeholder="Filter subjects (e.g. 'Calculus', 'Oral', 'Science')..." oninput="LuminaApp.filterOnboardingChecklist()">
-          </div>
-          <div style="display:flex; gap:8px;">
-            <button class="btn-ghost" style="font-size:11.5px; padding:4px 10px;" onclick="LuminaApp.selectStrandRecommendedSubjects()">Select Strand Typical Load</button>
-            <button class="btn-ghost" style="font-size:11.5px; padding:4px 10px;" onclick="LuminaApp.clearAllChecklistSelections()">Clear All</button>
-          </div>
-        </div>
-
-        <!-- Checklist scroll container -->
-        <div class="checklist-scroll-area" id="onboardingChecklistContainer">
-          <!-- Populated dynamically: Specialized, Core, Applied -->
-        </div>
-
-        <!-- Custom Subject Quick-Add Drawer -->
-        <div class="custom-subject-drawer" id="onboardCustomDrawer">
-          <button class="custom-subject-toggle-btn" onclick="LuminaApp.toggleOnboardCustomDrawer()">
-            <span>+ Add Institutional / School-Specific Subject</span>
-            <span id="customDrawerArrow">▼</span>
-          </button>
-          <div class="custom-subject-form" id="onboardCustomForm" style="display:none; margin-top:10px;">
-            <div style="display:grid; grid-template-columns: 2fr 1fr; gap:10px; margin-bottom:8px;">
-              <input type="text" class="form-input" id="onboardCustomName" placeholder="Subject Name (e.g. Christian Living / Robotics)">
-              <select class="form-select" id="onboardCustomClassification">
-                <option value="Specialized">Specialized (25/45/30)</option>
-                <option value="Core">Core Curriculum (25/50/25)</option>
-                <option value="Applied">Applied Track (25/50/25)</option>
-              </select>
-            </div>
-            <button class="btn-ghost" style="font-size:11px; padding:4px 12px;" onclick="LuminaApp.addCustomSubjectToChecklist()">+ Add to Checklist</button>
-          </div>
-        </div>
-
-        <div class="modal-footer" style="padding:0; margin-top:20px; display:flex; justify-content:space-between; align-items:center;">
-          <button class="btn-ghost" onclick="LuminaApp.goToOnboardingStep(1)">← Back to Profile</button>
-          <button class="btn-primary" id="onboardSubmitBtn" onclick="LuminaApp.completeOnboardingAndLaunch()">
-            Launch Academic OS 🚀
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
+  <!-- 4b. Setup Wizard has been elevated to the dedicated Split-Screen Intro Page (#introPage) -->
 
   <!-- 4c. Semester Crossover Enrollment Modal (Seamless Semester 2 Setup) -->
   <div class="modal-overlay" id="semesterCrossoverModal">

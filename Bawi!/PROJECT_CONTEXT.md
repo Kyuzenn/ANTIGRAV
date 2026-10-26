@@ -207,3 +207,36 @@ graph TD
   - DepEd Order No. 36, s. 2016 academic honors certification (*With Highest Honors* $\ge 98$, *With High Honors* $\ge 95$, *With Honors* $\ge 90$) with strict fail-check gate (no quarter rating below 75).
   - Print/PDF export stylesheet with class adviser and principal signature endorsements.
 
+---
+
+## 11. Slice 5 Architecture: Standalone Intro Page & Split-Screen Command Center (Concept A)
+
+### 11.1 Dedicated Intro & Landing Page (`#introPage`)
+- **Problem Solved:** Previously, the setup wizard was constrained to a popup modal inside the dashboard, which cluttered the interface and missed the opportunity to introduce the student to the platform's unique pedagogical framework and DepEd compliance.
+- **Implementation:**
+  - Replaced the modal-based onboarding with a full-viewport, dedicated **Intro Page (`#introPage`)** rendered with an obsidian dark theme (`#090A0F`), subtle emerald/cyan gradient glows, and glassmorphic elevation.
+  - Features a sticky top navbar with brand emblem `[λ] Bawi!`, an official `DepEd Table 4 Certified` badge pill, and a quick **"⚡ Explore Sample Demo"** button.
+  - For existing users or students exploring the platform, includes a high-contrast **"Return to Dashboard →"** action button.
+
+### 11.2 Split-Screen Command Center (Concept A)
+- **Left Showcase Pane (`.intro-left-pane`):**
+  - High-impact headline: *Turn "Bawi tayo next quarter" into an algorithmic reality.*
+  - Value description articulating the mathematical bridge between DepEd Table 4 step transmutation and closed-form reverse target solving.
+  - 4 interactive feature highlight cards:
+    1. **🎯 The Bawi Target Formula:** $Q_2 = (2 \times \text{Target}) - Q_1$, round-off aware.
+    2. **📊 DepEd Table 4 Step Matrix:** Official 41-bracket step transmutation engine.
+    3. **📜 DepEd Form 138-SHS:** 1-click certified progress report card with DO 36, s. 2016 honors awards.
+    4. **🔒 100% Local-First & Private:** Zero login, zero server tracking, instant local persistence.
+  - Official DepEd Order No. 8, s. 2015 policy citation card.
+- **Right Integrated Wizard Pane (`.intro-right-pane`):**
+  - Elevated glass console (`.intro-wizard-card`) housing the 2-step setup workflow:
+    - **Step 1:** Profile & Strand configuration with live honors tier preview.
+    - **Step 2:** Interactive multi-select subject checklist with real-time search, strand typical load prefill, and expandable custom institutional subject drawer.
+  - Clear **"Start with Blank Slate"** and **"Launch Academic OS 🚀"** actions with celebration chime.
+
+### 11.3 Lifecycle, Deep-Linking, & Navigation
+- Automatic trigger: First-time arrivals (empty workspace) are greeted immediately by the full-screen Intro Page.
+- Deep-linking support: Supports hash navigation (`#intro`, `#welcome`, `#step2`) for instant routing and testing.
+- Re-access: Accessible at any time from the desktop sidebar utility row (`📖` icon) or via the Command Palette (`⌘K` $\to$ *Welcome Intro & Setup Guide*).
+
+
