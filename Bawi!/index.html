@@ -12,14 +12,20 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 
-  <!-- Stylesheets -->
-  <link rel="stylesheet" href="css/tokens.css">
-  <link rel="stylesheet" href="css/style.css">
+  <!-- Stylesheets (with cache-busting query strings) -->
+  <link rel="stylesheet" href="css/tokens.css?v=2.1">
+  <link rel="stylesheet" href="css/style.css?v=2.1">
   <link rel="manifest" href="manifest.json">
   <script>
-    if ('serviceWorker' in navigator && window.location.protocol.startsWith('http')) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js').catch(() => {});
+    // Development Cache Buster: unregister any lingering service workers and purge caches
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(regs => {
+        for (const r of regs) r.unregister();
+      });
+    }
+    if ('caches' in window) {
+      caches.keys().then(names => {
+        for (const n of names) caches.delete(n);
       });
     }
   </script>
@@ -837,11 +843,11 @@
   <!-- Toast Notifications Container -->
   <div class="toast-container" id="toastContainer"></div>
 
-  <!-- Scripts -->
-  <script src="js/deped-data.js"></script>
-  <script src="js/audio.js"></script>
-  <script src="js/store.js"></script>
-  <script src="js/engine.js"></script>
-  <script src="js/app.js"></script>
+  <!-- Scripts (cache-busted) -->
+  <script src="js/deped-data.js?v=2.1"></script>
+  <script src="js/audio.js?v=2.1"></script>
+  <script src="js/store.js?v=2.1"></script>
+  <script src="js/engine.js?v=2.1"></script>
+  <script src="js/app.js?v=2.1"></script>
 </body>
 </html>
