@@ -201,12 +201,23 @@ window.LuminaApp = (function () {
     const leverageCard = document.getElementById('leverageAllocatorContent');
     const subjectsGrid = document.getElementById('dashboardSubjectsGrid');
 
+    const hasSubjects = summary.subjectsCalculated.length > 0;
+    const hasAnyGraded = summary.transmutedGeneralAverage > 0;
+
     // Rolling animation for general average
     if (gpaDisplay) {
-      animateRollingNumber(gpaDisplay, summary.transmutedGeneralAverage);
+      if (hasAnyGraded) {
+        animateRollingNumber(gpaDisplay, summary.transmutedGeneralAverage);
+      } else {
+        gpaDisplay.textContent = '--';
+      }
     }
     if (igDisplay) {
-      igDisplay.textContent = `${summary.unweightedInitialAverage.toFixed(2)}%`;
+      if (hasAnyGraded) {
+        igDisplay.textContent = `${summary.unweightedInitialAverage.toFixed(2)}%`;
+      } else {
+        igDisplay.textContent = '--%';
+      }
     }
 
     const semestralSum = LuminaEngine.calculateSemestralSummary();
@@ -223,45 +234,64 @@ window.LuminaApp = (function () {
 
     // Honors Distinction Badge
     if (honorsBadge) {
-      const tier = summary.honorsTier;
-      honorsBadge.className = `honors-badge-pill ${tier.badgeClass}`;
-      honorsBadge.innerHTML = `
-        <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:${tier.color}; box-shadow:0 0 8px ${tier.glow};"></span>
-        <span>${tier.title}</span>
-      `;
+      if (!hasSubjects) {
+        honorsBadge.className = 'honors-badge-pill badge-standing';
+        honorsBadge.innerHTML = '<span>No Subjects Enrolled</span>';
+      } else if (!hasAnyGraded) {
+        honorsBadge.className = 'honors-badge-pill badge-standing';
+        honorsBadge.innerHTML = '<span>Awaiting Graded Works</span>';
+      } else {
+        const tier = summary.honorsTier;
+        honorsBadge.className = `honors-badge-pill ${tier.badgeClass}`;
+        honorsBadge.innerHTML = `
+          <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:${tier.color}; box-shadow:0 0 8px ${tier.glow};"></span>
+          <span>${tier.title}</span>
+        `;
+      }
     }
 
     // Honors Proximity Delta Meter
     if (proximityMeter) {
-      const tier = summary.honorsTier;
-      if (tier.nextTier) {
-        const targetThreshold = tier.nextTier === 'With Highest Honors' ? 98.00 : (tier.nextTier === 'With High Honors' ? 95.00 : 90.00);
-        const currentAvg = summary.transmutedGeneralAverage;
-        const base = tier.nextTier === 'With Highest Honors' ? 95.00 : (tier.nextTier === 'With High Honors' ? 90.00 : 75.00);
-        const progressPct = Math.min(100, Math.max(0, ((currentAvg - base) / (targetThreshold - base)) * 100));
-
+      if (!hasSubjects) {
         proximityMeter.innerHTML = `
           <div class="proximity-delta-readout">
-            <strong>+${tier.deltaNeeded.toFixed(2)} pts</strong> needed to cross into <strong>${tier.nextTier}</strong>.
+            No subjects enrolled yet for <strong>${profile.semester}</strong>. Add your subjects to track honors standing and target GPA.
           </div>
           <div class="gauge-track">
-            <div class="gauge-fill" style="width: ${progressPct}%;"></div>
-          </div>
-          <div style="display:flex; justify-content:space-between; font-size:11px; color:var(--text-secondary); margin-top:8px; font-family:var(--font-mono);">
-            <span>Current: ${currentAvg.toFixed(2)}</span>
-            <span>Target: ${targetThreshold.toFixed(2)}</span>
+            <div class="gauge-fill" style="width: 0%;"></div>
           </div>
         `;
       } else {
-        proximityMeter.innerHTML = `
-          <div class="proximity-delta-readout">
-            <strong style="color:var(--status-opal-1);">Pinnacle Tier Reached!</strong>
-            Currently holding the highest DepEd academic distinction with a General Average of ${summary.transmutedGeneralAverage.toFixed(2)}.
-          </div>
-          <div class="gauge-track">
-            <div class="gauge-fill" style="width: 100%; background: linear-gradient(90deg, #38bdf8, #c084fc, #f472b6);"></div>
-          </div>
-        `;
+        const tier = summary.honorsTier;
+        if (tier.nextTier) {
+          const targetThreshold = tier.nextTier === 'With Highest Honors' ? 98.00 : (tier.nextTier === 'With High Honors' ? 95.00 : 90.00);
+          const currentAvg = summary.transmutedGeneralAverage;
+          const base = tier.nextTier === 'With Highest Honors' ? 95.00 : (tier.nextTier === 'With High Honors' ? 90.00 : 75.00);
+          const progressPct = Math.min(100, Math.max(0, ((currentAvg - base) / (targetThreshold - base)) * 100));
+
+          proximityMeter.innerHTML = `
+            <div class="proximity-delta-readout">
+              <strong>+${tier.deltaNeeded.toFixed(2)} pts</strong> needed to cross into <strong>${tier.nextTier}</strong>.
+            </div>
+            <div class="gauge-track">
+              <div class="gauge-fill" style="width: ${progressPct}%;"></div>
+            </div>
+            <div style="display:flex; justify-content:space-between; font-size:11px; color:var(--text-secondary); margin-top:8px; font-family:var(--font-mono);">
+              <span>Current: ${currentAvg.toFixed(2)}</span>
+              <span>Target: ${targetThreshold.toFixed(2)}</span>
+            </div>
+          `;
+        } else {
+          proximityMeter.innerHTML = `
+            <div class="proximity-delta-readout">
+              <strong style="color:var(--status-opal-1);">Pinnacle Tier Reached!</strong>
+              Currently holding the highest DepEd academic distinction with a General Average of ${summary.transmutedGeneralAverage.toFixed(2)}.
+            </div>
+            <div class="gauge-track">
+              <div class="gauge-fill" style="width: 100%; background: linear-gradient(90deg, #38bdf8, #c084fc, #f472b6);"></div>
+            </div>
+          `;
+        }
       }
     }
 
@@ -281,18 +311,45 @@ window.LuminaApp = (function () {
           </div>
           <div class="leverage-desc">${allocator.detailedMessage}</div>
         `;
+      } else {
+        leverageCard.innerHTML = `
+          <div class="leverage-header">
+            <div class="leverage-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+              Awaiting Enrolled Subjects
+            </div>
+          </div>
+          <div class="leverage-desc">Enroll your subjects for ${profile.semester} to receive AI high-leverage study allocations.</div>
+        `;
       }
     }
 
     // Subject Health Grid
     if (subjectsGrid) {
       subjectsGrid.innerHTML = '';
+      if (!hasSubjects) {
+        subjectsGrid.innerHTML = `
+          <div class="glass-card" style="grid-column: 1/-1; padding: 40px 24px; text-align: center; border-style: dashed; border-color: rgba(255,255,255,0.14);">
+            <div style="font-size: 32px; margin-bottom: 10px;">📚</div>
+            <div style="font-size: 16px; font-weight: 600; color: var(--text-primary); margin-bottom: 6px;">No Subjects Enrolled for ${profile.semester}</div>
+            <div style="font-size: 13.5px; color: var(--text-secondary); margin-bottom: 20px; max-width: 440px; margin-left: auto; margin-right: auto; line-height: 1.5;">
+              You have no subjects enrolled for this term. Add an official DepEd subject from the catalog, or load the STEM sample demo presets to test.
+            </div>
+            <div style="display:flex; justify-content:center; gap:12px; flex-wrap:wrap;">
+              <button class="btn-primary" onclick="LuminaApp.openAddSubjectModal()">+ Enroll First Subject</button>
+              <button class="btn-ghost" onclick="LuminaApp.resetToDemoData()">Load Sample Demo Data</button>
+            </div>
+          </div>
+        `;
+        return;
+      }
       summary.subjectsCalculated.forEach(calc => {
         const card = document.createElement('div');
         card.className = 'glass-card interactive mini-subject-card';
         card.onclick = () => navigateToSubject(calc.subject.id);
 
         const sparklineSvg = renderSparklineSvg(calc.sparkline);
+        const gradeText = calc.hasAssessments ? calc.transmutedGrade : '--';
 
         card.innerHTML = `
           <div class="mini-card-top">
@@ -300,7 +357,7 @@ window.LuminaApp = (function () {
               <div class="mini-subject-title">${calc.subject.name}</div>
               <div class="mini-subject-strand">${calc.subject.classification} • ${calc.subject.strand}</div>
             </div>
-            <div class="mini-subject-grade mono">${calc.transmutedGrade}</div>
+            <div class="mini-subject-grade mono">${gradeText}</div>
           </div>
           <div class="mini-sparkline-box">
             ${sparklineSvg}
@@ -455,9 +512,28 @@ window.LuminaApp = (function () {
   // --------------------------------------------------------------------------
 
   function renderSubjectDeepDive() {
-    const subject = LuminaStore.getActiveSubject();
     const container = document.getElementById('tab-subject-view');
-    if (!container || !subject) return;
+    if (!container) return;
+
+    const subject = LuminaStore.getActiveSubject();
+    const emptyWrap = document.getElementById('subjectWorkspaceEmpty');
+    const contentWrap = document.getElementById('subjectWorkspaceContent');
+
+    if (!subject) {
+      if (emptyWrap) {
+        emptyWrap.style.display = 'block';
+        const profile = LuminaStore.getProfile();
+        const titleEl = document.getElementById('emptyWorkspaceTitle');
+        const descEl = document.getElementById('emptyWorkspaceDesc');
+        if (titleEl) titleEl.textContent = `No Subjects Enrolled for ${profile.semester}`;
+        if (descEl) descEl.textContent = `You don't have any subjects enrolled for ${profile.semester}. Click below to add an official course from the DepEd curriculum catalog.`;
+      }
+      if (contentWrap) contentWrap.style.display = 'none';
+      return;
+    }
+
+    if (emptyWrap) emptyWrap.style.display = 'none';
+    if (contentWrap) contentWrap.style.display = 'block';
 
     const activeQ = LuminaStore.getActiveQuarter();
     const assessments = LuminaStore.getAssessments(subject.id, activeQ);
@@ -476,11 +552,17 @@ window.LuminaApp = (function () {
     if (btnQ2) btnQ2.classList.toggle('active', activeQ === 'Quarter 2');
 
     if (statsBar) {
-      let honorsBadgeText = 'Passing';
+      const hasData = calc && calc.hasAssessments;
+      const tGrade = hasData ? (calc.transmutedGrade || 0) : null;
+      let honorsBadgeText = 'No Entries Yet';
       let honorsBadgeClass = 'badge-standing';
-      let gradeColor = 'var(--text-primary)';
-      const tGrade = calc.transmutedGrade || 0;
-      if (tGrade >= 98) {
+      let gradeColor = 'var(--text-secondary)';
+
+      if (!hasData) {
+        honorsBadgeText = 'No Entries Yet';
+        honorsBadgeClass = 'badge-standing';
+        gradeColor = 'var(--text-secondary)';
+      } else if (tGrade >= 98) {
         honorsBadgeText = 'Highest Honors';
         honorsBadgeClass = 'badge-highest-honors';
         gradeColor = 'var(--status-opal-1)';
@@ -504,7 +586,9 @@ window.LuminaApp = (function () {
 
       const targetVal = subject.targetGrade || 95;
       let targetDeltaHtml = '';
-      if (tGrade >= targetVal) {
+      if (!hasData) {
+        targetDeltaHtml = `<span class="stat-sub text-tertiary">Awaiting ${activeQ} entries</span>`;
+      } else if (tGrade >= targetVal) {
         const diff = tGrade - targetVal;
         targetDeltaHtml = `<span class="stat-sub text-emerald">✓ On Track (${diff >= 0 ? '+' : ''}${diff} pts)</span>`;
       } else {
@@ -514,12 +598,14 @@ window.LuminaApp = (function () {
       const wwCount = calc.ww ? calc.ww.count : 0;
       const ptCount = calc.pt ? calc.pt.count : 0;
       const qaCount = calc.qa ? calc.qa.count : 0;
+      const displayTG = hasData ? tGrade : '--';
+      const displayIG = hasData ? `${calc.effectiveInitialGrade}` : '--';
 
       statsBar.innerHTML = `
         <div class="stat-item hero-stat">
           <span class="label">Transmuted Grade</span>
           <div class="stat-val-row">
-            <span class="val hero-val" style="color:${gradeColor};">${tGrade}</span>
+            <span class="val hero-val" style="color:${gradeColor};">${displayTG}</span>
             <span class="honors-badge-pill ${honorsBadgeClass}" style="font-size:11px; padding:3px 10px;">${honorsBadgeText}</span>
           </div>
           <span class="stat-sub">Official DepEd Table 4</span>
@@ -528,7 +614,7 @@ window.LuminaApp = (function () {
         <div class="stat-item">
           <span class="label">Initial Grade (Raw)</span>
           <div class="stat-val-row">
-            <span class="val">${calc.effectiveInitialGrade}<span class="unit">%</span></span>
+            <span class="val">${displayIG}<span class="unit">%</span></span>
           </div>
           <span class="stat-sub">Weighted Cumulative IG</span>
         </div>
@@ -1906,7 +1992,8 @@ window.LuminaApp = (function () {
       strand: catalogItem.strand || profile.trackStrand || 'STEM',
       weights,
       targetGrade,
-      isCustomWeight: isCustom
+      isCustomWeight: isCustom,
+      semester: profile.semester || 'Semester 1'
     });
 
     closeModal(els.addSubjectModal);
@@ -2039,7 +2126,14 @@ window.LuminaApp = (function () {
     if (confirm(`Are you sure you want to delete ${subject.name}? All logged scores will be removed.`)) {
       LuminaStore.deleteSubject(subject.id);
       showToast(`Deleted ${subject.name}`);
-      switchTab('pipeline');
+      const remaining = LuminaStore.getSubjects();
+      if (remaining.length > 0) {
+        navigateToSubject(remaining[0].id);
+      } else {
+        renderSubjectDeepDive();
+        renderDashboard();
+        renderPipeline();
+      }
     }
   }
 
@@ -2160,11 +2254,29 @@ window.LuminaApp = (function () {
     reader.readAsText(file);
   }
 
-  function resetToDemoData() {
-    if (confirm('Reset application to standard STEM demo subjects and scores?')) {
-      LuminaStore.resetToDemo();
-      showToast('Reset to demo records');
+  function resetToBlankState() {
+    if (confirm('Clear all subjects, scores, and planner tasks to start with a fresh blank state?')) {
+      LuminaStore.resetToBlank();
+      showToast('Reset to blank slate');
       closeAllModals();
+      renderGlobalHeaderBadges();
+      renderDashboard();
+      renderPipeline();
+      renderSubjectDeepDive();
+      renderPlanner();
+    }
+  }
+
+  function resetToDemoData() {
+    if (confirm('Load sample DepEd Grade 11 STEM demo data (5 subjects and assessment logs)?')) {
+      LuminaStore.resetToDemo();
+      showToast('Loaded sample demo records');
+      closeAllModals();
+      renderGlobalHeaderBadges();
+      renderDashboard();
+      renderPipeline();
+      renderSubjectDeepDive();
+      renderPlanner();
     }
   }
 
@@ -2471,6 +2583,7 @@ window.LuminaApp = (function () {
     exportDataFile,
     importDataFile,
     resetToDemoData,
+    resetToBlankState,
     showToast,
     setSimSliderScore,
     setEmbeddedSimCategory,

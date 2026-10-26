@@ -66,12 +66,13 @@ window.LuminaEngine = (function () {
     if (hasQA) activeWeight += subject.weights.qa;
 
     // Running performance rate (pace) to avoid false-failing when QA is pending
-    const runningRate = activeWeight > 0 ? (totalRawInitialGrade / activeWeight) : 0;
+    const hasAssessments = activeWeight > 0;
+    const runningRate = hasAssessments ? (totalRawInitialGrade / activeWeight) : 0;
 
     // Effective Initial Grade for Display & Transmutation:
     // If exam is completed, use actual total. If exam is pending, project based on running rate.
     const effectiveInitialGrade = hasQA ? totalRawInitialGrade : runningRate;
-    const transmutedGrade = LuminaDepEd.initialToTransmuted(effectiveInitialGrade);
+    const transmutedGrade = hasAssessments ? LuminaDepEd.initialToTransmuted(effectiveInitialGrade) : 0;
 
     // Target Grade comparison
     const profile = LuminaStore.getProfile();
@@ -88,6 +89,7 @@ window.LuminaEngine = (function () {
 
     return {
       subject,
+      hasAssessments,
       hasWW,
       hasPT,
       hasQA,
@@ -174,11 +176,22 @@ window.LuminaEngine = (function () {
     }
 
     const calculated = subjects.map(s => calculateSubject(s));
-    const totalTG = calculated.reduce((acc, c) => acc + c.transmutedGrade, 0);
-    const totalIG = calculated.reduce((acc, c) => acc + c.effectiveInitialGrade, 0);
+    const graded = calculated.filter(c => c.hasAssessments);
+    if (graded.length === 0) {
+      return {
+        transmutedGeneralAverage: 0,
+        unweightedInitialAverage: 0,
+        honorsTier: LuminaDepEd.getHonorsTier(0),
+        subjectCount: subjects.length,
+        subjectsCalculated: calculated
+      };
+    }
 
-    const generalAverage = +(totalTG / calculated.length).toFixed(2);
-    const unweightedInitial = +(totalIG / calculated.length).toFixed(2);
+    const totalTG = graded.reduce((acc, c) => acc + c.transmutedGrade, 0);
+    const totalIG = graded.reduce((acc, c) => acc + c.effectiveInitialGrade, 0);
+
+    const generalAverage = +(totalTG / graded.length).toFixed(2);
+    const unweightedInitial = +(totalIG / graded.length).toFixed(2);
     const honorsTier = LuminaDepEd.getHonorsTier(generalAverage);
 
     return {
@@ -503,10 +516,28 @@ window.LuminaEngine = (function () {
     const q1Calc = calculateSubject(subject, q1Assessments);
     const q2Calc = calculateSubject(subject, q2Assessments);
 
-    const q1Transmuted = q1Calc ? q1Calc.transmutedGrade : 75;
-    const q2Transmuted = q2Calc ? q2Calc.transmutedGrade : null;
+    const q1Transmuted = q1Calc && q1Calc.hasAssessments ? q1Calc.transmutedGrade : 75;
+    const q2Transmuted = q2Calc && q2Calc.hasAssessments ? q2Calc.transmutedGrade : null;
     const hasQ1Data = q1Assessments.length > 0;
     const hasQ2Data = q2Assessments.length > 0;
+
+    if (!hasQ1Data) {
+      return {
+        subject,
+        target,
+        q1Transmuted: '--',
+        q2Transmuted: q2Transmuted || '--',
+        hasQ1Data: false,
+        hasQ2Data,
+        requiredQ2: target,
+        requiredQ2Initial: LuminaDepEd.transmutedToMinInitial(target),
+        semestralFinal: '--',
+        status: 'achievable',
+        headline: `Aim for ${target} in Quarter 1`,
+        description: `No Quarter 1 assessments recorded yet for <strong>${subject.name}</strong>. Aim for at least <strong>${target}</strong> in Quarter 1 to establish a solid foundation for the semester.`,
+        badgeClass: 'badge-honors'
+      };
+    }
 
     // Required Q2 grade: (2 * Target) - Q1
     const requiredQ2 = (2 * target) - q1Transmuted;
@@ -572,9 +603,17 @@ window.LuminaEngine = (function () {
     const subjects = LuminaStore.getSubjects();
     if (subjects.length === 0) return null;
 
-    const semestralSubjects = subjects.map(s => calculateSemestralGrade(s.id));
-    const totalSemFinal = semestralSubjects.reduce((acc, s) => acc + (s ? s.semestralFinal : 75), 0);
-    const semestralAverage = +(totalSemFinal / semestralSubjects.length).toFixed(2);
+    const semestralSubjects = subjects.map(s => calculateSemestralGrade(s.id)).filter(Boolean);
+    const graded = semestralSubjects.filter(s => s.hasQ1 || s.hasQ2);
+    if (graded.length === 0) {
+      return {
+        semestralAverage: '--',
+        honorsTier: LuminaDepEd.getHonorsTier(0),
+        subjects: semestralSubjects
+      };
+    }
+    const totalSemFinal = graded.reduce((acc, s) => acc + s.semestralFinal, 0);
+    const semestralAverage = +(totalSemFinal / graded.length).toFixed(2);
     const honorsTier = LuminaDepEd.getHonorsTier(semestralAverage);
 
     return {

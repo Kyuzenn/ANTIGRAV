@@ -13,8 +13,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 
   <!-- Stylesheets (with cache-busting query strings) -->
-  <link rel="stylesheet" href="css/tokens.css?v=2.6">
-  <link rel="stylesheet" href="css/style.css?v=2.6">
+  <link rel="stylesheet" href="css/tokens.css?v=2.7">
+  <link rel="stylesheet" href="css/style.css?v=2.7">
   <link rel="manifest" href="manifest.json">
   <script>
     // Development Cache Buster: unregister any lingering service workers and purge caches
@@ -244,6 +244,19 @@
            Tab 3: Dynamic Subject Deep-Dive (Tri-Pane Gradebook)
            =================================================================== -->
       <section class="tab-view" id="tab-subject-view">
+        <div id="subjectWorkspaceEmpty" style="display:none; padding:60px 24px; text-align:center; max-width:560px; margin:40px auto; border-style:dashed; border-color:rgba(255,255,255,0.12);" class="glass-card">
+          <div style="font-size: 36px; margin-bottom: 12px;">📚</div>
+          <h2 style="font-size: 18px; font-weight: 600; color: var(--text-primary); margin-bottom: 8px;" id="emptyWorkspaceTitle">No Subjects Enrolled for Current Semester</h2>
+          <p style="font-size: 13.5px; color: var(--text-secondary); margin-bottom: 20px; line-height: 1.5;" id="emptyWorkspaceDesc">
+            You don't have any subjects enrolled for this semester. Click below to add an official course from the DepEd curriculum catalog.
+          </p>
+          <div style="display:flex; justify-content:center; gap:12px; flex-wrap:wrap;">
+            <button class="btn-primary" onclick="LuminaApp.openAddSubjectModal()">+ Enroll Subject</button>
+            <button class="btn-ghost" onclick="LuminaApp.switchTab('pipeline')">View All Subjects</button>
+          </div>
+        </div>
+
+        <div id="subjectWorkspaceContent">
         <div class="subject-workspace-header">
           <div class="breadcrumb-nav">
             <a onclick="LuminaApp.switchTab('pipeline')">Pipeline</a>
@@ -259,7 +272,7 @@
                   Quarter 1
                 </button>
                 <button class="quarter-tab-btn" id="btnQuarter2" onclick="LuminaApp.setSubjectQuarter('Quarter 2')">
-                  Quarter 2 <span class="bawi-badge">Bawi</span>
+                  Quarter 2
                 </button>
               </div>
             </div>
@@ -558,6 +571,7 @@
             </div>
           </div>
         </div>
+        </div> <!-- end #subjectWorkspaceContent -->
       </section>
 
     </main>
@@ -835,11 +849,11 @@
             <div class="term-sem-title">Semester 1</div>
             <button class="term-quarter-btn" id="termBtn-sem1-q1" onclick="LuminaApp.selectAcademicTerm('Semester 1', 'Quarter 1')">
               <span>Quarter 1</span>
-              <span class="category-tag">Midterm</span>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="opacity:0.4;"><polyline points="9 18 15 12 9 6"/></svg>
             </button>
             <button class="term-quarter-btn" id="termBtn-sem1-q2" onclick="LuminaApp.selectAcademicTerm('Semester 1', 'Quarter 2')">
               <span>Quarter 2</span>
-              <span class="bawi-badge">Bawi Target</span>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="opacity:0.4;"><polyline points="9 18 15 12 9 6"/></svg>
             </button>
           </div>
           <!-- Semester 2 -->
@@ -847,11 +861,11 @@
             <div class="term-sem-title">Semester 2</div>
             <button class="term-quarter-btn" id="termBtn-sem2-q1" onclick="LuminaApp.selectAcademicTerm('Semester 2', 'Quarter 1')">
               <span>Quarter 1 (Q3)</span>
-              <span class="category-tag">Midterm</span>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="opacity:0.4;"><polyline points="9 18 15 12 9 6"/></svg>
             </button>
             <button class="term-quarter-btn" id="termBtn-sem2-q2" onclick="LuminaApp.selectAcademicTerm('Semester 2', 'Quarter 2')">
               <span>Quarter 2 (Q4)</span>
-              <span class="bawi-badge">Final Bawi</span>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="opacity:0.4;"><polyline points="9 18 15 12 9 6"/></svg>
             </button>
           </div>
         </div>
@@ -945,7 +959,8 @@
               Import JSON
               <input type="file" accept=".json" style="display:none;" onchange="LuminaApp.importDataFile(event)">
             </label>
-            <button class="btn-ghost" style="color:var(--status-rose); border-color:rgba(244,63,94,0.3);" onclick="LuminaApp.resetToDemoData()">Reset to Demo</button>
+            <button class="btn-ghost" style="color:var(--status-rose); border-color:rgba(244,63,94,0.3);" onclick="LuminaApp.resetToBlankState()">Clear All (Blank State)</button>
+            <button class="btn-ghost" onclick="LuminaApp.resetToDemoData()">Load Sample Demo</button>
           </div>
         </div>
       </div>
@@ -981,10 +996,10 @@
   <div class="toast-container" id="toastContainer"></div>
 
   <!-- Scripts (cache-busted) -->
-  <script src="js/deped-data.js?v=2.6"></script>
-  <script src="js/audio.js?v=2.6"></script>
-  <script src="js/store.js?v=2.6"></script>
-  <script src="js/engine.js?v=2.6"></script>
-  <script src="js/app.js?v=2.6"></script>
+  <script src="js/deped-data.js?v=2.7"></script>
+  <script src="js/audio.js?v=2.7"></script>
+  <script src="js/store.js?v=2.7"></script>
+  <script src="js/engine.js?v=2.7"></script>
+  <script src="js/app.js?v=2.7"></script>
 </body>
 </html>

@@ -7,10 +7,24 @@
 window.LuminaStore = (function () {
   'use strict';
 
-  const STORAGE_KEY = 'lumina_shs_state_v2';
+  const STORAGE_KEY = 'bawi_shs_state_v1';
   const listeners = new Set();
 
   const DEFAULT_PROFILE = {
+    studentName: 'Student',
+    gradeLevel: 'Grade 11',
+    trackStrand: 'STEM',
+    schoolYear: '2026-2027',
+    semester: 'Semester 1',
+    quarter: 'Quarter 1',
+    targetGeneralAverage: 95.00
+  };
+
+  const DEFAULT_SUBJECTS = [];
+  const DEFAULT_ASSESSMENTS = [];
+  const DEFAULT_TASKS = [];
+
+  const DEMO_PROFILE = {
     studentName: 'Maria Santos',
     gradeLevel: 'Grade 11',
     trackStrand: 'STEM',
@@ -20,7 +34,7 @@ window.LuminaStore = (function () {
     targetGeneralAverage: 95.00
   };
 
-  const DEFAULT_SUBJECTS = [
+  const DEMO_SUBJECTS = [
     {
       id: 'subj-gen-chem-1',
       name: 'General Chemistry 1',
@@ -30,6 +44,7 @@ window.LuminaStore = (function () {
       targetGrade: 95,
       isCustomWeight: false,
       archived: false,
+      semester: 'Semester 1',
       quarter: 'Quarter 1'
     },
     {
@@ -41,6 +56,7 @@ window.LuminaStore = (function () {
       targetGrade: 96,
       isCustomWeight: false,
       archived: false,
+      semester: 'Semester 1',
       quarter: 'Quarter 1'
     },
     {
@@ -52,6 +68,7 @@ window.LuminaStore = (function () {
       targetGrade: 95,
       isCustomWeight: false,
       archived: false,
+      semester: 'Semester 1',
       quarter: 'Quarter 1'
     },
     {
@@ -63,6 +80,7 @@ window.LuminaStore = (function () {
       targetGrade: 94,
       isCustomWeight: false,
       archived: false,
+      semester: 'Semester 1',
       quarter: 'Quarter 1'
     },
     {
@@ -74,11 +92,12 @@ window.LuminaStore = (function () {
       targetGrade: 95,
       isCustomWeight: false,
       archived: false,
+      semester: 'Semester 1',
       quarter: 'Quarter 1'
     }
   ];
 
-  const DEFAULT_ASSESSMENTS = [
+  const DEMO_ASSESSMENTS = [
     // General Chemistry 1
     {
       id: 'entry-chem-ww1',
@@ -343,7 +362,7 @@ window.LuminaStore = (function () {
     }
   ];
 
-  const DEFAULT_TASKS = [
+  const DEMO_TASKS = [
     {
       id: 'task-1',
       subjectId: 'subj-basic-calculus',
@@ -391,7 +410,7 @@ window.LuminaStore = (function () {
     subjects: JSON.parse(JSON.stringify(DEFAULT_SUBJECTS)),
     assessments: JSON.parse(JSON.stringify(DEFAULT_ASSESSMENTS)),
     tasks: JSON.parse(JSON.stringify(DEFAULT_TASKS)),
-    activeSubjectId: 'subj-gen-chem-1',
+    activeSubjectId: null,
     activeTab: 'overview', // 'overview', 'subjects', 'planner', 'matrix'
     activeQuarter: 'Quarter 1'
   };
@@ -401,11 +420,11 @@ window.LuminaStore = (function () {
       const stored = localStorage.getItem(STORAGE_KEY);
       if (stored) {
         const parsed = JSON.parse(stored);
-        if (parsed && parsed.subjects && parsed.subjects.length > 0) {
+        if (parsed) {
           state.profile = Object.assign({}, DEFAULT_PROFILE, parsed.profile || {});
-          state.subjects = parsed.subjects;
-          state.assessments = parsed.assessments || [];
-          state.tasks = parsed.tasks && parsed.tasks.length > 0 ? parsed.tasks : JSON.parse(JSON.stringify(DEFAULT_TASKS));
+          state.subjects = Array.isArray(parsed.subjects) ? parsed.subjects : [];
+          state.assessments = Array.isArray(parsed.assessments) ? parsed.assessments : [];
+          state.tasks = Array.isArray(parsed.tasks) ? parsed.tasks : [];
           state.activeSubjectId = parsed.activeSubjectId || (state.subjects[0] ? state.subjects[0].id : null);
           state.activeTab = parsed.activeTab || 'overview';
           state.activeQuarter = parsed.activeQuarter || state.profile.quarter || 'Quarter 1';
@@ -495,11 +514,21 @@ window.LuminaStore = (function () {
       state.activeQuarter = quarter;
       state.profile.quarter = quarter;
     }
+    const semSubjects = getSubjects(semester);
+    if (semSubjects.length > 0) {
+      const stillValid = semSubjects.some(s => s.id === state.activeSubjectId);
+      if (!stillValid) {
+        state.activeSubjectId = semSubjects[0].id;
+      }
+    } else {
+      state.activeSubjectId = null;
+    }
     persist();
   }
 
-  function getSubjects() {
-    return state.subjects.filter(s => !s.archived);
+  function getSubjects(semester) {
+    const sem = semester || state.profile.semester || 'Semester 1';
+    return state.subjects.filter(s => !s.archived && (s.semester || 'Semester 1') === sem);
   }
 
   function getAllSubjects() {
@@ -511,8 +540,11 @@ window.LuminaStore = (function () {
   }
 
   function getActiveSubject() {
-    if (!state.activeSubjectId && state.subjects.length > 0) {
-      state.activeSubjectId = state.subjects[0].id;
+    const currentSubjects = getSubjects();
+    if (currentSubjects.length === 0) return null;
+    const exists = currentSubjects.find(s => s.id === state.activeSubjectId);
+    if (!exists) {
+      state.activeSubjectId = currentSubjects[0].id;
     }
     return getSubject(state.activeSubjectId);
   }
@@ -533,7 +565,8 @@ window.LuminaStore = (function () {
       targetGrade: Number(data.targetGrade) || 95,
       isCustomWeight: !!data.isCustomWeight,
       archived: false,
-      quarter: state.activeQuarter
+      semester: data.semester || state.profile.semester || 'Semester 1',
+      quarter: state.activeQuarter || 'Quarter 1'
     };
     state.subjects.push(newSubject);
     state.activeSubjectId = id;
@@ -552,20 +585,26 @@ window.LuminaStore = (function () {
   function deleteSubject(id) {
     state.subjects = state.subjects.filter(s => s.id !== id);
     state.assessments = state.assessments.filter(a => a.subjectId !== id);
+    const semSubjects = getSubjects();
     if (state.activeSubjectId === id) {
-      state.activeSubjectId = state.subjects[0] ? state.subjects[0].id : null;
+      state.activeSubjectId = semSubjects[0] ? semSubjects[0].id : null;
     }
     persist();
   }
 
   function getAssessments(subjectId, quarter) {
+    const targetQ = quarter || state.activeQuarter || 'Quarter 1';
     return state.assessments.filter(a => {
       if (a.subjectId !== subjectId) return false;
-      if (quarter) {
-        return a.quarter === quarter || (!a.quarter && quarter === 'Quarter 1');
-      }
-      return true;
+      return (a.quarter || 'Quarter 1') === targetQ;
     });
+  }
+
+  function getAllAssessments(subjectId) {
+    if (subjectId) {
+      return state.assessments.filter(a => a.subjectId === subjectId);
+    }
+    return state.assessments;
   }
 
   function addAssessment(entry) {
@@ -649,10 +688,22 @@ window.LuminaStore = (function () {
   }
 
   function resetToDemo() {
-    state.profile = JSON.parse(JSON.stringify(DEFAULT_PROFILE));
-    state.subjects = JSON.parse(JSON.stringify(DEFAULT_SUBJECTS));
-    state.assessments = JSON.parse(JSON.stringify(DEFAULT_ASSESSMENTS));
+    state.profile = JSON.parse(JSON.stringify(DEMO_PROFILE));
+    state.subjects = JSON.parse(JSON.stringify(DEMO_SUBJECTS));
+    state.assessments = JSON.parse(JSON.stringify(DEMO_ASSESSMENTS));
+    state.tasks = JSON.parse(JSON.stringify(DEMO_TASKS));
     state.activeSubjectId = 'subj-gen-chem-1';
+    state.activeTab = 'overview';
+    state.activeQuarter = 'Quarter 1';
+    persist();
+  }
+
+  function resetToBlank() {
+    state.profile = JSON.parse(JSON.stringify(DEFAULT_PROFILE));
+    state.subjects = [];
+    state.assessments = [];
+    state.tasks = [];
+    state.activeSubjectId = null;
     state.activeTab = 'overview';
     state.activeQuarter = 'Quarter 1';
     persist();
@@ -706,6 +757,7 @@ window.LuminaStore = (function () {
     updateSubject,
     deleteSubject,
     getAssessments,
+    getAllAssessments,
     addAssessment,
     updateAssessment,
     deleteAssessment,
@@ -715,6 +767,7 @@ window.LuminaStore = (function () {
     toggleTask,
     deleteTask,
     resetToDemo,
+    resetToBlank,
     exportJSON,
     importJSON,
     subscribe
