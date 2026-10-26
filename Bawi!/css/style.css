@@ -18,8 +18,8 @@ html, body {
   background-color: var(--canvas-base);
   color: var(--text-primary);
   font-family: var(--font-sans);
-  font-size: 15px;
-  line-height: 1.5;
+  font-size: 16px;
+  line-height: 1.6;
   font-weight: 400;
   min-height: 100vh;
   letter-spacing: -0.01em;
@@ -323,24 +323,24 @@ h1, h2, h3, h4, .font-display {
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
-  margin-bottom: 24px;
+  margin-bottom: 28px;
   gap: 16px;
 }
 
 .section-title {
-  font-size: 28px;
-  font-weight: 400;
+  font-size: 32px;
+  font-weight: 500;
   letter-spacing: -0.025em;
   color: var(--text-primary);
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
 }
 
 .section-subtitle {
-  font-size: 14px;
+  font-size: 16px;
   color: var(--text-secondary);
-  margin-top: 4px;
+  margin-top: 6px;
   font-weight: 400;
 }
 
@@ -396,7 +396,7 @@ h1, h2, h3, h4, .font-display {
 }
 
 .hero-metric-label {
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -409,21 +409,21 @@ h1, h2, h3, h4, .font-display {
 .hero-gpa-number-row {
   display: flex;
   align-items: baseline;
-  gap: 16px;
-  margin: 16px 0 20px;
+  gap: 18px;
+  margin: 18px 0 24px;
 }
 
 .display-hero-gpa {
   font-family: var(--font-display);
-  font-size: 48px;
-  font-weight: 300;
+  font-size: 60px;
+  font-weight: 400;
   line-height: 1;
   letter-spacing: -0.04em;
   color: var(--text-primary);
 }
 
 .initial-gpa-readout {
-  font-size: 13px;
+  font-size: 16px;
   color: var(--text-secondary);
   font-family: var(--font-mono);
 }
@@ -436,10 +436,10 @@ h1, h2, h3, h4, .font-display {
 .honors-badge-pill {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 6px 14px;
+  gap: 10px;
+  padding: 8px 18px;
   border-radius: var(--radius-pill);
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 500;
   letter-spacing: 0.01em;
   border: 1px solid var(--border-hairline);
@@ -629,9 +629,9 @@ h1, h2, h3, h4, .font-display {
   background: var(--glass-card);
   border: 1px solid var(--border-hairline);
   color: var(--text-secondary);
-  padding: 4px 12px;
+  padding: 6px 16px;
   border-radius: var(--radius-pill);
-  font-size: 12px;
+  font-size: 14px;
   cursor: pointer;
   transition: var(--spring-micro);
 }
@@ -652,20 +652,20 @@ h1, h2, h3, h4, .font-display {
   color: var(--text-inverse);
   border: none;
   font-family: var(--font-sans);
-  font-size: 12px;
-  font-weight: 500;
-  padding: 6px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 10px 22px;
   border-radius: var(--radius-pill);
   cursor: pointer;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   transition: var(--spring-micro);
 }
 
 .btn-primary:hover {
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(255, 255, 255, 0.2);
+  box-shadow: 0 4px 14px rgba(255, 255, 255, 0.22);
 }
 
 .btn-ghost {
@@ -673,13 +673,13 @@ h1, h2, h3, h4, .font-display {
   color: var(--text-secondary);
   border: 1px solid var(--border-hairline);
   font-family: var(--font-sans);
-  font-size: 12px;
-  padding: 6px 14px;
+  font-size: 14px;
+  padding: 9px 18px;
   border-radius: var(--radius-pill);
   cursor: pointer;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   transition: var(--spring-micro);
 }
 
@@ -691,12 +691,13 @@ h1, h2, h3, h4, .font-display {
 
 .pipeline-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+  gap: 24px;
 }
 
 .pipeline-subject-card {
-  padding: 24px;
+  padding: 28px;
+  border-radius: var(--radius-xl);
   cursor: pointer;
 }
 
@@ -708,11 +709,11 @@ h1, h2, h3, h4, .font-display {
 }
 
 .pipeline-subject-title {
-  font-size: 16px;
-  font-weight: 400;
+  font-size: 20px;
+  font-weight: 500;
   color: var(--text-primary);
   letter-spacing: -0.015em;
-  margin-bottom: 4px;
+  margin-bottom: 6px;
 }
 
 .pipeline-meta-row {
@@ -722,10 +723,11 @@ h1, h2, h3, h4, .font-display {
 }
 
 .category-tag {
-  font-size: 10px;
+  font-size: 12px;
+  font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  padding: 2px 6px;
+  padding: 3px 8px;
   border-radius: var(--radius-xs);
   background: var(--glass-subtle);
   border: 1px solid var(--border-subtle);
@@ -965,11 +967,11 @@ h1, h2, h3, h4, .font-display {
 }
 
 .col-tag {
-  font-size: 11px;
-  font-weight: 500;
+  font-size: 13px;
+  font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  padding: 2px 8px;
+  padding: 4px 10px;
   border-radius: var(--radius-pill);
 }
 
@@ -993,7 +995,7 @@ h1, h2, h3, h4, .font-display {
 
 .col-weight-pill {
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: 13px;
   color: var(--text-secondary);
 }
 
@@ -1005,40 +1007,41 @@ h1, h2, h3, h4, .font-display {
 
 .col-score-fraction {
   font-family: var(--font-mono);
-  font-size: 20px;
+  font-size: 26px;
   font-weight: 400;
   color: var(--text-primary);
 }
 
 .col-score-fraction span {
-  font-size: 13px;
+  font-size: 16px;
   color: var(--text-secondary);
 }
 
 .col-percentage-badge {
   font-family: var(--font-mono);
-  font-size: 13px;
+  font-size: 15px;
   color: var(--text-secondary);
 }
 
 .col-action-bar {
-  padding: 12px 20px;
+  padding: 14px 20px;
   border-bottom: 1px solid var(--border-subtle);
 }
 
 .btn-add-entry {
   width: 100%;
-  padding: 7px;
+  padding: 11px 16px;
   background: var(--glass-subtle);
   border: 1px dashed var(--border-hairline);
   color: var(--text-secondary);
   border-radius: var(--radius-sm);
-  font-size: 12px;
+  font-size: 14px;
+  font-weight: 500;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: 8px;
   transition: var(--spring-micro);
 }
 
@@ -1793,15 +1796,15 @@ h1, h2, h3, h4, .font-display {
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    width: 270px;
-    min-width: 270px;
+    width: 290px;
+    min-width: 290px;
     height: 100%;
     overflow-y: auto;
     position: relative;
     flex-shrink: 0;
     background: var(--canvas-surface);
     border-right: 1px solid var(--border-hairline);
-    padding: 24px 18px;
+    padding: 28px 20px;
     z-index: 95;
     box-shadow: var(--shadow-subtle);
   }
@@ -1819,8 +1822,8 @@ h1, h2, h3, h4, .font-display {
     min-width: 0;
     height: 100%;
     overflow-y: auto;
-    padding: 40px 52px 100px;
-    max-width: 1440px;
+    padding: 44px 60px 120px;
+    max-width: 1560px;
     margin: 0 auto;
     width: 100%;
   }
@@ -1842,10 +1845,10 @@ h1, h2, h3, h4, .font-display {
 .sidebar-brand-title {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   font-family: var(--font-display);
-  font-size: 20px;
-  font-weight: 500;
+  font-size: 24px;
+  font-weight: 600;
   letter-spacing: -0.02em;
   color: var(--text-primary);
   cursor: pointer;
@@ -1857,11 +1860,11 @@ h1, h2, h3, h4, .font-display {
 }
 
 .sidebar-semester-toggle {
-  font-size: 11px;
+  font-size: 13px;
   color: var(--text-secondary);
   background: var(--glass-card);
   border: 1px solid var(--border-subtle);
-  padding: 4px 10px;
+  padding: 5px 12px;
   border-radius: var(--radius-pill);
   cursor: pointer;
   transition: var(--spring-micro);
@@ -1879,22 +1882,22 @@ h1, h2, h3, h4, .font-display {
 .sidebar-nav-list {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  margin-top: 10px;
+  gap: 8px;
+  margin-top: 14px;
 }
 
 .sidebar-nav-btn {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  padding: 10px 14px;
+  gap: 14px;
+  padding: 12px 16px;
   border-radius: var(--radius-md);
   border: 1px solid transparent;
   background: transparent;
   color: var(--text-secondary);
-  font-size: 13px;
-  font-weight: 400;
+  font-size: 15px;
+  font-weight: 500;
   cursor: pointer;
   transition: var(--spring-micro);
   text-align: left;
@@ -1914,10 +1917,10 @@ h1, h2, h3, h4, .font-display {
 }
 
 .sidebar-nav-btn.active {
-  background: rgba(52, 211, 153, 0.10);
-  border-color: rgba(52, 211, 153, 0.28);
+  background: rgba(52, 211, 153, 0.12);
+  border-color: rgba(52, 211, 153, 0.35);
   color: var(--text-primary);
-  font-weight: 500;
+  font-weight: 600;
 }
 
 .sidebar-nav-btn.active svg {
@@ -1925,9 +1928,9 @@ h1, h2, h3, h4, .font-display {
 }
 
 .sidebar-badge-count {
-  font-size: 11px;
+  font-size: 12px;
   font-family: var(--font-mono);
-  padding: 1px 6px;
+  padding: 2px 8px;
   border-radius: var(--radius-pill);
   background: var(--glass-card);
   color: var(--text-secondary);
@@ -1936,13 +1939,13 @@ h1, h2, h3, h4, .font-display {
 .sidebar-bottom {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  padding-top: 16px;
+  gap: 14px;
+  padding-top: 18px;
   border-top: 1px solid var(--border-hairline);
 }
 
 .sidebar-profile-card {
-  padding: 12px 14px;
+  padding: 14px 16px;
   background: var(--glass-card);
   border: 1px solid var(--border-hairline);
   border-radius: var(--radius-lg);
@@ -1963,8 +1966,8 @@ h1, h2, h3, h4, .font-display {
 }
 
 .sidebar-student-name {
-  font-size: 13px;
-  font-weight: 500;
+  font-size: 15px;
+  font-weight: 600;
   color: var(--text-primary);
 }
 
@@ -1972,16 +1975,16 @@ h1, h2, h3, h4, .font-display {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 11px;
+  font-size: 13px;
   color: var(--text-secondary);
 }
 
 .sidebar-target-pill {
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: 13px;
   color: var(--status-emerald);
   background: var(--status-emerald-bg);
-  padding: 2px 7px;
+  padding: 3px 9px;
   border-radius: var(--radius-pill);
   border: 1px solid rgba(52, 211, 153, 0.3);
   cursor: pointer;
@@ -2220,7 +2223,7 @@ h1, h2, h3, h4, .font-display {
 }
 
 .embedded-sim-title {
-  font-size: 20px;
+  font-size: 26px;
   font-weight: 500;
   color: var(--text-primary);
   letter-spacing: -0.02em;
@@ -2228,46 +2231,46 @@ h1, h2, h3, h4, .font-display {
 }
 
 .embedded-sim-subtitle {
-  font-size: 13px;
+  font-size: 16px;
   color: var(--text-secondary);
   line-height: 1.5;
   margin: 0;
-  max-width: 620px;
+  max-width: 680px;
 }
 
 .sim-target-header-control {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   flex-wrap: wrap;
-  background: rgba(0, 0, 0, 0.3);
-  padding: 6px 12px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.35);
+  padding: 8px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: var(--radius-pill);
 }
 
 .sim-target-label {
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 500;
   color: var(--text-secondary);
 }
 
 .sim-target-input {
-  width: 70px;
-  padding: 4px 8px;
-  font-size: 13px;
+  width: 80px;
+  padding: 6px 10px;
+  font-size: 16px;
   font-weight: 600;
   text-align: center;
   border-radius: 8px;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.18);
 }
 
 /* Beautiful Pill Chips */
 .sim-preset-chips {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   flex-wrap: wrap;
 }
 
@@ -2276,8 +2279,8 @@ h1, h2, h3, h4, .font-display {
   border: 1px solid rgba(255, 255, 255, 0.1);
   color: var(--text-secondary);
   border-radius: var(--radius-pill);
-  padding: 6px 14px;
-  font-size: 12px;
+  padding: 8px 18px;
+  font-size: 14px;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
@@ -2414,13 +2417,13 @@ h1, h2, h3, h4, .font-display {
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: var(--radius-md);
-  padding: 14px 12px;
+  padding: 18px 16px;
   cursor: pointer;
   text-align: left;
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
 }
 
 .sim-type-card:hover {
@@ -2443,14 +2446,14 @@ h1, h2, h3, h4, .font-display {
 }
 
 .sim-card-icon {
-  font-size: 18px;
+  font-size: 20px;
 }
 
 .sim-card-weight {
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 600;
   background: rgba(255, 255, 255, 0.08);
-  padding: 2px 7px;
+  padding: 3px 9px;
   border-radius: 6px;
   color: var(--text-secondary);
   font-family: var(--font-mono);
@@ -2462,22 +2465,22 @@ h1, h2, h3, h4, .font-display {
 }
 
 .sim-card-name {
-  font-size: 13px;
+  font-size: 16px;
   font-weight: 600;
   color: var(--text-primary);
   margin-top: 4px;
 }
 
 .sim-card-sub {
-  font-size: 11px;
+  font-size: 13px;
   color: var(--text-secondary);
-  line-height: 1.35;
+  line-height: 1.4;
 }
 
 /* Step 2: Items Row */
 .sim-items-input-row {
   display: flex;
-  gap: 14px;
+  gap: 16px;
   align-items: center;
   flex-wrap: wrap;
 }
@@ -2485,20 +2488,20 @@ h1, h2, h3, h4, .font-display {
 .sim-items-field {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
 }
 
 .sim-items-input {
-  width: 100px;
-  padding: 8px 12px;
-  font-size: 16px;
+  width: 110px;
+  padding: 10px 14px;
+  font-size: 18px;
   font-weight: 600;
   border-radius: var(--radius-sm);
   text-align: center;
 }
 
 .sim-items-suffix {
-  font-size: 12px;
+  font-size: 14px;
   color: var(--text-secondary);
 }
 
@@ -2510,7 +2513,7 @@ h1, h2, h3, h4, .font-display {
 
 .embedded-sim-result-card {
   flex: 1;
-  padding: 24px;
+  padding: 28px;
   background: var(--canvas-base);
   border: 1px solid var(--border-hairline);
   border-radius: var(--radius-xl);
@@ -2546,13 +2549,13 @@ h1, h2, h3, h4, .font-display {
 .sim-hero-score-box {
   display: flex;
   align-items: baseline;
-  gap: 8px;
-  margin: 10px 0 8px 0;
+  gap: 10px;
+  margin: 12px 0 10px 0;
 }
 
 .sim-hero-number {
-  font-size: 52px;
-  font-weight: 300;
+  font-size: 64px;
+  font-weight: 400;
   font-family: var(--font-display);
   line-height: 1;
   color: var(--text-primary);
@@ -2560,23 +2563,23 @@ h1, h2, h3, h4, .font-display {
 }
 
 .sim-hero-total {
-  font-size: 16px;
+  font-size: 20px;
   color: var(--text-secondary);
   font-family: var(--font-mono);
 }
 
 .sim-plain-english-msg {
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 500;
   color: var(--text-primary);
-  line-height: 1.45;
-  margin-bottom: 6px;
+  line-height: 1.5;
+  margin-bottom: 8px;
 }
 
 .sim-plain-english-sub {
-  font-size: 12px;
+  font-size: 14px;
   color: var(--text-secondary);
-  line-height: 1.4;
+  line-height: 1.45;
 }
 
 /* Interactive Slider Box */
