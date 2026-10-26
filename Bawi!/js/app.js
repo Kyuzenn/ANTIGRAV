@@ -459,26 +459,87 @@ window.LuminaApp = (function () {
     if (headerTitle) headerTitle.textContent = subject.name;
 
     if (statsBar) {
+      let honorsBadgeText = 'Passing';
+      let honorsBadgeClass = 'badge-standing';
+      let gradeColor = 'var(--text-primary)';
+      const tGrade = calc.transmutedGrade || 0;
+      if (tGrade >= 98) {
+        honorsBadgeText = 'Highest Honors';
+        honorsBadgeClass = 'badge-highest-honors';
+        gradeColor = 'var(--status-opal-1)';
+      } else if (tGrade >= 95) {
+        honorsBadgeText = 'High Honors';
+        honorsBadgeClass = 'badge-high-honors';
+        gradeColor = '#fbbf24';
+      } else if (tGrade >= 90) {
+        honorsBadgeText = 'With Honors';
+        honorsBadgeClass = 'badge-honors';
+        gradeColor = 'var(--status-emerald)';
+      } else if (tGrade >= 75) {
+        honorsBadgeText = 'Passing';
+        honorsBadgeClass = 'badge-standing';
+        gradeColor = 'var(--text-primary)';
+      } else {
+        honorsBadgeText = 'Needs Catch-Up';
+        honorsBadgeClass = 'badge-standing';
+        gradeColor = 'var(--status-rose)';
+      }
+
+      const targetVal = subject.targetGrade || 95;
+      let targetDeltaHtml = '';
+      if (tGrade >= targetVal) {
+        const diff = tGrade - targetVal;
+        targetDeltaHtml = `<span class="stat-sub text-emerald">✓ On Track (${diff >= 0 ? '+' : ''}${diff} pts)</span>`;
+      } else {
+        targetDeltaHtml = `<span class="stat-sub text-amber">Needs +${targetVal - tGrade} pts</span>`;
+      }
+
+      const wwCount = calc.ww ? calc.ww.count : 0;
+      const ptCount = calc.pt ? calc.pt.count : 0;
+      const qaCount = calc.qa ? calc.qa.count : 0;
+
       statsBar.innerHTML = `
-        <div class="stat-item">
+        <div class="stat-item hero-stat">
           <span class="label">Transmuted Grade</span>
-          <span class="val" style="color:var(--status-emerald);">${calc.transmutedGrade}</span>
+          <div class="stat-val-row">
+            <span class="val hero-val" style="color:${gradeColor};">${tGrade}</span>
+            <span class="honors-badge-pill ${honorsBadgeClass}" style="font-size:11px; padding:3px 10px;">${honorsBadgeText}</span>
+          </div>
+          <span class="stat-sub">Official DepEd Table 4</span>
         </div>
+
         <div class="stat-item">
-          <span class="label">Initial Grade</span>
-          <span class="val">Raw: ${calc.effectiveInitialGrade}</span>
+          <span class="label">Initial Grade (Raw)</span>
+          <div class="stat-val-row">
+            <span class="val">${calc.effectiveInitialGrade}<span class="unit">%</span></span>
+          </div>
+          <span class="stat-sub">Weighted Cumulative IG</span>
         </div>
+
         <div class="stat-item">
           <span class="label">Target Transmuted</span>
-          <span class="val">${subject.targetGrade || 95}</span>
+          <div class="stat-val-row">
+            <span class="val">${targetVal}</span>
+          </div>
+          ${targetDeltaHtml}
         </div>
+
         <div class="stat-item">
           <span class="label">Weight Finalized</span>
-          <span class="val">${calc.completedPercentage}%</span>
+          <div class="stat-val-row">
+            <span class="val">${calc.completedPercentage}%</span>
+          </div>
+          <div class="stat-progress-track">
+            <div class="stat-progress-fill" style="width: ${calc.completedPercentage}%;"></div>
+          </div>
         </div>
+
         <div class="stat-item">
           <span class="label">Total Entries</span>
-          <span class="val">${assessments.length}</span>
+          <div class="stat-val-row">
+            <span class="val">${assessments.length}</span>
+          </div>
+          <span class="stat-sub">${wwCount} WW • ${ptCount} PT • ${qaCount} QA</span>
         </div>
       `;
     }
