@@ -23,8 +23,8 @@ Bawi! transforms this emotional sentiment into an **actionable, algorithmic real
 ### 2.1 The Non-Linearity of DepEd Grading (DepEd Order No. 8, s. 2015)
 Under DepEd standards, senior high school grading differs fundamentally from simple percentage averages or traditional GPA scales:
 1. **Multi-Component Strand-Specific Weighting:** Scores in **Written Works (WW)**, **Performance Tasks (PT)**, and **Quarterly Assessment (QA)** carry distinct weights depending on the subject type:
-   - **Math & Science (STEM / Specialized):** WW 35% | PT 40% | QA 25%
-   - **Languages & Social Sciences (Core / Humanities):** WW 25% | PT 50% | QA 25%
+   - **Specialized Track (STEM / ABM / HUMSS / GAS):** WW 25% | PT 45% | QA 30%
+   - **Core Curriculum Subjects:** WW 25% | PT 50% | QA 25%
    - **Technical-Vocational / Arts / Physical Education:** WW 20% | PT 60% | QA 20%
 2. **Table 4 Transmutation Matrix (Step Function):** The raw weighted percentage (Initial Grade, $IG$) does not directly become the report card grade. Instead, it must be mapped against the **DepEd Adjusted Transmutation Matrix (Table 4)** into an integer scale between 60 and 100 ($TG$):
    - A passing grade of **75** requires at least **70.00%** $IG$.
@@ -167,3 +167,10 @@ graph TD
 | **II. Review of Related Lit (RRL)** | Cite DepEd Order 8 s. 2015, DepEd Order 36 s. 2016, Goal-Setting Theory, Cognitive Load Theory, and Local-First privacy architectures. |
 | **III. Methodology & Architecture** | Use Section 5 (Mathematical Formulations & Equations) and Section 6 (System Architecture Mermaid Diagram). |
 | **IV. Results & Evaluation Plan** | Propose ISO/IEC 25010 testing for usability, functional accuracy across all 41 Table 4 brackets, and offline reliability. |
+
+---
+
+## 9. Architectural Log & Deferred Refinements
+- **Quarter 1 In-Flight Task Banner:** Temporarily disabled per user directive. To be revisited and redesigned in a dedicated follow-up iteration focusing on dynamic seatwork pacing and micro-task forecasting.
+- **Header Stats Container:** "Entries" counter item removed to maintain clean visual hierarchy and emphasize core academic metrics (Transmuted Grade, Semestral Final, Raw Initial, Target, and Weight Progress).
+- **Specialized Subject Weighting:** Standardized across all specialized SHS curriculum subjects to **WW 25% | PT 45% | QA 30%**.

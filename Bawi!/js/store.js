@@ -40,7 +40,7 @@ window.LuminaStore = (function () {
       name: 'General Chemistry 1',
       classification: 'Specialized',
       strand: 'STEM',
-      weights: { ww: 0.35, pt: 0.40, qa: 0.25 },
+      weights: { ww: 0.25, pt: 0.45, qa: 0.30 },
       targetGrade: 95,
       isCustomWeight: false,
       archived: false,
@@ -52,7 +52,7 @@ window.LuminaStore = (function () {
       name: 'Basic Calculus',
       classification: 'Specialized',
       strand: 'STEM',
-      weights: { ww: 0.35, pt: 0.40, qa: 0.25 },
+      weights: { ww: 0.25, pt: 0.45, qa: 0.30 },
       targetGrade: 96,
       isCustomWeight: false,
       archived: false,
@@ -64,7 +64,7 @@ window.LuminaStore = (function () {
       name: 'General Biology 1',
       classification: 'Specialized',
       strand: 'STEM',
-      weights: { ww: 0.35, pt: 0.40, qa: 0.25 },
+      weights: { ww: 0.25, pt: 0.45, qa: 0.30 },
       targetGrade: 95,
       isCustomWeight: false,
       archived: false,
@@ -422,7 +422,14 @@ window.LuminaStore = (function () {
         const parsed = JSON.parse(stored);
         if (parsed) {
           state.profile = Object.assign({}, DEFAULT_PROFILE, parsed.profile || {});
-          state.subjects = Array.isArray(parsed.subjects) ? parsed.subjects : [];
+          state.subjects = (Array.isArray(parsed.subjects) ? parsed.subjects : []).map(s => {
+            if (s && s.classification === 'Specialized' && !s.isCustomWeight) {
+              if (s.weights && (s.weights.ww === 0.35 || s.weights.qa === 0.25)) {
+                s.weights = { ww: 0.25, pt: 0.45, qa: 0.30 };
+              }
+            }
+            return s;
+          });
           state.assessments = Array.isArray(parsed.assessments) ? parsed.assessments : [];
           state.tasks = Array.isArray(parsed.tasks) ? parsed.tasks : [];
           state.activeSubjectId = parsed.activeSubjectId || (state.subjects[0] ? state.subjects[0].id : null);
@@ -556,12 +563,14 @@ window.LuminaStore = (function () {
 
   function addSubject(data) {
     const id = 'subj-' + Date.now().toString(36) + '-' + Math.random().toString(36).substring(2, 6);
+    const isSpecialized = (data.classification === 'Specialized');
+    const defaultWeights = isSpecialized ? { ww: 0.25, pt: 0.45, qa: 0.30 } : { ww: 0.25, pt: 0.50, qa: 0.25 };
     const newSubject = {
       id,
       name: data.name,
       classification: data.classification || 'Core',
       strand: data.strand || state.profile.trackStrand || 'STEM',
-      weights: data.weights || { ww: 0.25, pt: 0.50, qa: 0.25 },
+      weights: data.weights || defaultWeights,
       targetGrade: Number(data.targetGrade) || 95,
       isCustomWeight: !!data.isCustomWeight,
       archived: false,

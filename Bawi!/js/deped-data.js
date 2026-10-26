@@ -63,28 +63,28 @@ window.LuminaDepEd = (function () {
       name: 'General Mathematics',
       classification: 'Core',
       category: 'Math & Science',
-      defaultPreset: 'math_science'
+      defaultPreset: 'core_language'
     },
     {
       id: 'core-stats-prob',
       name: 'Statistics and Probability',
       classification: 'Core',
       category: 'Math & Science',
-      defaultPreset: 'math_science'
+      defaultPreset: 'core_language'
     },
     {
       id: 'core-earth-life-sci',
       name: 'Earth and Life Science',
       classification: 'Core',
       category: 'Math & Science',
-      defaultPreset: 'math_science'
+      defaultPreset: 'core_language'
     },
     {
       id: 'core-physical-sci',
       name: 'Physical Science',
       classification: 'Core',
       category: 'Math & Science',
-      defaultPreset: 'math_science'
+      defaultPreset: 'core_language'
     },
     {
       id: 'core-intro-philosophy',
@@ -173,7 +173,7 @@ window.LuminaDepEd = (function () {
       classification: 'Specialized',
       strand: 'STEM',
       category: 'Math & Science',
-      defaultPreset: 'math_science'
+      defaultPreset: 'specialized'
     },
     {
       id: 'stem-basic-calculus',
@@ -181,7 +181,7 @@ window.LuminaDepEd = (function () {
       classification: 'Specialized',
       strand: 'STEM',
       category: 'Math & Science',
-      defaultPreset: 'math_science'
+      defaultPreset: 'specialized'
     },
     {
       id: 'stem-gen-biology-1',
@@ -189,7 +189,7 @@ window.LuminaDepEd = (function () {
       classification: 'Specialized',
       strand: 'STEM',
       category: 'Math & Science',
-      defaultPreset: 'math_science'
+      defaultPreset: 'specialized'
     },
     {
       id: 'stem-gen-biology-2',
@@ -197,7 +197,7 @@ window.LuminaDepEd = (function () {
       classification: 'Specialized',
       strand: 'STEM',
       category: 'Math & Science',
-      defaultPreset: 'math_science'
+      defaultPreset: 'specialized'
     },
     {
       id: 'stem-gen-physics-1',
@@ -205,7 +205,7 @@ window.LuminaDepEd = (function () {
       classification: 'Specialized',
       strand: 'STEM',
       category: 'Math & Science',
-      defaultPreset: 'math_science'
+      defaultPreset: 'specialized'
     },
     {
       id: 'stem-gen-physics-2',
@@ -213,7 +213,7 @@ window.LuminaDepEd = (function () {
       classification: 'Specialized',
       strand: 'STEM',
       category: 'Math & Science',
-      defaultPreset: 'math_science'
+      defaultPreset: 'specialized'
     },
     {
       id: 'stem-gen-chem-1',
@@ -221,7 +221,7 @@ window.LuminaDepEd = (function () {
       classification: 'Specialized',
       strand: 'STEM',
       category: 'Math & Science',
-      defaultPreset: 'math_science'
+      defaultPreset: 'specialized'
     },
     {
       id: 'stem-gen-chem-2',
@@ -229,7 +229,7 @@ window.LuminaDepEd = (function () {
       classification: 'Specialized',
       strand: 'STEM',
       category: 'Math & Science',
-      defaultPreset: 'math_science'
+      defaultPreset: 'specialized'
     },
     {
       id: 'stem-work-immersion',
@@ -237,7 +237,7 @@ window.LuminaDepEd = (function () {
       classification: 'Specialized',
       strand: 'STEM',
       category: 'Capstone',
-      defaultPreset: 'math_science'
+      defaultPreset: 'specialized'
     },
 
     // Specialized Subjects — ABM
@@ -247,7 +247,7 @@ window.LuminaDepEd = (function () {
       classification: 'Specialized',
       strand: 'ABM',
       category: 'Business',
-      defaultPreset: 'core_language'
+      defaultPreset: 'specialized'
     },
     {
       id: 'abm-business-ethics',
@@ -255,7 +255,7 @@ window.LuminaDepEd = (function () {
       classification: 'Specialized',
       strand: 'ABM',
       category: 'Business',
-      defaultPreset: 'core_language'
+      defaultPreset: 'specialized'
     },
     {
       id: 'abm-fabm-1',
@@ -263,7 +263,7 @@ window.LuminaDepEd = (function () {
       classification: 'Specialized',
       strand: 'ABM',
       category: 'Math & Business',
-      defaultPreset: 'math_science'
+      defaultPreset: 'specialized'
     },
     {
       id: 'abm-fabm-2',
@@ -271,7 +271,7 @@ window.LuminaDepEd = (function () {
       classification: 'Specialized',
       strand: 'ABM',
       category: 'Math & Business',
-      defaultPreset: 'math_science'
+      defaultPreset: 'specialized'
     },
     {
       id: 'abm-business-math',
@@ -279,7 +279,7 @@ window.LuminaDepEd = (function () {
       classification: 'Specialized',
       strand: 'ABM',
       category: 'Math & Science',
-      defaultPreset: 'math_science'
+      defaultPreset: 'specialized'
     },
     {
       id: 'abm-business-finance',
@@ -287,7 +287,7 @@ window.LuminaDepEd = (function () {
       classification: 'Specialized',
       strand: 'ABM',
       category: 'Math & Business',
-      defaultPreset: 'math_science'
+      defaultPreset: 'specialized'
     },
     {
       id: 'abm-org-mgmt',
@@ -295,7 +295,7 @@ window.LuminaDepEd = (function () {
       classification: 'Specialized',
       strand: 'ABM',
       category: 'Business',
-      defaultPreset: 'core_language'
+      defaultPreset: 'specialized'
     },
 
     // Specialized Subjects — HUMSS
@@ -305,7 +305,7 @@ window.LuminaDepEd = (function () {
       classification: 'Specialized',
       strand: 'HUMSS',
       category: 'Humanities',
-      defaultPreset: 'core_language'
+      defaultPreset: 'specialized'
     },
     {
       id: 'humss-creative-nonfiction',
@@ -313,7 +313,7 @@ window.LuminaDepEd = (function () {
       classification: 'Specialized',
       strand: 'HUMSS',
       category: 'Humanities',
-      defaultPreset: 'core_language'
+      defaultPreset: 'specialized'
     },
     {
       id: 'humss-world-religions',
@@ -321,7 +321,7 @@ window.LuminaDepEd = (function () {
       classification: 'Specialized',
       strand: 'HUMSS',
       category: 'Social Science',
-      defaultPreset: 'core_language'
+      defaultPreset: 'specialized'
     },
     {
       id: 'humss-trends-networks',
@@ -329,7 +329,7 @@ window.LuminaDepEd = (function () {
       classification: 'Specialized',
       strand: 'HUMSS',
       category: 'Social Science',
-      defaultPreset: 'core_language'
+      defaultPreset: 'specialized'
     },
     {
       id: 'humss-ph-politics',
@@ -337,7 +337,7 @@ window.LuminaDepEd = (function () {
       classification: 'Specialized',
       strand: 'HUMSS',
       category: 'Social Science',
-      defaultPreset: 'core_language'
+      defaultPreset: 'specialized'
     },
     {
       id: 'humss-comm-engagement',
@@ -345,7 +345,7 @@ window.LuminaDepEd = (function () {
       classification: 'Specialized',
       strand: 'HUMSS',
       category: 'Social Science',
-      defaultPreset: 'core_language'
+      defaultPreset: 'specialized'
     },
     {
       id: 'humss-diss',
@@ -353,7 +353,7 @@ window.LuminaDepEd = (function () {
       classification: 'Specialized',
       strand: 'HUMSS',
       category: 'Social Science',
-      defaultPreset: 'core_language'
+      defaultPreset: 'specialized'
     },
     {
       id: 'humss-diass',
@@ -361,7 +361,7 @@ window.LuminaDepEd = (function () {
       classification: 'Specialized',
       strand: 'HUMSS',
       category: 'Social Science',
-      defaultPreset: 'core_language'
+      defaultPreset: 'specialized'
     },
 
     // Specialized Subjects — GAS
@@ -371,7 +371,7 @@ window.LuminaDepEd = (function () {
       classification: 'Specialized',
       strand: 'GAS',
       category: 'Humanities',
-      defaultPreset: 'core_language'
+      defaultPreset: 'specialized'
     },
     {
       id: 'gas-humanities-2',
@@ -379,7 +379,7 @@ window.LuminaDepEd = (function () {
       classification: 'Specialized',
       strand: 'GAS',
       category: 'Humanities',
-      defaultPreset: 'core_language'
+      defaultPreset: 'specialized'
     },
     {
       id: 'gas-social-sci-1',
@@ -387,7 +387,7 @@ window.LuminaDepEd = (function () {
       classification: 'Specialized',
       strand: 'GAS',
       category: 'Social Science',
-      defaultPreset: 'core_language'
+      defaultPreset: 'specialized'
     },
     {
       id: 'gas-social-sci-2',
@@ -395,7 +395,7 @@ window.LuminaDepEd = (function () {
       classification: 'Specialized',
       strand: 'GAS',
       category: 'Social Science',
-      defaultPreset: 'core_language'
+      defaultPreset: 'specialized'
     },
     {
       id: 'gas-drrr',
@@ -403,7 +403,7 @@ window.LuminaDepEd = (function () {
       classification: 'Specialized',
       strand: 'GAS',
       category: 'Science',
-      defaultPreset: 'math_science'
+      defaultPreset: 'specialized'
     },
 
     // Specialized Subjects — TVL / ICT / Home Economics
@@ -467,17 +467,26 @@ window.LuminaDepEd = (function () {
 
   // 2. Official DepEd Standard Component Weights
   const WEIGHT_PRESETS = {
+    specialized: {
+      name: 'Specialized Subjects',
+      ww: 0.25,
+      pt: 0.45,
+      qa: 0.30,
+      wwLabel: '25%',
+      ptLabel: '45%',
+      qaLabel: '30%'
+    },
     math_science: {
-      name: 'Math & Science (Specialized/STEM)',
-      ww: 0.35,
-      pt: 0.40,
-      qa: 0.25,
-      wwLabel: '35%',
-      ptLabel: '40%',
-      qaLabel: '25%'
+      name: 'Specialized / Math & Science',
+      ww: 0.25,
+      pt: 0.45,
+      qa: 0.30,
+      wwLabel: '25%',
+      ptLabel: '45%',
+      qaLabel: '30%'
     },
     core_language: {
-      name: 'Languages / Social Sciences / Core',
+      name: 'Core Curriculum / Languages / Humanities',
       ww: 0.25,
       pt: 0.50,
       qa: 0.25,

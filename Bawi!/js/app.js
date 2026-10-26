@@ -690,14 +690,6 @@ window.LuminaApp = (function () {
             <div class="stat-progress-fill" style="width: ${calc.completedPercentage}%;"></div>
           </div>
         </div>
-
-        <div class="stat-item">
-          <span class="label">${activeQ} Entries</span>
-          <div class="stat-val-row">
-            <span class="val">${assessments.length}</span>
-          </div>
-          <span class="stat-sub">${wwCount} WW • ${ptCount} PT • ${qaCount} QA</span>
-        </div>
       `;
     }
 
@@ -732,11 +724,15 @@ window.LuminaApp = (function () {
     if (!bannerContainer || !subject) return;
 
     const activeQ = LuminaStore.getActiveQuarter();
+    // Quarter 1 banner temporarily disabled per user instruction (to be revisited later)
     if (activeQ === 'Quarter 1') {
-      renderQuarter1TaskBanner(subject, bannerContainer);
-    } else {
-      renderQuarter2BawiBanner(subject, bannerContainer);
+      bannerContainer.innerHTML = '';
+      bannerContainer.style.display = 'none';
+      return;
     }
+
+    bannerContainer.style.display = '';
+    renderQuarter2BawiBanner(subject, bannerContainer);
   }
 
   function renderQuarter1TaskBanner(subject, bannerContainer) {
