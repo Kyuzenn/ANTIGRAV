@@ -174,3 +174,36 @@ graph TD
 - **Quarter 1 In-Flight Task Banner:** Temporarily disabled per user directive. To be revisited and redesigned in a dedicated follow-up iteration focusing on dynamic seatwork pacing and micro-task forecasting.
 - **Header Stats Container:** "Entries" counter item removed to maintain clean visual hierarchy and emphasize core academic metrics (Transmuted Grade, Semestral Final, Raw Initial, Target, and Weight Progress).
 - **Specialized Subject Weighting:** Standardized across all specialized SHS curriculum subjects to **WW 25% | PT 45% | QA 30%**.
+
+---
+
+## 10. Slice 4 Architecture & Capabilities
+
+### 10.1 Flexible Onboarding & Subject Selection (Zero Forced Auto-Enrollment)
+- **Problem Solved:** Philippine SHS institutions sequence curriculum subjects differently (e.g. some schools teach *Pre-Calculus* in Sem 1 while others teach it in Sem 2; strand offerings differ across private vs public institutions).
+- **Implementation:**
+  - First-time onboarding features a 2-step setup wizard (`#onboardingModal`).
+  - **Step 1:** Student Profile (Name, Track/Strand, Grade Level, Starting Semester, Target General Average with live honors tier preview).
+  - **Step 2:** Interactive Multi-Select Checklist grouped into *Specialized Track*, *Core Curriculum*, *Applied Track*, and *Custom Institutional Subjects*.
+  - Features real-time search filtering, 1-click **"Select Strand Load"**, **"Clear"**, and collapsible **"Custom Subject"** addition drawer.
+  - Option to launch with an empty slate (`Start with Blank Slate`) or batch enroll selected subjects (`LuminaStore.addSubjectsBatch()`).
+
+### 10.2 Semester 2 Crossover & Term Transition
+- **Problem Solved:** Transitioning into Semester 2 must safely preserve Semester 1 grade records while preventing duplicate subject enrollment.
+- **Implementation:**
+  - Automatically activates when switching to Semester 2 if no Semester 2 subjects are enrolled, or via the empty state action button.
+  - Highlights subjects completed in Semester 1 with visual badges (`(Enrolled in Sem 1)`).
+  - Pre-selects recommended Semester 2 strand course load excluding completed subjects.
+  - Batch enrolls Semester 2 course load and sets academic term atomically.
+
+### 10.3 Official DepEd Form 138-SHS (SF 9-SHS) Report Card
+- **Problem Solved:** Students need an authentic, official DepEd progress report card for scholarship applications, college admissions, and parent-teacher consultations.
+- **Implementation:**
+  - Upgraded `#gradeSlipModal` into a certified **DepEd Form 138-SHS** progress report card compliant with DepEd Order No. 8, s. 2015 and DepEd Order No. 36, s. 2016.
+  - Formatted paper layout (`.form138-paper`) with Republic of the Philippines Department of Education masthead.
+  - Dual quarterly rating columns (`Quarter 1`, `Quarter 2`, `Final Semestral Grade`, `Action Taken / Remarks`).
+  - Distinct subject classification sections for *Core Curriculum Subjects* and *Applied & Specialized Track Subjects*.
+  - DepEd Semestral General Average calculation with nearest-integer rounding.
+  - DepEd Order No. 36, s. 2016 academic honors certification (*With Highest Honors* $\ge 98$, *With High Honors* $\ge 95$, *With Honors* $\ge 90$) with strict fail-check gate (no quarter rating below 75).
+  - Print/PDF export stylesheet with class adviser and principal signature endorsements.
+

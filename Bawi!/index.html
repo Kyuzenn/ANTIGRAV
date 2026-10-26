@@ -13,8 +13,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 
   <!-- Stylesheets (with cache-busting query strings) -->
-  <link rel="stylesheet" href="css/tokens.css?v=2.9">
-  <link rel="stylesheet" href="css/style.css?v=2.9">
+  <link rel="stylesheet" href="css/tokens.css?v=3.0">
+  <link rel="stylesheet" href="css/style.css?v=3.0">
   <link rel="manifest" href="manifest.json">
   <script>
     // Development Cache Buster: unregister any lingering service workers and purge caches
@@ -971,7 +971,177 @@
     </div>
   </div>
 
-  <!-- 5. Certified Grade Slip Exporter Modal -->
+  <!-- 4b. First-Time Setup & Multi-Select Subject Checklist Wizard Modal -->
+  <div class="modal-overlay" id="onboardingModal">
+    <div class="modal-sheet onboarding-sheet" onclick="event.stopPropagation()">
+      <div class="onboarding-progress-bar">
+        <div class="onboarding-step-indicator active" id="onboardingStepIndicator1">1. Academic Profile</div>
+        <div class="onboarding-step-indicator" id="onboardingStepIndicator2">2. Subject Checklist</div>
+      </div>
+
+      <!-- Step 1: Profile & Academic Strand -->
+      <div class="onboarding-step-content" id="onboardingStep1">
+        <div class="onboarding-header">
+          <div class="brand-monogram" style="margin-bottom:8px;">
+            <span class="symbol">[λ]</span>
+            <span class="brand-title" style="letter-spacing:normal; text-transform:none; font-weight:700; font-size:18px;">Bawi! Academic OS</span>
+          </div>
+          <h2 class="onboarding-title">Set Up Your Academic Profile</h2>
+          <p class="onboarding-subtitle">Configure your Philippine Senior High School track, grade level, and honors target to personalize your workspace.</p>
+        </div>
+
+        <div class="form-group" style="margin-bottom:14px;">
+          <label class="form-label">Student Name</label>
+          <input type="text" class="form-input" id="onboardStudentName" placeholder="e.g. Maria Santos" value="Maria Santos">
+        </div>
+
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom:14px;">
+          <div class="form-group">
+            <label class="form-label">Track & Strand</label>
+            <select class="form-select" id="onboardStrandSelect" onchange="LuminaApp.onOnboardStrandChange()">
+              <option value="STEM">STEM (Science, Tech, Eng, Math)</option>
+              <option value="ABM">ABM (Accountancy, Business & Management)</option>
+              <option value="HUMSS">HUMSS (Humanities & Social Sciences)</option>
+              <option value="GAS">GAS (General Academic Strand)</option>
+              <option value="TVL">TVL (Technical-Vocational-Livelihood)</option>
+              <option value="Arts">Arts and Design Track</option>
+              <option value="Sports">Sports Track</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Grade Level</label>
+            <select class="form-select" id="onboardGradeLevel">
+              <option value="Grade 11">Grade 11</option>
+              <option value="Grade 12">Grade 12</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom:18px;">
+          <div class="form-group">
+            <label class="form-label">Starting Semester</label>
+            <select class="form-select" id="onboardSemesterSelect" onchange="LuminaApp.onOnboardStrandChange()">
+              <option value="Semester 1">Semester 1</option>
+              <option value="Semester 2">Semester 2</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Target General Average</label>
+            <div style="display:flex; gap:8px; align-items:center;">
+              <input type="number" class="form-input mono-input" id="onboardTargetAverage" min="75" max="100" step="0.5" value="95" oninput="LuminaApp.updateOnboardHonorsPreview()">
+              <span class="honors-badge-pill badge-high-honors" id="onboardHonorsBadge" style="font-size:11px; white-space:nowrap; padding:4px 10px;">With High Honors</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer" style="padding:0; margin-top:20px; display:flex; justify-content:space-between; align-items:center;">
+          <button class="btn-ghost" onclick="LuminaApp.skipOnboardingToBlank()">Start with Blank Slate</button>
+          <button class="btn-primary" onclick="LuminaApp.goToOnboardingStep(2)">
+            Continue to Subject Selection →
+          </button>
+        </div>
+      </div>
+
+      <!-- Step 2: Multi-Select Subject Checklist -->
+      <div class="onboarding-step-content" id="onboardingStep2" style="display:none;">
+        <div class="onboarding-header">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px;">
+            <div>
+              <h2 class="onboarding-title">Select Your Enrolled Subjects</h2>
+              <p class="onboarding-subtitle">Check off only the subjects on your school schedule. Official DepEd weights will apply automatically.</p>
+            </div>
+            <div class="onboarding-selected-badge" id="onboardingSelectedCounter">
+              <span id="onboardingSelectedCount">0</span> Subjects Selected
+            </div>
+          </div>
+        </div>
+
+        <!-- Filter & Search Toolbar -->
+        <div class="checklist-toolbar">
+          <div class="checklist-search-box">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            <input type="text" class="checklist-search-input" id="onboardingChecklistSearch" placeholder="Filter subjects (e.g. 'Calculus', 'Oral', 'Science')..." oninput="LuminaApp.filterOnboardingChecklist()">
+          </div>
+          <div style="display:flex; gap:8px;">
+            <button class="btn-ghost" style="font-size:11.5px; padding:4px 10px;" onclick="LuminaApp.selectStrandRecommendedSubjects()">Select Strand Typical Load</button>
+            <button class="btn-ghost" style="font-size:11.5px; padding:4px 10px;" onclick="LuminaApp.clearAllChecklistSelections()">Clear All</button>
+          </div>
+        </div>
+
+        <!-- Checklist scroll container -->
+        <div class="checklist-scroll-area" id="onboardingChecklistContainer">
+          <!-- Populated dynamically: Specialized, Core, Applied -->
+        </div>
+
+        <!-- Custom Subject Quick-Add Drawer -->
+        <div class="custom-subject-drawer" id="onboardCustomDrawer">
+          <button class="custom-subject-toggle-btn" onclick="LuminaApp.toggleOnboardCustomDrawer()">
+            <span>+ Add Institutional / School-Specific Subject</span>
+            <span id="customDrawerArrow">▼</span>
+          </button>
+          <div class="custom-subject-form" id="onboardCustomForm" style="display:none; margin-top:10px;">
+            <div style="display:grid; grid-template-columns: 2fr 1fr; gap:10px; margin-bottom:8px;">
+              <input type="text" class="form-input" id="onboardCustomName" placeholder="Subject Name (e.g. Christian Living / Robotics)">
+              <select class="form-select" id="onboardCustomClassification">
+                <option value="Specialized">Specialized (25/45/30)</option>
+                <option value="Core">Core Curriculum (25/50/25)</option>
+                <option value="Applied">Applied Track (25/50/25)</option>
+              </select>
+            </div>
+            <button class="btn-ghost" style="font-size:11px; padding:4px 12px;" onclick="LuminaApp.addCustomSubjectToChecklist()">+ Add to Checklist</button>
+          </div>
+        </div>
+
+        <div class="modal-footer" style="padding:0; margin-top:20px; display:flex; justify-content:space-between; align-items:center;">
+          <button class="btn-ghost" onclick="LuminaApp.goToOnboardingStep(1)">← Back to Profile</button>
+          <button class="btn-primary" id="onboardSubmitBtn" onclick="LuminaApp.completeOnboardingAndLaunch()">
+            Launch Academic OS 🚀
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4c. Semester Crossover Enrollment Modal (Seamless Semester 2 Setup) -->
+  <div class="modal-overlay" id="semesterCrossoverModal">
+    <div class="modal-sheet onboarding-sheet" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <div class="modal-title" style="display:flex; align-items:center; gap:8px;">
+          <span style="font-size:20px;">🎓</span>
+          <span>Semester 2 Course Load Enrollment</span>
+        </div>
+        <button class="icon-btn" onclick="LuminaApp.closeModal(document.getElementById('semesterCrossoverModal'))">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="onboarding-header" style="margin-bottom:16px;">
+          <h2 class="onboarding-title" style="font-size:17px;">Welcome to Semester 2!</h2>
+          <p class="onboarding-subtitle">Your Semester 1 grade records are safely archived. Check off your Semester 2 subjects to start your second-half honors campaign.</p>
+        </div>
+
+        <div class="checklist-toolbar">
+          <div class="checklist-search-box">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            <input type="text" class="checklist-search-input" id="sem2ChecklistSearch" placeholder="Filter Semester 2 subjects..." oninput="LuminaApp.filterSem2Checklist()">
+          </div>
+          <div class="onboarding-selected-badge" id="sem2SelectedCounter">
+            <span id="sem2SelectedCount">0</span> Subjects Selected
+          </div>
+        </div>
+
+        <div class="checklist-scroll-area" id="sem2ChecklistContainer">
+          <!-- Populated dynamically with Semester 1 tags and Semester 2 suggestions -->
+        </div>
+      </div>
+      <div class="modal-footer" style="display:flex; justify-content:space-between; align-items:center;">
+        <button class="btn-ghost" onclick="LuminaApp.closeModal(document.getElementById('semesterCrossoverModal'))">I'll Add Later</button>
+        <button class="btn-primary" id="sem2SubmitBtn" onclick="LuminaApp.completeSem2Crossover()">
+          Enroll Semester 2 Load 🚀
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. Certified DepEd Form 138-SHS Report Card Modal -->
   <div class="modal-overlay" id="gradeSlipModal">
     <div class="modal-sheet grade-slip-modal" onclick="event.stopPropagation()">
       <div class="modal-header">
@@ -996,10 +1166,10 @@
   <div class="toast-container" id="toastContainer"></div>
 
   <!-- Scripts (cache-busted) -->
-  <script src="js/deped-data.js?v=2.9"></script>
-  <script src="js/audio.js?v=2.9"></script>
-  <script src="js/store.js?v=2.9"></script>
-  <script src="js/engine.js?v=2.9"></script>
-  <script src="js/app.js?v=2.9"></script>
+  <script src="js/deped-data.js?v=3.0"></script>
+  <script src="js/audio.js?v=3.0"></script>
+  <script src="js/store.js?v=3.0"></script>
+  <script src="js/engine.js?v=3.0"></script>
+  <script src="js/app.js?v=3.0"></script>
 </body>
 </html>

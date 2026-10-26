@@ -67,6 +67,9 @@ window.LuminaApp = (function () {
     const activeTab = LuminaStore.getActiveTab() || 'overview';
     switchTab(activeTab, false);
     renderGlobalHeaderBadges();
+
+    // Check if first-time user / blank slate needing guided onboarding
+    checkOnboardingStatus();
   }
 
   // ==========================================================================
@@ -328,16 +331,24 @@ window.LuminaApp = (function () {
     if (subjectsGrid) {
       subjectsGrid.innerHTML = '';
       if (!hasSubjects) {
+        const isSem2 = profile.semester === 'Semester 2';
         subjectsGrid.innerHTML = `
           <div class="glass-card" style="grid-column: 1/-1; padding: 40px 24px; text-align: center; border-style: dashed; border-color: rgba(255,255,255,0.14);">
-            <div style="font-size: 32px; margin-bottom: 10px;">📚</div>
-            <div style="font-size: 16px; font-weight: 600; color: var(--text-primary); margin-bottom: 6px;">No Subjects Enrolled for ${profile.semester}</div>
-            <div style="font-size: 13.5px; color: var(--text-secondary); margin-bottom: 20px; max-width: 440px; margin-left: auto; margin-right: auto; line-height: 1.5;">
-              You have no subjects enrolled for this term. Add an official DepEd subject from the catalog, or load the STEM sample demo presets to test.
+            <div style="font-size: 32px; margin-bottom: 10px;">${isSem2 ? '🎓' : '📚'}</div>
+            <div style="font-size: 16px; font-weight: 600; color: var(--text-primary); margin-bottom: 6px;">
+              ${isSem2 ? 'Welcome to Semester 2! No Subjects Enrolled Yet' : 'No Subjects Enrolled for ' + profile.semester}
+            </div>
+            <div style="font-size: 13.5px; color: var(--text-secondary); margin-bottom: 20px; max-width: 480px; margin-left: auto; margin-right: auto; line-height: 1.5;">
+              ${isSem2
+                ? 'Your Semester 1 grade records are safely archived. Select your Semester 2 course load from the curated curriculum checklist.'
+                : 'Configure your enrolled subjects from the official DepEd curriculum checklist, or load sample demo data to explore Bawi!.'}
             </div>
             <div style="display:flex; justify-content:center; gap:12px; flex-wrap:wrap;">
-              <button class="btn-primary" onclick="LuminaApp.openAddSubjectModal()">+ Enroll First Subject</button>
-              <button class="btn-ghost" onclick="LuminaApp.resetToDemoData()">Load Sample Demo Data</button>
+              ${isSem2
+                ? `<button class="btn-primary" onclick="LuminaApp.openSemesterCrossoverModal()">+ Enroll Semester 2 Load (Checklist)</button>`
+                : `<button class="btn-primary" onclick="LuminaApp.openOnboardingModal()">+ Setup Subjects (Checklist)</button>`}
+              <button class="btn-ghost" onclick="LuminaApp.openAddSubjectModal()">+ Add Single Subject</button>
+              <button class="btn-ghost" onclick="LuminaApp.resetToDemoData()">Load Sample Demo</button>
             </div>
           </div>
         `;
@@ -418,10 +429,19 @@ window.LuminaApp = (function () {
     });
 
     if (filtered.length === 0) {
+      const isSem2 = LuminaStore.getProfile().semester === 'Semester 2';
       grid.innerHTML = `
         <div style="grid-column: 1/-1; padding:48px; text-align:center; color:var(--text-secondary);" class="glass-card">
-          <p style="margin-bottom:12px;">No subjects found under "${currentPipelineFilter}".</p>
-          <button class="btn-primary" onclick="LuminaApp.openAddSubjectModal()">+ Add New Subject</button>
+          <div style="font-size:32px; margin-bottom:10px;">${isSem2 ? '🎓' : '📚'}</div>
+          <p style="margin-bottom:12px; font-size:15px; color:var(--text-primary);">
+            ${isSem2 ? 'No subjects enrolled yet for Semester 2.' : 'No subjects enrolled yet for this term.'}
+          </p>
+          <div style="display:flex; justify-content:center; gap:10px; flex-wrap:wrap;">
+            ${isSem2
+              ? `<button class="btn-primary" onclick="LuminaApp.openSemesterCrossoverModal()">+ Enroll Semester 2 Load (Checklist)</button>`
+              : `<button class="btn-primary" onclick="LuminaApp.openOnboardingModal()">+ Setup Subjects (Checklist)</button>`}
+            <button class="btn-ghost" onclick="LuminaApp.openAddSubjectModal()">+ Add Single Subject</button>
+          </div>
         </div>
       `;
       return;
@@ -921,6 +941,13 @@ window.LuminaApp = (function () {
     renderPipeline();
     renderSubjectDeepDive();
     renderPlanner();
+
+    if (semester === 'Semester 2') {
+      const sem2Subjects = LuminaStore.getSubjects('Semester 2');
+      if (sem2Subjects.length === 0) {
+        setTimeout(() => openSemesterCrossoverModal(), 350);
+      }
+    }
   }
 
   function renderGradebookColumn(categoryKey, compCalc, items, subject) {
@@ -1749,81 +1776,708 @@ window.LuminaApp = (function () {
     }
   }
 
-  // --------------------------------------------------------------------------
-  // Certified Grade Slip Exporter
-  // --------------------------------------------------------------------------
+  // ==========================================================================
+  // Slice 4: Guided Onboarding & Multi-Select Subject Checklist Wizard
+  // ==========================================================================
+
+  let onboardingSelectedSubjects = new Map();
+  let onboardingCustomSubjects = [];
+  let sem2SelectedSubjects = new Map();
+
+  function checkOnboardingStatus() {
+    const profile = LuminaStore.getProfile();
+    const allSubjects = LuminaStore.getAllSubjects();
+    if (!profile.onboardingCompleted && allSubjects.length === 0) {
+      setTimeout(() => openOnboardingModal(), 350);
+    }
+  }
+
+  function openOnboardingModal() {
+    const modal = document.getElementById('onboardingModal');
+    if (!modal) return;
+
+    const profile = LuminaStore.getProfile();
+    const nameInput = document.getElementById('onboardStudentName');
+    const strandSelect = document.getElementById('onboardStrandSelect');
+    const gradeSelect = document.getElementById('onboardGradeLevel');
+    const semSelect = document.getElementById('onboardSemesterSelect');
+    const targetInput = document.getElementById('onboardTargetAverage');
+
+    if (nameInput) nameInput.value = (profile.studentName && profile.studentName !== 'Student Profile') ? profile.studentName : 'Maria Santos';
+    if (strandSelect) strandSelect.value = profile.trackStrand || 'STEM';
+    if (gradeSelect) gradeSelect.value = profile.gradeLevel || 'Grade 11';
+    if (semSelect) semSelect.value = profile.semester || 'Semester 1';
+    if (targetInput) targetInput.value = profile.targetGeneralAverage || 95;
+
+    updateOnboardHonorsPreview();
+    goToOnboardingStep(1);
+    openModal(modal);
+  }
+
+  function updateOnboardHonorsPreview() {
+    const targetInput = document.getElementById('onboardTargetAverage');
+    const badge = document.getElementById('onboardHonorsBadge');
+    if (!targetInput || !badge) return;
+
+    const targetVal = Number(targetInput.value) || 95;
+    const tier = LuminaDepEd.getHonorsTier(targetVal);
+    badge.className = `honors-badge-pill ${tier.badgeClass}`;
+    badge.textContent = tier.title;
+  }
+
+  function onOnboardStrandChange() {
+    if (document.getElementById('onboardingStep2').style.display !== 'none') {
+      renderOnboardingChecklist();
+    }
+  }
+
+  function goToOnboardingStep(step) {
+    const step1 = document.getElementById('onboardingStep1');
+    const step2 = document.getElementById('onboardingStep2');
+    const ind1 = document.getElementById('onboardingStepIndicator1');
+    const ind2 = document.getElementById('onboardingStepIndicator2');
+
+    if (step === 2) {
+      const nameInput = document.getElementById('onboardStudentName');
+      const strandSelect = document.getElementById('onboardStrandSelect');
+      const gradeSelect = document.getElementById('onboardGradeLevel');
+      const semSelect = document.getElementById('onboardSemesterSelect');
+      const targetInput = document.getElementById('onboardTargetAverage');
+
+      LuminaStore.updateProfile({
+        studentName: (nameInput && nameInput.value.trim()) ? nameInput.value.trim() : 'Maria Santos',
+        trackStrand: strandSelect ? strandSelect.value : 'STEM',
+        gradeLevel: gradeSelect ? gradeSelect.value : 'Grade 11',
+        semester: semSelect ? semSelect.value : 'Semester 1',
+        targetGeneralAverage: Number(targetInput ? targetInput.value : 95) || 95
+      });
+
+      renderOnboardingChecklist();
+      selectStrandRecommendedSubjects();
+
+      step1.style.display = 'none';
+      step2.style.display = 'block';
+      if (ind1) ind1.classList.remove('active');
+      if (ind2) ind2.classList.add('active');
+    } else {
+      step2.style.display = 'none';
+      step1.style.display = 'block';
+      if (ind2) ind2.classList.remove('active');
+      if (ind1) ind1.classList.add('active');
+    }
+  }
+
+  function renderOnboardingChecklist(filterText = '') {
+    const container = document.getElementById('onboardingChecklistContainer');
+    if (!container) return;
+
+    const profile = LuminaStore.getProfile();
+    const strand = profile.trackStrand || 'STEM';
+    const query = filterText.toLowerCase().trim();
+
+    const catalog = LuminaDepEd.CURRICULUM_CATALOG;
+
+    const specialized = catalog.filter(s => s.classification === 'Specialized' && (!s.strand || s.strand === strand));
+    const core = catalog.filter(s => s.classification === 'Core');
+    const applied = catalog.filter(s => s.classification === 'Applied');
+
+    let html = '';
+
+    function renderGroup(title, items, weightTag) {
+      const filtered = items.filter(it => !query || it.name.toLowerCase().includes(query));
+      if (filtered.length === 0) return '';
+
+      const itemsHtml = filtered.map(item => {
+        const isSelected = onboardingSelectedSubjects.has(item.name);
+        return `
+          <div class="checklist-item-card ${isSelected ? 'selected' : ''}" onclick="LuminaApp.toggleChecklistItem(this, '${encodeURIComponent(JSON.stringify(item))}')">
+            <div class="checklist-item-left">
+              <div class="checklist-custom-checkbox">${isSelected ? '✓' : ''}</div>
+              <div>
+                <div class="checklist-item-name">${item.name}</div>
+                <div style="font-size:11px; color:var(--text-secondary); margin-top:2px;">
+                  ${item.classification} ${item.strand ? '• ' + item.strand : ''}
+                </div>
+              </div>
+            </div>
+            <div class="checklist-item-meta">
+              <span class="category-tag" style="font-family:var(--font-mono); font-size:10.5px;">${weightTag}</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      return `
+        <div class="checklist-group">
+          <div class="checklist-group-header">
+            <span>${title}</span>
+            <span style="font-family:var(--font-mono); font-size:10px; opacity:0.8;">${weightTag}</span>
+          </div>
+          <div class="checklist-group-items">
+            ${itemsHtml}
+          </div>
+        </div>
+      `;
+    }
+
+    html += renderGroup(`Specialized Track (${strand})`, specialized, 'WW 25% • PT 45% • QA 30%');
+    html += renderGroup('Core Curriculum Subjects', core, 'WW 25% • PT 50% • QA 25%');
+    html += renderGroup('Applied Track Subjects', applied, 'WW 25% • PT 50% • QA 25%');
+
+    if (onboardingCustomSubjects.length > 0) {
+      const customItemsHtml = onboardingCustomSubjects.map(item => {
+        const isSelected = onboardingSelectedSubjects.has(item.name);
+        const wLabel = item.classification === 'Specialized' ? 'WW 25% • PT 45% • QA 30%' : 'WW 25% • PT 50% • QA 25%';
+        return `
+          <div class="checklist-item-card ${isSelected ? 'selected' : ''}" onclick="LuminaApp.toggleChecklistItem(this, '${encodeURIComponent(JSON.stringify(item))}')">
+            <div class="checklist-item-left">
+              <div class="checklist-custom-checkbox">${isSelected ? '✓' : ''}</div>
+              <div>
+                <div class="checklist-item-name">${item.name}</div>
+                <div style="font-size:11px; color:var(--text-secondary); margin-top:2px;">Custom • ${item.classification}</div>
+              </div>
+            </div>
+            <div class="checklist-item-meta">
+              <span class="category-tag" style="font-family:var(--font-mono); font-size:10.5px;">${wLabel}</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      html += `
+        <div class="checklist-group">
+          <div class="checklist-group-header">
+            <span>Custom Institutional Subjects</span>
+          </div>
+          <div class="checklist-group-items">
+            ${customItemsHtml}
+          </div>
+        </div>
+      `;
+    }
+
+    container.innerHTML = html || '<div style="padding:20px; text-align:center; color:var(--text-tertiary); font-size:12px;">No matching subjects found.</div>';
+    updateChecklistCounterUI();
+  }
+
+  function filterOnboardingChecklist() {
+    const input = document.getElementById('onboardingChecklistSearch');
+    renderOnboardingChecklist(input ? input.value : '');
+  }
+
+  function toggleChecklistItem(el, jsonStr) {
+    try {
+      const item = JSON.parse(decodeURIComponent(jsonStr));
+      if (onboardingSelectedSubjects.has(item.name)) {
+        onboardingSelectedSubjects.delete(item.name);
+        el.classList.remove('selected');
+        const box = el.querySelector('.checklist-custom-checkbox');
+        if (box) box.textContent = '';
+      } else {
+        const isSpecialized = item.classification === 'Specialized';
+        const weights = isSpecialized ? { ww: 0.25, pt: 0.45, qa: 0.30 } : { ww: 0.25, pt: 0.50, qa: 0.25 };
+        onboardingSelectedSubjects.set(item.name, {
+          name: item.name,
+          classification: item.classification || 'Core',
+          strand: item.strand || LuminaStore.getProfile().trackStrand || 'STEM',
+          weights,
+          targetGrade: LuminaStore.getProfile().targetGeneralAverage || 95
+        });
+        el.classList.add('selected');
+        const box = el.querySelector('.checklist-custom-checkbox');
+        if (box) box.textContent = '✓';
+      }
+      updateChecklistCounterUI();
+      LuminaAudio.playClick();
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  function updateChecklistCounterUI() {
+    const count = onboardingSelectedSubjects.size;
+    const countEl = document.getElementById('onboardingSelectedCount');
+    const submitBtn = document.getElementById('onboardSubmitBtn');
+
+    if (countEl) countEl.textContent = count;
+    if (submitBtn) {
+      submitBtn.textContent = count > 0 ? `Launch Academic OS (Enroll ${count} Subjects) 🚀` : `Launch Academic OS (Blank Workspace) 🚀`;
+    }
+  }
+
+  function selectStrandRecommendedSubjects() {
+    const profile = LuminaStore.getProfile();
+    const strand = profile.trackStrand || 'STEM';
+    const catalog = LuminaDepEd.CURRICULUM_CATALOG;
+
+    onboardingSelectedSubjects.clear();
+
+    let recommendedNames = [];
+    if (strand === 'STEM') {
+      recommendedNames = [
+        'Pre-Calculus',
+        'General Chemistry 1',
+        'Oral Communication in Context',
+        'Komunikasyon at Pananaliksik sa Wika at Kulturang Pilipino',
+        'General Mathematics',
+        'Earth and Life Science',
+        'Physical Education and Health',
+        'English for Academic and Professional Purposes (EAPP)'
+      ];
+    } else if (strand === 'ABM') {
+      recommendedNames = [
+        'Applied Economics',
+        'Organization and Management',
+        'Oral Communication in Context',
+        'General Mathematics',
+        'Earth and Life Science',
+        'Physical Education and Health',
+        'English for Academic and Professional Purposes (EAPP)'
+      ];
+    } else if (strand === 'HUMSS') {
+      recommendedNames = [
+        'Creative Writing',
+        'Disciplines and Ideas in the Social Sciences (DISS)',
+        'Oral Communication in Context',
+        'Komunikasyon at Pananaliksik sa Wika at Kulturang Pilipino',
+        'General Mathematics',
+        'Earth and Life Science',
+        'Physical Education and Health'
+      ];
+    } else {
+      recommendedNames = [
+        'Oral Communication in Context',
+        'Komunikasyon at Pananaliksik sa Wika at Kulturang Pilipino',
+        'General Mathematics',
+        'Earth and Life Science',
+        'Physical Education and Health',
+        'English for Academic and Professional Purposes (EAPP)'
+      ];
+    }
+
+    recommendedNames.forEach(name => {
+      const match = catalog.find(c => c.name.toLowerCase() === name.toLowerCase());
+      if (match) {
+        const isSpec = match.classification === 'Specialized';
+        onboardingSelectedSubjects.set(match.name, {
+          name: match.name,
+          classification: match.classification,
+          strand: match.strand || strand,
+          weights: isSpec ? { ww: 0.25, pt: 0.45, qa: 0.30 } : { ww: 0.25, pt: 0.50, qa: 0.25 },
+          targetGrade: profile.targetGeneralAverage || 95
+        });
+      }
+    });
+
+    renderOnboardingChecklist();
+  }
+
+  function clearAllChecklistSelections() {
+    onboardingSelectedSubjects.clear();
+    renderOnboardingChecklist();
+  }
+
+  function toggleOnboardCustomDrawer() {
+    const form = document.getElementById('onboardCustomForm');
+    const arrow = document.getElementById('customDrawerArrow');
+    if (!form) return;
+    const isHidden = form.style.display === 'none';
+    form.style.display = isHidden ? 'block' : 'none';
+    if (arrow) arrow.textContent = isHidden ? '▲' : '▼';
+  }
+
+  function addCustomSubjectToChecklist() {
+    const nameInput = document.getElementById('onboardCustomName');
+    const classSelect = document.getElementById('onboardCustomClassification');
+    if (!nameInput || !nameInput.value.trim()) {
+      alert('Please enter a subject name.');
+      return;
+    }
+
+    const name = nameInput.value.trim();
+    const classification = classSelect ? classSelect.value : 'Core';
+    const isSpec = classification === 'Specialized';
+    const weights = isSpec ? { ww: 0.25, pt: 0.45, qa: 0.30 } : { ww: 0.25, pt: 0.50, qa: 0.25 };
+
+    const newSubj = {
+      name,
+      classification,
+      strand: LuminaStore.getProfile().trackStrand || 'STEM',
+      weights,
+      targetGrade: LuminaStore.getProfile().targetGeneralAverage || 95
+    };
+
+    onboardingCustomSubjects.push(newSubj);
+    onboardingSelectedSubjects.set(name, newSubj);
+    nameInput.value = '';
+    renderOnboardingChecklist();
+    showToast(`Added "${name}" to checklist!`);
+  }
+
+  function completeOnboardingAndLaunch() {
+    const profile = LuminaStore.getProfile();
+    const semester = profile.semester || 'Semester 1';
+
+    const subjectsToEnroll = Array.from(onboardingSelectedSubjects.values()).map(s => Object.assign({}, s, {
+      semester,
+      quarter: 'Quarter 1'
+    }));
+
+    if (subjectsToEnroll.length > 0) {
+      LuminaStore.addSubjectsBatch(subjectsToEnroll);
+    }
+
+    LuminaStore.updateProfile({ onboardingCompleted: true });
+    closeModal(document.getElementById('onboardingModal'));
+
+    LuminaAudio.playCelebration();
+    showToast(`Enrolled ${subjectsToEnroll.length} subjects for ${semester}! Welcome to Bawi!`);
+
+    renderGlobalHeaderBadges();
+    renderDashboard();
+    renderPipeline();
+    if (subjectsToEnroll.length > 0) {
+      renderSubjectDeepDive();
+    }
+  }
+
+  function skipOnboardingToBlank() {
+    LuminaStore.updateProfile({ onboardingCompleted: true });
+    closeModal(document.getElementById('onboardingModal'));
+    showToast('Starting with empty workspace. Use "+ Add Subject" whenever ready.');
+    renderGlobalHeaderBadges();
+    renderDashboard();
+    renderPipeline();
+  }
+
+  // ==========================================================================
+  // Slice 4: Semester 2 Crossover Flow
+  // ==========================================================================
+
+  function openSemesterCrossoverModal() {
+    const modal = document.getElementById('semesterCrossoverModal');
+    if (!modal) return;
+    renderSemester2Checklist();
+    openModal(modal);
+  }
+
+  function renderSemester2Checklist(filterText = '') {
+    const container = document.getElementById('sem2ChecklistContainer');
+    if (!container) return;
+
+    const profile = LuminaStore.getProfile();
+    const strand = profile.trackStrand || 'STEM';
+    const query = filterText.toLowerCase().trim();
+    const completedNames = LuminaStore.getCompletedSubjectNames('Semester 2');
+
+    const catalog = LuminaDepEd.CURRICULUM_CATALOG;
+
+    const specialized = catalog.filter(s => s.classification === 'Specialized' && (!s.strand || s.strand === strand));
+    const core = catalog.filter(s => s.classification === 'Core');
+    const applied = catalog.filter(s => s.classification === 'Applied');
+
+    if (sem2SelectedSubjects.size === 0) {
+      let sem2Defaults = [];
+      if (strand === 'STEM') {
+        sem2Defaults = ['Basic Calculus', 'General Chemistry 2', 'Reading and Writing Skills', 'Statistics and Probability', 'Physical Science', 'Physical Education and Health'];
+      } else if (strand === 'ABM') {
+        sem2Defaults = ['Fundamentals of Accountancy, Business and Management 1', 'Business Math', 'Reading and Writing Skills', 'Statistics and Probability', 'Physical Science', 'Physical Education and Health'];
+      } else if (strand === 'HUMSS') {
+        sem2Defaults = ['Creative Nonfiction', 'Philippine Politics and Governance', 'Reading and Writing Skills', 'Statistics and Probability', 'Physical Science', 'Physical Education and Health'];
+      } else {
+        sem2Defaults = ['Reading and Writing Skills', 'Statistics and Probability', 'Physical Science', 'Physical Education and Health', 'Practical Research 1'];
+      }
+
+      sem2Defaults.forEach(name => {
+        if (!completedNames.has(name.toLowerCase())) {
+          const match = catalog.find(c => c.name.toLowerCase() === name.toLowerCase());
+          if (match) {
+            const isSpec = match.classification === 'Specialized';
+            sem2SelectedSubjects.set(match.name, {
+              name: match.name,
+              classification: match.classification,
+              strand: match.strand || strand,
+              weights: isSpec ? { ww: 0.25, pt: 0.45, qa: 0.30 } : { ww: 0.25, pt: 0.50, qa: 0.25 },
+              targetGrade: profile.targetGeneralAverage || 95
+            });
+          }
+        }
+      });
+    }
+
+    function renderSem2Group(title, items, weightTag) {
+      const filtered = items.filter(it => !query || it.name.toLowerCase().includes(query));
+      if (filtered.length === 0) return '';
+
+      const itemsHtml = filtered.map(item => {
+        const isTaken = completedNames.has(item.name.toLowerCase());
+        const isSelected = sem2SelectedSubjects.has(item.name);
+
+        return `
+          <div class="checklist-item-card ${isSelected ? 'selected' : ''} ${isTaken ? 'already-taken' : ''}" onclick="LuminaApp.toggleSem2ChecklistItem(this, '${encodeURIComponent(JSON.stringify(item))}', ${isTaken})">
+            <div class="checklist-item-left">
+              <div class="checklist-custom-checkbox">${isSelected ? '✓' : ''}</div>
+              <div>
+                <div class="checklist-item-name">
+                  ${item.name}
+                  ${isTaken ? '<span style="margin-left:6px; font-size:10px; color:var(--text-tertiary); font-style:italic;">(Enrolled in Sem 1)</span>' : ''}
+                </div>
+                <div style="font-size:11px; color:var(--text-secondary); margin-top:2px;">
+                  ${item.classification} ${item.strand ? '• ' + item.strand : ''}
+                </div>
+              </div>
+            </div>
+            <div class="checklist-item-meta">
+              <span class="category-tag" style="font-family:var(--font-mono); font-size:10.5px;">${weightTag}</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      return `
+        <div class="checklist-group">
+          <div class="checklist-group-header">
+            <span>${title}</span>
+            <span style="font-family:var(--font-mono); font-size:10px; opacity:0.8;">${weightTag}</span>
+          </div>
+          <div class="checklist-group-items">
+            ${itemsHtml}
+          </div>
+        </div>
+      `;
+    }
+
+    let html = '';
+    html += renderSem2Group(`Specialized Track (${strand})`, specialized, 'WW 25% • PT 45% • QA 30%');
+    html += renderSem2Group('Core Curriculum Subjects', core, 'WW 25% • PT 50% • QA 25%');
+    html += renderSem2Group('Applied Track Subjects', applied, 'WW 25% • PT 50% • QA 25%');
+
+    container.innerHTML = html;
+    updateSem2CounterUI();
+  }
+
+  function filterSem2Checklist() {
+    const input = document.getElementById('sem2ChecklistSearch');
+    renderSemester2Checklist(input ? input.value : '');
+  }
+
+  function toggleSem2ChecklistItem(el, jsonStr, isTaken) {
+    try {
+      const item = JSON.parse(decodeURIComponent(jsonStr));
+      if (sem2SelectedSubjects.has(item.name)) {
+        sem2SelectedSubjects.delete(item.name);
+        el.classList.remove('selected');
+        const box = el.querySelector('.checklist-custom-checkbox');
+        if (box) box.textContent = '';
+      } else {
+        const isSpecialized = item.classification === 'Specialized';
+        const weights = isSpecialized ? { ww: 0.25, pt: 0.45, qa: 0.30 } : { ww: 0.25, pt: 0.50, qa: 0.25 };
+        sem2SelectedSubjects.set(item.name, {
+          name: item.name,
+          classification: item.classification || 'Core',
+          strand: item.strand || LuminaStore.getProfile().trackStrand || 'STEM',
+          weights,
+          targetGrade: LuminaStore.getProfile().targetGeneralAverage || 95
+        });
+        el.classList.add('selected');
+        const box = el.querySelector('.checklist-custom-checkbox');
+        if (box) box.textContent = '✓';
+      }
+      updateSem2CounterUI();
+      LuminaAudio.playClick();
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  function updateSem2CounterUI() {
+    const count = sem2SelectedSubjects.size;
+    const countEl = document.getElementById('sem2SelectedCount');
+    const submitBtn = document.getElementById('sem2SubmitBtn');
+
+    if (countEl) countEl.textContent = count;
+    if (submitBtn) {
+      submitBtn.textContent = count > 0 ? `Enroll Semester 2 Load (${count} Subjects) 🚀` : `Keep Empty for Now`;
+    }
+  }
+
+  function completeSem2Crossover() {
+    const profile = LuminaStore.getProfile();
+    const subjectsToEnroll = Array.from(sem2SelectedSubjects.values()).map(s => Object.assign({}, s, {
+      semester: 'Semester 2',
+      quarter: 'Quarter 1'
+    }));
+
+    if (subjectsToEnroll.length > 0) {
+      LuminaStore.addSubjectsBatch(subjectsToEnroll);
+    }
+
+    LuminaStore.setAcademicTerm('Semester 2', 'Quarter 1');
+    closeModal(document.getElementById('semesterCrossoverModal'));
+
+    LuminaAudio.playCelebration();
+    showToast(`Semester 2 initialized with ${subjectsToEnroll.length} subjects!`);
+
+    renderGlobalHeaderBadges();
+    renderDashboard();
+    renderPipeline();
+    if (subjectsToEnroll.length > 0) {
+      renderSubjectDeepDive();
+    }
+  }
+
+  // ==========================================================================
+  // Slice 4: Official DepEd Form 138-SHS (Learner's Report Card)
+  // ==========================================================================
 
   function openGradeSlipModal() {
-    const summary = LuminaEngine.calculateTermSummary();
     const profile = LuminaStore.getProfile();
+    const semester = profile.semester || 'Semester 1';
+    const subjects = LuminaStore.getSubjects(semester);
     const paper = document.getElementById('gradeSlipPaperContent');
     if (!paper) return;
 
-    const subjectsHtml = summary.subjectsCalculated.map(c => `
-      <tr>
-        <td class="subj-name">${c.subject.name}</td>
-        <td>${c.subject.classification}</td>
-        <td>${c.ww.percentage.toFixed(1)}%</td>
-        <td>${c.pt.percentage.toFixed(1)}%</td>
-        <td>${c.qa.count > 0 ? c.qa.percentage.toFixed(1) + '%' : 'Pending'}</td>
-        <td>${c.effectiveInitialGrade.toFixed(2)}%</td>
-        <td style="font-weight:600; font-size:13px;">${c.transmutedGrade}</td>
-        <td>${c.transmutedGrade >= 75 ? 'Passed' : 'Failed'}</td>
-      </tr>
-    `).join('');
+    if (subjects.length === 0) {
+      paper.innerHTML = `
+        <div style="padding:48px 24px; text-align:center; color:#64748b;">
+          <div style="font-size:36px; margin-bottom:12px;">📄</div>
+          <div style="font-size:16px; font-weight:700; color:#0f172a; margin-bottom:6px;">No Subjects Enrolled for ${semester}</div>
+          <div style="font-size:13px; max-width:400px; margin:0 auto 16px auto;">Enroll your subjects to generate an official DepEd Form 138-SHS report card.</div>
+        </div>
+      `;
+      openModal(els.gradeSlipModal);
+      return;
+    }
+
+    const coreSubjects = subjects.filter(s => s.classification === 'Core');
+    const appliedSpecialized = subjects.filter(s => s.classification !== 'Core');
+
+    let totalSemFinal = 0;
+    let gradedCount = 0;
+    let hasAnyFailingQuarter = false;
+
+    function renderSubjectRows(subjList) {
+      return subjList.map(s => {
+        const sem = LuminaEngine.calculateSemestralGrade(s.id);
+        const q1Text = sem && sem.hasQ1 ? sem.q1Grade : '--';
+        const q2Text = sem && sem.hasQ2 ? sem.q2Grade : '--';
+        const finalVal = sem && sem.semestralFinal ? sem.semestralFinal : (sem && sem.hasQ1 ? sem.q1Grade : '--');
+
+        if (sem && sem.hasQ1 && sem.q1Grade < 75) hasAnyFailingQuarter = true;
+        if (sem && sem.hasQ2 && sem.q2Grade < 75) hasAnyFailingQuarter = true;
+
+        let remarks = 'In Progress';
+        if (sem && sem.semestralFinal) {
+          totalSemFinal += sem.semestralFinal;
+          gradedCount++;
+          remarks = sem.semestralFinal >= 75 ? 'Passed' : 'Failed';
+        } else if (sem && sem.hasQ1) {
+          totalSemFinal += sem.q1Grade;
+          gradedCount++;
+          remarks = sem.q1Grade >= 75 ? 'In Progress (Passed Q1)' : 'In Progress (Failed Q1)';
+        }
+
+        return `
+          <tr>
+            <td class="text-left" style="font-weight:500;">${s.name}</td>
+            <td style="font-family:var(--font-mono);">${q1Text}</td>
+            <td style="font-family:var(--font-mono);">${q2Text}</td>
+            <td style="font-family:var(--font-mono); font-weight:700;">${finalVal}</td>
+            <td>${remarks}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    const coreRows = renderSubjectRows(coreSubjects);
+    const appliedRows = renderSubjectRows(appliedSpecialized);
+
+    const semAverage = gradedCount > 0 ? Math.round(totalSemFinal / gradedCount) : '--';
+    let honorsText = 'Promoted';
+    if (semAverage !== '--') {
+      if (semAverage >= 98 && !hasAnyFailingQuarter) honorsText = 'Passed - With Highest Honors';
+      else if (semAverage >= 95 && !hasAnyFailingQuarter) honorsText = 'Passed - With High Honors';
+      else if (semAverage >= 90 && !hasAnyFailingQuarter) honorsText = 'Passed - With Honors';
+      else if (semAverage >= 75) honorsText = 'Passed';
+      else honorsText = 'Retained (Intervention Needed)';
+    }
 
     paper.innerHTML = `
-      <div class="slip-header">
-        <div>
-          <div class="slip-title">OFFICIAL TRANSMUTED GRADE REPORT</div>
-          <div class="slip-subtitle">Senior High School Academic Standing • DepEd Table 4 Protocol</div>
+      <div class="form138-paper">
+        <div class="form138-header">
+          <div class="form138-republic">Republic of the Philippines • Department of Education</div>
+          <div class="form138-deped">SENIOR HIGH SCHOOL LEARNER'S PROGRESS REPORT CARD</div>
+          <div class="form138-title">DEPED FORM 138-SHS (SF 9-SHS) • OFFICIAL CERTIFIED COPY</div>
         </div>
-        <div style="text-align:right; font-family:var(--font-mono); font-size:11px; color:#64748b;">
-          <div>REF: LUMINA-${Date.now().toString(36).toUpperCase()}</div>
-          <div>DATE: ${new Date().toLocaleDateString('en-PH', { year: 'numeric', month: 'short', day: 'numeric' })}</div>
-        </div>
-      </div>
 
-      <div class="slip-meta-grid">
-        <div><strong>STUDENT:</strong> ${profile.studentName}</div>
-        <div><strong>GRADE & STRAND:</strong> ${profile.gradeLevel} • ${profile.trackStrand}</div>
-        <div><strong>ACADEMIC YEAR:</strong> ${profile.schoolYear}</div>
-        <div><strong>SEMESTER:</strong> ${profile.semester}</div>
-        <div><strong>TERM:</strong> ${profile.quarter}</div>
-        <div><strong>CURRICULUM:</strong> DepEd K to 12 Basic Education</div>
-      </div>
-
-      <table class="slip-table">
-        <thead>
+        <table class="form138-meta-table">
           <tr>
-            <th>Subject Title</th>
-            <th>Track</th>
-            <th>WW %</th>
-            <th>PT %</th>
-            <th>QA %</th>
-            <th>Initial</th>
-            <th>Transmuted</th>
-            <th>Remarks</th>
+            <td style="width:50%;"><strong>Learner Name:</strong> ${profile.studentName || 'Student Name'}</td>
+            <td style="width:50%;"><strong>School Year:</strong> ${profile.schoolYear || '2026-2027'}</td>
           </tr>
-        </thead>
-        <tbody>
-          ${subjectsHtml}
-        </tbody>
-      </table>
+          <tr>
+            <td><strong>Grade & Section:</strong> ${profile.gradeLevel || 'Grade 11'}</td>
+            <td><strong>Semester:</strong> ${semester}</td>
+          </tr>
+          <tr>
+            <td><strong>Track / Strand:</strong> ${profile.trackStrand || 'STEM Track'}</td>
+            <td><strong>Curriculum:</strong> DepEd K to 12 Basic Education</td>
+          </tr>
+        </table>
 
-      <div class="slip-footer-summary">
-        <div>
-          <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.06em; opacity:0.8;">GENERAL AVERAGE</div>
-          <div style="font-size:28px; font-weight:700; font-family:var(--font-mono);">${summary.transmutedGeneralAverage.toFixed(2)}</div>
+        <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.04em; color:#0f172a; margin-bottom:8px;">
+          Report on Learning Progress and Achievement (${semester})
         </div>
-        <div style="text-align:right;">
-          <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.06em; opacity:0.8;">OFFICIAL ACADEMIC DISTINCTION</div>
-          <div style="font-size:18px; font-weight:600; color:#38bdf8;">${summary.honorsTier.title}</div>
-        </div>
-      </div>
 
-      <div style="margin-top:16px; font-size:10px; color:#94a3b8; text-align:center;">
-        Transmuted using Department of Education Philippines Table 4 Adjusted Transmutation Standard. Verified by LUMINA Academic OS.
+        <table class="form138-grade-table">
+          <thead>
+            <tr>
+              <th rowspan="2" style="width:48%;" class="text-left">Subjects</th>
+              <th colspan="2">Quarterly Rating</th>
+              <th rowspan="2" style="width:16%;">Final Semestral Grade</th>
+              <th rowspan="2" style="width:16%;">Action Taken / Remarks</th>
+            </tr>
+            <tr>
+              <th style="width:10%;">1</th>
+              <th style="width:10%;">2</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="form138-category-row">
+              <td colspan="5" class="text-left">Core Curriculum Subjects</td>
+            </tr>
+            ${coreRows || '<tr><td colspan="5" style="color:#94a3b8; font-style:italic;">No core subjects enrolled</td></tr>'}
+
+            <tr class="form138-category-row">
+              <td colspan="5" class="text-left">Applied & Specialized Track Subjects</td>
+            </tr>
+            ${appliedRows || '<tr><td colspan="5" style="color:#94a3b8; font-style:italic;">No applied or specialized subjects enrolled</td></tr>'}
+          </tbody>
+        </table>
+
+        <div class="form138-summary-box">
+          <div>
+            <div style="font-size:10px; font-weight:700; text-transform:uppercase; color:#64748b;">General Average for the Semester</div>
+            <div style="font-size:26px; font-weight:800; font-family:var(--font-mono); color:#0f172a;">${semAverage}</div>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-size:10px; font-weight:700; text-transform:uppercase; color:#64748b;">Official DepEd Recognition (DO 36, s. 2016)</div>
+            <div style="font-size:16px; font-weight:700; color:#0369a1;">${honorsText}</div>
+          </div>
+        </div>
+
+        <div class="form138-signatures">
+          <div>
+            <div class="form138-sig-line">Signature of Class Adviser</div>
+          </div>
+          <div>
+            <div class="form138-sig-line">Signature of School Principal / Head</div>
+          </div>
+        </div>
+
+        <div style="margin-top:24px; text-align:center; font-size:9.5px; color:#94a3b8; border-top:1px dashed #cbd5e1; padding-top:10px;">
+          Generated via Bawi! Philippine SHS Academic OS • Compliant with DepEd Table 4 Transmutation Matrix & DepEd Order No. 8, s. 2015
+        </div>
       </div>
     `;
 
@@ -2712,6 +3366,22 @@ window.LuminaApp = (function () {
     saveProfileFromModal,
     openGradeSlipModal,
     printGradeSlip,
+    openOnboardingModal,
+    goToOnboardingStep,
+    onOnboardStrandChange,
+    updateOnboardHonorsPreview,
+    filterOnboardingChecklist,
+    selectStrandRecommendedSubjects,
+    clearAllChecklistSelections,
+    toggleChecklistItem,
+    toggleOnboardCustomDrawer,
+    addCustomSubjectToChecklist,
+    completeOnboardingAndLaunch,
+    skipOnboardingToBlank,
+    openSemesterCrossoverModal,
+    filterSem2Checklist,
+    toggleSem2ChecklistItem,
+    completeSem2Crossover,
     openCommandPalette,
     closeCommandPalette,
     closeModal,

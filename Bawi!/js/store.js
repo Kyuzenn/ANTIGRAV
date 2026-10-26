@@ -17,7 +17,8 @@ window.LuminaStore = (function () {
     schoolYear: '2026-2027',
     semester: 'Semester 1',
     quarter: 'Quarter 1',
-    targetGeneralAverage: 95.00
+    targetGeneralAverage: 95.00,
+    onboardingCompleted: false
   };
 
   const DEFAULT_SUBJECTS = [];
@@ -31,7 +32,8 @@ window.LuminaStore = (function () {
     schoolYear: '2026-2027',
     semester: 'Semester 1',
     quarter: 'Quarter 1',
-    targetGeneralAverage: 95.00
+    targetGeneralAverage: 95.00,
+    onboardingCompleted: true
   };
 
   const DEMO_SUBJECTS = [
@@ -583,6 +585,41 @@ window.LuminaStore = (function () {
     return newSubject;
   }
 
+  function addSubjectsBatch(subjectsArray) {
+    if (!Array.isArray(subjectsArray) || subjectsArray.length === 0) return [];
+    const added = [];
+    subjectsArray.forEach((data, index) => {
+      const id = 'subj-' + Date.now().toString(36) + '-' + index + '-' + Math.random().toString(36).substring(2, 5);
+      const isSpecialized = (data.classification === 'Specialized');
+      const defaultWeights = isSpecialized ? { ww: 0.25, pt: 0.45, qa: 0.30 } : { ww: 0.25, pt: 0.50, qa: 0.25 };
+      const newSubject = {
+        id,
+        name: data.name,
+        classification: data.classification || 'Core',
+        strand: data.strand || state.profile.trackStrand || 'STEM',
+        weights: data.weights || defaultWeights,
+        targetGrade: Number(data.targetGrade) || Number(state.profile.targetGeneralAverage) || 95,
+        isCustomWeight: !!data.isCustomWeight,
+        archived: false,
+        semester: data.semester || state.profile.semester || 'Semester 1',
+        quarter: state.activeQuarter || 'Quarter 1'
+      };
+      state.subjects.push(newSubject);
+      added.push(newSubject);
+    });
+
+    if (added.length > 0) {
+      state.activeSubjectId = added[0].id;
+    }
+    persist();
+    return added;
+  }
+
+  function getCompletedSubjectNames(excludeSemester) {
+    const list = state.subjects.filter(s => !s.archived && (!excludeSemester || s.semester !== excludeSemester));
+    return new Set(list.map(s => s.name.trim().toLowerCase()));
+  }
+
   function updateSubject(id, updates) {
     const idx = state.subjects.findIndex(s => s.id === id);
     if (idx !== -1) {
@@ -763,6 +800,8 @@ window.LuminaStore = (function () {
     getActiveSubject,
     setActiveSubjectId,
     addSubject,
+    addSubjectsBatch,
+    getCompletedSubjectNames,
     updateSubject,
     deleteSubject,
     getAssessments,
