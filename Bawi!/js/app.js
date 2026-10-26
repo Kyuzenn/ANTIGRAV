@@ -70,10 +70,9 @@ window.LuminaApp = (function () {
 
     // Check if first-time user / blank slate needing guided onboarding or hash navigation
     if (window.location.hash === '#step2') {
-      showIntroPage(false);
-      setTimeout(() => goToOnboardingStep(2), 150);
+      window.location.href = 'welcome.html#step2';
     } else if (window.location.hash === '#intro' || window.location.hash === '#welcome') {
-      showIntroPage(true);
+      window.location.href = 'welcome.html';
     } else {
       checkOnboardingStatus();
     }
@@ -1795,61 +1794,20 @@ window.LuminaApp = (function () {
     const profile = LuminaStore.getProfile();
     const allSubjects = LuminaStore.getAllSubjects();
     if (!profile.onboardingCompleted && allSubjects.length === 0) {
-      showIntroPage(false);
-    } else {
-      hideIntroPage();
+      window.location.href = 'welcome.html';
     }
   }
 
-  function showIntroPage(allowReturn = true) {
-    document.body.classList.add('intro-active');
-    const intro = document.getElementById('introPage');
-    const appShell = document.getElementById('appShell');
-    const returnBtn = document.getElementById('introReturnToDashboardBtn');
-
-    if (intro) {
-      intro.style.display = 'flex';
-      intro.classList.remove('hidden');
-    }
-    if (appShell) {
-      appShell.style.display = 'none';
-    }
-
-    if (returnBtn) {
-      returnBtn.style.display = allowReturn ? 'inline-flex' : 'none';
-    }
-    const profile = LuminaStore.getProfile();
-    const nameInput = document.getElementById('onboardStudentName');
-    const strandSelect = document.getElementById('onboardStrandSelect');
-    const gradeSelect = document.getElementById('onboardGradeLevel');
-    const semSelect = document.getElementById('onboardSemesterSelect');
-    const targetInput = document.getElementById('onboardTargetAverage');
-
-    if (nameInput) nameInput.value = (profile.studentName && profile.studentName !== 'Student Profile') ? profile.studentName : 'Maria Santos';
-    if (strandSelect) strandSelect.value = profile.trackStrand || 'STEM';
-    if (gradeSelect) gradeSelect.value = profile.gradeLevel || 'Grade 11';
-    if (semSelect) semSelect.value = profile.semester || 'Semester 1';
-    if (targetInput) targetInput.value = profile.targetGeneralAverage || 95;
-
-    updateOnboardHonorsPreview();
-    goToOnboardingStep(1);
+  function showIntroPage() {
+    window.location.href = 'welcome.html';
   }
 
   function hideIntroPage() {
-    document.body.classList.remove('intro-active');
-    const intro = document.getElementById('introPage');
-    const appShell = document.getElementById('appShell');
-    if (intro) {
-      intro.style.display = 'none';
-      intro.classList.add('hidden');
-    }
-    if (appShell) {
-      appShell.style.display = 'flex';
-    }
+    // Already in dashboard
   }
 
   function openOnboardingModal() {
-    showIntroPage(true);
+    window.location.href = 'welcome.html';
   }
 
   function updateOnboardHonorsPreview() {
