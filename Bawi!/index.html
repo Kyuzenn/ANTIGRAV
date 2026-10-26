@@ -13,8 +13,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 
   <!-- Stylesheets (with cache-busting query strings) -->
-  <link rel="stylesheet" href="css/tokens.css?v=2.5">
-  <link rel="stylesheet" href="css/style.css?v=2.5">
+  <link rel="stylesheet" href="css/tokens.css?v=2.6">
+  <link rel="stylesheet" href="css/style.css?v=2.6">
   <link rel="manifest" href="manifest.json">
   <script>
     // Development Cache Buster: unregister any lingering service workers and purge caches
@@ -164,12 +164,15 @@
             <div>
               <div class="hero-metric-label">
                 <span>Transmuted General Average</span>
-                <span style="font-family:var(--font-mono); font-size:10px; opacity:0.8;">DEPED TABLE 4</span>
+                <span style="font-family:var(--font-mono); font-size:10px; opacity:0.8;" id="heroActiveTerm">DEPED TABLE 4</span>
               </div>
               <div class="hero-gpa-number-row">
                 <div class="display-hero-gpa mono" id="heroTransmutedGPA">--</div>
                 <div class="initial-gpa-readout">
                   Unweighted Initial: <span id="heroInitialAverage">--%</span>
+                  <div style="margin-top:4px; font-size:11.5px; color:var(--text-secondary);">
+                    Semestral Projection: <strong id="heroSemestralAverage" style="color:var(--text-primary);">--</strong>
+                  </div>
                 </div>
               </div>
             </div>
@@ -249,7 +252,17 @@
           </div>
 
           <div class="subject-title-row">
-            <h1 class="section-title" id="subjHeaderTitle">Subject Title</h1>
+            <div style="display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
+              <h1 class="section-title" id="subjHeaderTitle">Subject Title</h1>
+              <div class="subject-quarter-switcher" id="subjQuarterSwitcher">
+                <button class="quarter-tab-btn active" id="btnQuarter1" onclick="LuminaApp.setSubjectQuarter('Quarter 1')">
+                  Quarter 1
+                </button>
+                <button class="quarter-tab-btn" id="btnQuarter2" onclick="LuminaApp.setSubjectQuarter('Quarter 2')">
+                  Quarter 2 <span class="bawi-badge">Bawi</span>
+                </button>
+              </div>
+            </div>
             <div class="subject-switcher-arrows">
               <button class="btn-ghost" title="Previous Subject ([)" onclick="LuminaApp.cycleSubject(-1)">
                 ← Previous
@@ -264,6 +277,11 @@
           </div>
 
           <div class="subject-stats-bar" id="subjStatsBar">
+            <!-- Populated dynamically -->
+          </div>
+
+          <!-- The Bawi Formula Banner Container -->
+          <div class="bawi-banner-wrap" id="bawiFormulaBanner">
             <!-- Populated dynamically -->
           </div>
         </div>
@@ -792,6 +810,55 @@
     </div>
   </div>
 
+  <!-- 3e. Term Switcher Modal (Semester & Quarter) -->
+  <div class="modal-overlay" id="termSwitcherModal">
+    <div class="modal-sheet" style="max-width: 520px;" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <div class="modal-title" style="display:flex; align-items:center; gap:8px;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+            <line x1="16" y1="2" x2="16" y2="6"/>
+            <line x1="8" y1="2" x2="8" y2="6"/>
+            <line x1="3" y1="10" x2="21" y2="10"/>
+          </svg>
+          <span>Select Academic Term</span>
+        </div>
+        <button class="icon-btn" onclick="LuminaApp.closeModal(document.getElementById('termSwitcherModal'))">✕</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size:13.5px; color:var(--text-secondary); margin-bottom:16px;">
+          Switching your term configures your gradebooks, assessments, and target simulations for that active quarter.
+        </p>
+        <div class="term-modal-grid">
+          <!-- Semester 1 -->
+          <div class="term-semester-box">
+            <div class="term-sem-title">Semester 1</div>
+            <button class="term-quarter-btn" id="termBtn-sem1-q1" onclick="LuminaApp.selectAcademicTerm('Semester 1', 'Quarter 1')">
+              <span>Quarter 1</span>
+              <span class="category-tag">Midterm</span>
+            </button>
+            <button class="term-quarter-btn" id="termBtn-sem1-q2" onclick="LuminaApp.selectAcademicTerm('Semester 1', 'Quarter 2')">
+              <span>Quarter 2</span>
+              <span class="bawi-badge">Bawi Target</span>
+            </button>
+          </div>
+          <!-- Semester 2 -->
+          <div class="term-semester-box">
+            <div class="term-sem-title">Semester 2</div>
+            <button class="term-quarter-btn" id="termBtn-sem2-q1" onclick="LuminaApp.selectAcademicTerm('Semester 2', 'Quarter 1')">
+              <span>Quarter 1 (Q3)</span>
+              <span class="category-tag">Midterm</span>
+            </button>
+            <button class="term-quarter-btn" id="termBtn-sem2-q2" onclick="LuminaApp.selectAcademicTerm('Semester 2', 'Quarter 2')">
+              <span>Quarter 2 (Q4)</span>
+              <span class="bawi-badge">Final Bawi</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- 3c. Subject Settings Modal (Triple-Dots Action Menu) -->
   <div class="modal-overlay" id="subjectSettingsModal">
     <div class="modal-sheet" onclick="event.stopPropagation()">
@@ -914,10 +981,10 @@
   <div class="toast-container" id="toastContainer"></div>
 
   <!-- Scripts (cache-busted) -->
-  <script src="js/deped-data.js?v=2.5"></script>
-  <script src="js/audio.js?v=2.5"></script>
-  <script src="js/store.js?v=2.5"></script>
-  <script src="js/engine.js?v=2.5"></script>
-  <script src="js/app.js?v=2.5"></script>
+  <script src="js/deped-data.js?v=2.6"></script>
+  <script src="js/audio.js?v=2.6"></script>
+  <script src="js/store.js?v=2.6"></script>
+  <script src="js/engine.js?v=2.6"></script>
+  <script src="js/app.js?v=2.6"></script>
 </body>
 </html>

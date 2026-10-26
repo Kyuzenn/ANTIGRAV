@@ -489,6 +489,15 @@ window.LuminaStore = (function () {
     persist();
   }
 
+  function setAcademicTerm(semester, quarter) {
+    if (semester) state.profile.semester = semester;
+    if (quarter) {
+      state.activeQuarter = quarter;
+      state.profile.quarter = quarter;
+    }
+    persist();
+  }
+
   function getSubjects() {
     return state.subjects.filter(s => !s.archived);
   }
@@ -687,6 +696,7 @@ window.LuminaStore = (function () {
     setActiveTab,
     getActiveQuarter,
     setActiveQuarter,
+    setAcademicTerm,
     getSubjects,
     getAllSubjects,
     getSubject,

@@ -209,6 +209,18 @@ window.LuminaApp = (function () {
       igDisplay.textContent = `${summary.unweightedInitialAverage.toFixed(2)}%`;
     }
 
+    const semestralSum = LuminaEngine.calculateSemestralSummary();
+    const semestralAvgEl = document.getElementById('heroSemestralAverage');
+    const activeTermEl = document.getElementById('heroActiveTerm');
+    const profile = LuminaStore.getProfile();
+
+    if (semestralAvgEl) {
+      semestralAvgEl.textContent = semestralSum ? `${semestralSum.semestralAverage}` : '--';
+    }
+    if (activeTermEl) {
+      activeTermEl.textContent = `${profile.semester.toUpperCase()} • ${LuminaStore.getActiveQuarter().toUpperCase()}`;
+    }
+
     // Honors Distinction Badge
     if (honorsBadge) {
       const tier = summary.honorsTier;
@@ -447,16 +459,21 @@ window.LuminaApp = (function () {
     const container = document.getElementById('tab-subject-view');
     if (!container || !subject) return;
 
-    const calc = LuminaEngine.calculateSubject(subject);
-    const assessments = LuminaStore.getAssessments(subject.id);
+    const activeQ = LuminaStore.getActiveQuarter();
+    const assessments = LuminaStore.getAssessments(subject.id, activeQ);
+    const calc = LuminaEngine.calculateSubject(subject, assessments);
 
     // Subject Breadcrumb & Title
     const breadcrumbTitle = document.getElementById('subjBreadcrumbTitle');
     const headerTitle = document.getElementById('subjHeaderTitle');
     const statsBar = document.getElementById('subjStatsBar');
+    const btnQ1 = document.getElementById('btnQuarter1');
+    const btnQ2 = document.getElementById('btnQuarter2');
 
-    if (breadcrumbTitle) breadcrumbTitle.textContent = subject.name;
+    if (breadcrumbTitle) breadcrumbTitle.textContent = `${subject.name} (${activeQ})`;
     if (headerTitle) headerTitle.textContent = subject.name;
+    if (btnQ1) btnQ1.classList.toggle('active', activeQ === 'Quarter 1');
+    if (btnQ2) btnQ2.classList.toggle('active', activeQ === 'Quarter 2');
 
     if (statsBar) {
       let honorsBadgeText = 'Passing';
@@ -553,6 +570,9 @@ window.LuminaApp = (function () {
     // Populate Column 3: Quarterly Exam (QA)
     renderGradebookColumn('qa', calc.qa, assessments.filter(a => a.category === 'QA'), subject);
 
+    // Render The Bawi Formula Banner
+    renderBawiFormulaBanner(subject);
+
     // Default simulator target grade to the active subject's specific target
     embeddedSimTarget = subject.targetGrade || 95;
     const customTargetInput = document.getElementById('embeddedSimCustomTarget');
@@ -565,6 +585,118 @@ window.LuminaApp = (function () {
 
     // Render interactive embedded simulator at the bottom
     renderEmbeddedSimulator(subject);
+  }
+
+  function renderBawiFormulaBanner(subject) {
+    const bannerContainer = document.getElementById('bawiFormulaBanner');
+    if (!bannerContainer || !subject) return;
+
+    const bawi = LuminaEngine.calculateBawiFormula(subject);
+    if (!bawi) {
+      bannerContainer.innerHTML = '';
+      return;
+    }
+
+    const activeQ = LuminaStore.getActiveQuarter();
+    const isQ2 = activeQ === 'Quarter 2';
+
+    let cardClass = 'bawi-formula-card';
+    if (bawi.status === 'locked_in') cardClass += ' status-locked';
+    if (bawi.status === 'unreachable') cardClass += ' status-unreachable';
+
+    bannerContainer.innerHTML = `
+      <div class="${cardClass}">
+        <div class="bawi-card-left">
+          <div class="bawi-card-tag">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            <span>${isQ2 ? 'The Bawi Formula • Recovery Engine' : 'Semester Trajectory • Foundation Stage'}</span>
+          </div>
+          <div class="bawi-card-headline">${bawi.headline}</div>
+          <div class="bawi-card-desc">${bawi.description}</div>
+          <div class="bawi-equation-pill">
+            <span>DepEd Standard:</span>
+            <span>(Q1 <strong>${bawi.q1Transmuted}</strong> + Q2 <strong>${bawi.requiredQ2}</strong>) ÷ 2 = <strong>${bawi.target}</strong> Target Semestral Average</span>
+          </div>
+        </div>
+        <div class="bawi-card-right">
+          <div class="bawi-metric-block">
+            <div class="bawi-metric-label">${isQ2 ? 'Required Q2 Grade' : 'Q2 Target to Lock'}</div>
+            <div class="bawi-metric-number">${bawi.requiredQ2}</div>
+          </div>
+          <button class="bawi-simulate-btn" onclick="LuminaApp.simulateBawiTarget(${bawi.requiredQ2})">
+            🎯 Simulate Q2 Target (${bawi.requiredQ2})
+          </button>
+        </div>
+      </div>
+    `;
+  }
+
+  function simulateBawiTarget(targetGrade) {
+    const target = Math.min(100, Math.max(60, Number(targetGrade) || 95));
+    embeddedSimTarget = target;
+
+    const customTargetInput = document.getElementById('embeddedSimCustomTarget');
+    if (customTargetInput) {
+      customTargetInput.value = embeddedSimTarget;
+    }
+    document.querySelectorAll('#embeddedSimPresetChips .sim-preset-chip').forEach(btn => {
+      btn.classList.toggle('active', Number(btn.getAttribute('data-target')) === embeddedSimTarget);
+    });
+
+    const subject = LuminaStore.getActiveSubject();
+    if (subject) renderEmbeddedSimulator(subject);
+
+    const simSection = document.getElementById('embeddedSimulatorSection');
+    if (simSection) {
+      simSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    LuminaAudio.playTargetChime();
+    showToast(`Simulator tuned for Q2 Bawi target: ${target}`);
+  }
+
+  function setSubjectQuarter(quarter) {
+    LuminaStore.setActiveQuarter(quarter);
+    LuminaAudio.playClick();
+    showToast(`Switched view to ${quarter}`);
+    renderGlobalHeaderBadges();
+    renderSubjectDeepDive();
+    renderDashboard();
+    renderPipeline();
+  }
+
+  function openTermSwitcherModal() {
+    const modal = document.getElementById('termSwitcherModal');
+    if (!modal) return;
+
+    const profile = LuminaStore.getProfile();
+    const activeQ = LuminaStore.getActiveQuarter();
+    const isSem1 = profile.semester.includes('1');
+    const isQ1 = activeQ.includes('1');
+
+    const btnS1Q1 = document.getElementById('termBtn-sem1-q1');
+    const btnS1Q2 = document.getElementById('termBtn-sem1-q2');
+    const btnS2Q1 = document.getElementById('termBtn-sem2-q1');
+    const btnS2Q2 = document.getElementById('termBtn-sem2-q2');
+
+    if (btnS1Q1) btnS1Q1.classList.toggle('active', isSem1 && isQ1);
+    if (btnS1Q2) btnS1Q2.classList.toggle('active', isSem1 && !isQ1);
+    if (btnS2Q1) btnS2Q1.classList.toggle('active', !isSem1 && isQ1);
+    if (btnS2Q2) btnS2Q2.classList.toggle('active', !isSem1 && !isQ1);
+
+    openModal(modal);
+  }
+
+  function selectAcademicTerm(semester, quarter) {
+    LuminaStore.setAcademicTerm(semester, quarter);
+    closeModal(document.getElementById('termSwitcherModal'));
+    LuminaAudio.playClick();
+    showToast(`Active Term: ${semester} • ${quarter}`);
+    renderGlobalHeaderBadges();
+    renderDashboard();
+    renderPipeline();
+    renderSubjectDeepDive();
+    renderPlanner();
   }
 
   function renderGradebookColumn(categoryKey, compCalc, items, subject) {
@@ -2169,19 +2301,8 @@ window.LuminaApp = (function () {
     if (els.sidebarProfileCard) els.sidebarProfileCard.addEventListener('click', openProfileModal);
     if (els.sidebarTargetPill) els.sidebarTargetPill.addEventListener('click', openProfileModal);
 
-    if (els.semesterBadge) els.semesterBadge.addEventListener('click', () => {
-      const currentQ = LuminaStore.getActiveQuarter();
-      const nextQ = currentQ === 'Quarter 1' ? 'Quarter 2' : 'Quarter 1';
-      LuminaStore.setActiveQuarter(nextQ);
-      showToast(`Switched active term to ${nextQ}`);
-    });
-
-    if (els.sidebarSemesterBadge) els.sidebarSemesterBadge.addEventListener('click', () => {
-      const currentQ = LuminaStore.getActiveQuarter();
-      const nextQ = currentQ === 'Quarter 1' ? 'Quarter 2' : 'Quarter 1';
-      LuminaStore.setActiveQuarter(nextQ);
-      showToast(`Switched active term to ${nextQ}`);
-    });
+    if (els.semesterBadge) els.semesterBadge.addEventListener('click', openTermSwitcherModal);
+    if (els.sidebarSemesterBadge) els.sidebarSemesterBadge.addEventListener('click', openTermSwitcherModal);
 
     // Command Palette Input Listener
     if (els.cmdSearchInput) {
@@ -2354,7 +2475,11 @@ window.LuminaApp = (function () {
     setSimSliderScore,
     setEmbeddedSimCategory,
     setEmbeddedSimTarget,
-    setEmbeddedSimItems
+    setEmbeddedSimItems,
+    setSubjectQuarter,
+    openTermSwitcherModal,
+    selectAcademicTerm,
+    simulateBawiTarget
   };
 })();
 

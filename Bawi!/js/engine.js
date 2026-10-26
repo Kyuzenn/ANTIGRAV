@@ -13,7 +13,8 @@ window.LuminaEngine = (function () {
   function calculateSubject(subject, assessments) {
     if (!subject) return null;
 
-    const subAssessments = assessments || LuminaStore.getAssessments(subject.id);
+    const activeQ = LuminaStore.getActiveQuarter();
+    const subAssessments = assessments || LuminaStore.getAssessments(subject.id, activeQ);
     const wwItems = subAssessments.filter(a => a.category === 'WW');
     const ptItems = subAssessments.filter(a => a.category === 'PT');
     const qaItems = subAssessments.filter(a => a.category === 'QA');
@@ -486,6 +487,104 @@ window.LuminaEngine = (function () {
   }
 
   /**
+   * Section 4.0: The Bawi Formula (Academic Catch-Up Engine)
+   * Formula: Semestral Final = (Q1 + Q2) / 2
+   * Required Q2 = (2 * Target) - Q1
+   */
+  function calculateBawiFormula(subject, customTarget) {
+    if (!subject) return null;
+
+    const profile = LuminaStore.getProfile();
+    const target = Number(customTarget || subject.targetGrade || profile.targetGeneralAverage || 95);
+
+    const q1Assessments = LuminaStore.getAssessments(subject.id, 'Quarter 1');
+    const q2Assessments = LuminaStore.getAssessments(subject.id, 'Quarter 2');
+
+    const q1Calc = calculateSubject(subject, q1Assessments);
+    const q2Calc = calculateSubject(subject, q2Assessments);
+
+    const q1Transmuted = q1Calc ? q1Calc.transmutedGrade : 75;
+    const q2Transmuted = q2Calc ? q2Calc.transmutedGrade : null;
+    const hasQ1Data = q1Assessments.length > 0;
+    const hasQ2Data = q2Assessments.length > 0;
+
+    // Required Q2 grade: (2 * Target) - Q1
+    const requiredQ2 = (2 * target) - q1Transmuted;
+
+    // Minimum raw percentage needed for required Q2
+    let requiredQ2Initial = null;
+    if (requiredQ2 >= 60 && requiredQ2 <= 100) {
+      requiredQ2Initial = LuminaDepEd.transmutedToMinInitial(requiredQ2);
+    }
+
+    let semestralFinal = q1Transmuted;
+    if (hasQ1Data && hasQ2Data) {
+      semestralFinal = Math.round((q1Transmuted + q2Transmuted) / 2);
+    } else if (hasQ2Data && !hasQ1Data) {
+      semestralFinal = q2Transmuted;
+    }
+
+    let status = 'achievable';
+    let headline = '';
+    let description = '';
+    let badgeClass = 'badge-honors';
+
+    if (requiredQ2 > 100) {
+      status = 'unreachable';
+      const maxPossibleSemestral = Math.round((q1Transmuted + 100) / 2);
+      const deficit = requiredQ2 - 100;
+      headline = `Mathematical Stretch (+${deficit} pts needed)`;
+      description = `With a Q1 grade of <strong>${q1Transmuted}</strong>, reaching a final semester grade of <strong>${target}</strong> requires a ${requiredQ2} in Q2. Even with a perfect 100 in Q2, the maximum achievable semester grade is <strong>${maxPossibleSemestral}</strong>. Extra-credit projects or high-weight bonus items are required.`;
+      badgeClass = 'badge-standing';
+    } else if (requiredQ2 <= 75) {
+      status = 'locked_in';
+      headline = `Target Safely Secured (Passing Q2 needed)`;
+      description = `Your Q1 foundation of <strong>${q1Transmuted}</strong> is so solid that achieving the standard DepEd passing grade (75) in Q2 locks in your semester goal of <strong>${target}</strong>.`;
+      badgeClass = 'badge-highest-honors';
+    } else {
+      status = 'achievable';
+      headline = `Need ${requiredQ2} in Q2 to Bawi!`;
+      description = `To secure your semester target of <strong>${target}</strong> after a Q1 score of <strong>${q1Transmuted}</strong>, you need at least a <strong>${requiredQ2}</strong> (≈${requiredQ2Initial}% raw) in Quarter 2.`;
+      badgeClass = 'badge-high-honors';
+    }
+
+    return {
+      subject,
+      target,
+      q1Transmuted,
+      q2Transmuted,
+      hasQ1Data,
+      hasQ2Data,
+      requiredQ2,
+      requiredQ2Initial,
+      semestralFinal,
+      status,
+      headline,
+      description,
+      badgeClass
+    };
+  }
+
+  /**
+   * Calculate Combined Semestral Average across all active subjects.
+   */
+  function calculateSemestralSummary() {
+    const subjects = LuminaStore.getSubjects();
+    if (subjects.length === 0) return null;
+
+    const semestralSubjects = subjects.map(s => calculateSemestralGrade(s.id));
+    const totalSemFinal = semestralSubjects.reduce((acc, s) => acc + (s ? s.semestralFinal : 75), 0);
+    const semestralAverage = +(totalSemFinal / semestralSubjects.length).toFixed(2);
+    const honorsTier = LuminaDepEd.getHonorsTier(semestralAverage);
+
+    return {
+      semestralAverage,
+      honorsTier,
+      subjects: semestralSubjects
+    };
+  }
+
+  /**
    * Section 4.1: High-Leverage Study Allocator.
    * Examines remaining uncompleted weights across all subjects and ranks
    * where additional effort yields the highest General Average improvement.
@@ -555,6 +654,8 @@ window.LuminaEngine = (function () {
     calculateSubject,
     calculateTermSummary,
     calculateSemestralGrade,
+    calculateSemestralSummary,
+    calculateBawiFormula,
     solveForExam,
     solveForAssessment,
     projectAssessmentScore,
