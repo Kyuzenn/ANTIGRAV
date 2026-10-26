@@ -475,17 +475,24 @@ window.LuminaEngine = (function () {
     const q1Calc = calculateSubject(subject, q1Assessments);
     const q2Calc = calculateSubject(subject, q2Assessments);
 
-    const hasQ1 = q1Assessments.length > 0;
-    const hasQ2 = q2Assessments.length > 0;
+    const hasQ1 = q1Assessments.length > 0 && q1Calc && q1Calc.hasAssessments;
+    const hasQ2 = q2Assessments.length > 0 && q2Calc && q2Calc.hasAssessments;
 
-    const q1Grade = q1Calc.transmutedGrade;
-    const q2Grade = q2Calc.transmutedGrade;
+    const q1Grade = hasQ1 ? q1Calc.transmutedGrade : null;
+    const q2Grade = hasQ2 ? q2Calc.transmutedGrade : null;
 
-    let semestralFinal = q1Grade;
+    let semestralFinal = null;
+    let unroundedAvg = null;
+
     if (hasQ1 && hasQ2) {
-      semestralFinal = Math.round((q1Grade + q2Grade) / 2);
+      unroundedAvg = +((q1Grade + q2Grade) / 2).toFixed(1);
+      semestralFinal = Math.round(unroundedAvg);
+    } else if (hasQ1 && !hasQ2) {
+      semestralFinal = q1Grade;
+      unroundedAvg = q1Grade;
     } else if (hasQ2 && !hasQ1) {
       semestralFinal = q2Grade;
+      unroundedAvg = q2Grade;
     }
 
     return {
@@ -494,15 +501,17 @@ window.LuminaEngine = (function () {
       q2Grade,
       hasQ1,
       hasQ2,
+      unroundedAvg,
       semestralFinal,
-      honorsTier: LuminaDepEd.getHonorsTier(semestralFinal)
+      honorsTier: semestralFinal ? LuminaDepEd.getHonorsTier(semestralFinal) : LuminaDepEd.getHonorsTier(0)
     };
   }
 
   /**
    * Section 4.0: The Bawi Formula (Academic Catch-Up Engine)
-   * Formula: Semestral Final = (Q1 + Q2) / 2
-   * Required Q2 = (2 * Target) - Q1
+   * Formula: Semestral Final = round((Q1 + Q2) / 2)
+   * With DepEd half-point round-off: (Q1 + Q2) / 2 >= Target - 0.5
+   * => Required Q2 = (2 * Target - 1) - Q1
    */
   function calculateBawiFormula(subject, customTarget) {
     if (!subject) return null;
@@ -516,10 +525,11 @@ window.LuminaEngine = (function () {
     const q1Calc = calculateSubject(subject, q1Assessments);
     const q2Calc = calculateSubject(subject, q2Assessments);
 
-    const q1Transmuted = q1Calc && q1Calc.hasAssessments ? q1Calc.transmutedGrade : 75;
-    const q2Transmuted = q2Calc && q2Calc.hasAssessments ? q2Calc.transmutedGrade : null;
-    const hasQ1Data = q1Assessments.length > 0;
-    const hasQ2Data = q2Assessments.length > 0;
+    const hasQ1Data = q1Assessments.length > 0 && q1Calc && q1Calc.hasAssessments;
+    const hasQ2Data = q2Assessments.length > 0 && q2Calc && q2Calc.hasAssessments;
+
+    const q1Transmuted = hasQ1Data ? q1Calc.transmutedGrade : 75;
+    const q2Transmuted = hasQ2Data ? q2Calc.transmutedGrade : null;
 
     if (!hasQ1Data) {
       return {
@@ -531,28 +541,44 @@ window.LuminaEngine = (function () {
         hasQ2Data,
         requiredQ2: target,
         requiredQ2Initial: LuminaDepEd.transmutedToMinInitial(target),
+        unroundedAvg: '--',
         semestralFinal: '--',
         status: 'achievable',
         headline: `Aim for ${target} in Quarter 1`,
         description: `No Quarter 1 assessments recorded yet for <strong>${subject.name}</strong>. Aim for at least <strong>${target}</strong> in Quarter 1 to establish a solid foundation for the semester.`,
-        badgeClass: 'badge-honors'
+        badgeClass: 'badge-honors',
+        honorsTier: LuminaDepEd.getHonorsTier(0)
       };
     }
 
-    // Required Q2 grade: (2 * Target) - Q1
-    const requiredQ2 = (2 * target) - q1Transmuted;
+    // In DepEd: Semestral Final = Math.round((Q1 + Q2) / 2)
+    // To achieve target, (Q1 + Q2) / 2 >= target - 0.5
+    // Therefore, Q1 + Q2 >= (2 * target) - 1
+    // Required Q2 = (2 * target - 1) - q1Transmuted
+    const minSumForTarget = (2 * target) - 1;
+    const requiredQ2 = minSumForTarget - q1Transmuted;
+    const isPassingSufficient = requiredQ2 <= 75;
+    const targetQ2Grade = isPassingSufficient ? 75 : requiredQ2;
 
-    // Minimum raw percentage needed for required Q2
+    const resultingSum = q1Transmuted + targetQ2Grade;
+    const unroundedAvg = +(resultingSum / 2).toFixed(1);
+    const resultingSemestral = Math.round(unroundedAvg);
+
+    // Minimum raw percentage needed for targetQ2Grade
     let requiredQ2Initial = null;
-    if (requiredQ2 >= 60 && requiredQ2 <= 100) {
-      requiredQ2Initial = LuminaDepEd.transmutedToMinInitial(requiredQ2);
+    if (targetQ2Grade >= 60 && targetQ2Grade <= 100) {
+      requiredQ2Initial = LuminaDepEd.transmutedToMinInitial(targetQ2Grade);
     }
 
-    let semestralFinal = q1Transmuted;
+    // Current combined semestral grade so far (if Q2 has data)
+    let currentSemestralFinal = q1Transmuted;
+    let currentUnroundedAvg = q1Transmuted;
     if (hasQ1Data && hasQ2Data) {
-      semestralFinal = Math.round((q1Transmuted + q2Transmuted) / 2);
+      currentUnroundedAvg = +((q1Transmuted + q2Transmuted) / 2).toFixed(1);
+      currentSemestralFinal = Math.round(currentUnroundedAvg);
     } else if (hasQ2Data && !hasQ1Data) {
-      semestralFinal = q2Transmuted;
+      currentSemestralFinal = q2Transmuted;
+      currentUnroundedAvg = q2Transmuted;
     }
 
     let status = 'achievable';
@@ -565,17 +591,17 @@ window.LuminaEngine = (function () {
       const maxPossibleSemestral = Math.round((q1Transmuted + 100) / 2);
       const deficit = requiredQ2 - 100;
       headline = `Mathematical Stretch (+${deficit} pts needed)`;
-      description = `With a Q1 grade of <strong>${q1Transmuted}</strong>, reaching a final semester grade of <strong>${target}</strong> requires a ${requiredQ2} in Q2. Even with a perfect 100 in Q2, the maximum achievable semester grade is <strong>${maxPossibleSemestral}</strong>. Extra-credit projects or high-weight bonus items are required.`;
+      description = `With a Q1 grade of <strong>${q1Transmuted}</strong>, reaching a final semester target of <strong>${target}</strong> requires a ${requiredQ2} in Q2. Even with a perfect 100 in Q2, the maximum achievable semester grade is <strong>${maxPossibleSemestral}</strong>. Extra-credit projects or high-weight bonus items are required.`;
       badgeClass = 'badge-standing';
-    } else if (requiredQ2 <= 75) {
+    } else if (isPassingSufficient) {
       status = 'locked_in';
-      headline = `Target Safely Secured (Passing Q2 needed)`;
-      description = `Your Q1 foundation of <strong>${q1Transmuted}</strong> is so solid that achieving the standard DepEd passing grade (75) in Q2 locks in your semester goal of <strong>${target}</strong>.`;
+      headline = `Target Safely Secured (Passing 75 needed)`;
+      description = `Your Q1 score of <strong>${q1Transmuted}</strong> is so strong that achieving the standard DepEd passing grade (75) in Q2 locks in a final semester grade of <strong>${resultingSemestral}</strong>, securing your target of <strong>${target}</strong>.`;
       badgeClass = 'badge-highest-honors';
     } else {
       status = 'achievable';
       headline = `Need ${requiredQ2} in Q2 to Bawi!`;
-      description = `To secure your semester target of <strong>${target}</strong> after a Q1 score of <strong>${q1Transmuted}</strong>, you need at least a <strong>${requiredQ2}</strong> (≈${requiredQ2Initial}% raw) in Quarter 2.`;
+      description = `To secure your semester target of <strong>${target}</strong> after a Q1 score of <strong>${q1Transmuted}</strong>, you need at least a <strong>${requiredQ2}</strong> (≈${requiredQ2Initial}% raw) in Quarter 2. With DepEd half-point round-off, (${q1Transmuted} + ${requiredQ2}) ÷ 2 = ${unroundedAvg} rounds up to <strong>${target}</strong>.`;
       badgeClass = 'badge-high-honors';
     }
 
@@ -586,13 +612,19 @@ window.LuminaEngine = (function () {
       q2Transmuted,
       hasQ1Data,
       hasQ2Data,
-      requiredQ2,
+      requiredQ2: targetQ2Grade,
+      exactRequiredQ2: requiredQ2,
       requiredQ2Initial,
-      semestralFinal,
+      unroundedAvg,
+      resultingSemestral,
+      currentSemestralFinal,
+      currentUnroundedAvg,
+      semestralFinal: currentSemestralFinal,
       status,
       headline,
       description,
-      badgeClass
+      badgeClass,
+      honorsTier: LuminaDepEd.getHonorsTier(currentSemestralFinal)
     };
   }
 

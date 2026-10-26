@@ -442,14 +442,42 @@ window.LuminaApp = (function () {
       const ptWidth = Math.round(subject.weights.pt * 100);
       const qaWidth = Math.round(subject.weights.qa * 100);
 
-      const targetMet = calc.transmutedGrade >= subject.targetGrade;
-      const statusPillClass = targetMet ? 'met' : 'pending';
-      const statusPillText = targetMet
-        ? `Target Met (${calc.transmutedGrade}/${subject.targetGrade})`
-        : `Priority Focus (-${calc.deficitIG} pts)`;
+      const activeQ = LuminaStore.getActiveQuarter();
+      const isQ2 = activeQ === 'Quarter 2';
 
       const semCalc = LuminaEngine.calculateSemestralGrade(subject.id);
-      const semGradeDisplay = semCalc ? `<span class="category-tag" title="Semestral Average (${LuminaStore.getProfile().semester})">Sem: ${semCalc.finalGrade}</span>` : '';
+      let semGradeDisplay = '';
+      if (isQ2 && semCalc && semCalc.semestralFinal) {
+        semGradeDisplay = `<span class="category-tag" style="background:rgba(52,211,153,0.15); color:var(--status-emerald); border-color:rgba(52,211,153,0.35); font-weight:600;" title="Final Semester Average">Sem Final: ${semCalc.semestralFinal}</span>`;
+      } else {
+        semGradeDisplay = `<span class="category-tag">${activeQ}</span>`;
+      }
+
+      const targetVal = subject.targetGrade || 95;
+      const targetMet = calc.hasAssessments && (calc.transmutedGrade >= targetVal);
+      const statusPillClass = targetMet ? 'met' : 'pending';
+      let statusPillText = '';
+
+      if (!calc.hasAssessments) {
+        statusPillText = `Awaiting ${activeQ} Entries`;
+      } else if (isQ2) {
+        const bawi = LuminaEngine.calculateBawiFormula(subject);
+        if (bawi && bawi.requiredQ2) {
+          statusPillText = bawi.status === 'locked_in'
+            ? `Target Secured (Pass Q2)`
+            : (bawi.status === 'unreachable' ? `Stretch (${bawi.requiredQ2} needed)` : `Need ${bawi.requiredQ2} in Q2`);
+        } else {
+          statusPillText = targetMet ? `Target Met (${calc.transmutedGrade}/${targetVal})` : `Needs +${targetVal - calc.transmutedGrade} pts`;
+        }
+      } else {
+        // Quarter 1: focus exclusively on Quarter 1 progress
+        statusPillText = targetMet
+          ? `Q1 On Track (${calc.transmutedGrade}/${targetVal})`
+          : `Q1 Focus (Needs +${targetVal - calc.transmutedGrade} pts)`;
+      }
+
+      const tgDisplay = calc.hasAssessments ? calc.transmutedGrade : '--';
+      const rawDisplay = calc.hasAssessments ? `Raw: ${calc.effectiveInitialGrade}%` : 'Raw: --%';
 
       card.innerHTML = `
         <div class="pipeline-card-header">
@@ -483,11 +511,11 @@ window.LuminaApp = (function () {
 
         <div class="pipeline-metrics-row">
           <div class="pipeline-tg-box">
-            <div class="pipeline-tg-number">${calc.transmutedGrade}</div>
-            <div class="pipeline-raw-ig">Raw: ${calc.effectiveInitialGrade}</div>
+            <div class="pipeline-tg-number">${tgDisplay}</div>
+            <div class="pipeline-raw-ig">${rawDisplay}</div>
           </div>
           <div style="display:flex; flex-direction:column; align-items:flex-end; gap:6px;">
-            ${isPriority ? `<div class="priority-focus-badge">⚡ Priority Focus (-${calc.deficitIG} pts)</div>` : ''}
+            ${isPriority && calc.hasAssessments ? `<div class="priority-focus-badge">⚡ Priority Focus (-${calc.deficitIG} pts)</div>` : ''}
             <div class="target-status-pill ${statusPillClass}">
               <span style="display:inline-block; width:5px; height:5px; border-radius:50%; background:currentColor;"></span>
               ${statusPillText}
@@ -601,9 +629,33 @@ window.LuminaApp = (function () {
       const displayTG = hasData ? tGrade : '--';
       const displayIG = hasData ? `${calc.effectiveInitialGrade}` : '--';
 
+      let semFinalCardHtml = '';
+      if (activeQ === 'Quarter 2') {
+        const semCalc = LuminaEngine.calculateSemestralGrade(subject.id);
+        const hasSem = semCalc && semCalc.semestralFinal;
+        const semVal = hasSem ? semCalc.semestralFinal : '--';
+        const semHonors = hasSem ? semCalc.honorsTier : LuminaDepEd.getHonorsTier(0);
+        let semSubtext = 'Awaiting Q2 scores';
+        if (hasSem && semCalc.hasQ1 && semCalc.hasQ2) {
+          semSubtext = `(Q1 ${semCalc.q1Grade} + Q2 ${semCalc.q2Grade}) ÷ 2 = ${semCalc.unroundedAvg} → ${semCalc.semestralFinal}`;
+        } else if (hasSem && semCalc.hasQ1) {
+          semSubtext = `Based on Q1 foundation (${semCalc.q1Grade})`;
+        }
+        semFinalCardHtml = `
+          <div class="stat-item hero-stat" style="border-left: 2px solid var(--accent-primary);">
+            <span class="label">Semestral Final</span>
+            <div class="stat-val-row">
+              <span class="val hero-val" style="color:var(--status-emerald);">${semVal}</span>
+              <span class="honors-badge-pill ${semHonors.badgeClass}" style="font-size:11px; padding:3px 10px;">${semHonors.title}</span>
+            </div>
+            <span class="stat-sub">${semSubtext}</span>
+          </div>
+        `;
+      }
+
       statsBar.innerHTML = `
         <div class="stat-item hero-stat">
-          <span class="label">Transmuted Grade</span>
+          <span class="label">${activeQ} Grade</span>
           <div class="stat-val-row">
             <span class="val hero-val" style="color:${gradeColor};">${displayTG}</span>
             <span class="honors-badge-pill ${honorsBadgeClass}" style="font-size:11px; padding:3px 10px;">${honorsBadgeText}</span>
@@ -611,8 +663,10 @@ window.LuminaApp = (function () {
           <span class="stat-sub">Official DepEd Table 4</span>
         </div>
 
+        ${semFinalCardHtml}
+
         <div class="stat-item">
-          <span class="label">Initial Grade (Raw)</span>
+          <span class="label">${activeQ} Initial (Raw)</span>
           <div class="stat-val-row">
             <span class="val">${displayIG}<span class="unit">%</span></span>
           </div>
@@ -638,7 +692,7 @@ window.LuminaApp = (function () {
         </div>
 
         <div class="stat-item">
-          <span class="label">Total Entries</span>
+          <span class="label">${activeQ} Entries</span>
           <div class="stat-val-row">
             <span class="val">${assessments.length}</span>
           </div>
@@ -677,36 +731,119 @@ window.LuminaApp = (function () {
     const bannerContainer = document.getElementById('bawiFormulaBanner');
     if (!bannerContainer || !subject) return;
 
-    const bawi = LuminaEngine.calculateBawiFormula(subject);
-    if (!bawi) {
-      bannerContainer.innerHTML = '';
-      return;
-    }
-
     const activeQ = LuminaStore.getActiveQuarter();
-    const isQ2 = activeQ === 'Quarter 2';
+    if (activeQ === 'Quarter 1') {
+      renderQuarter1TaskBanner(subject, bannerContainer);
+    } else {
+      renderQuarter2BawiBanner(subject, bannerContainer);
+    }
+  }
+
+  function renderQuarter1TaskBanner(subject, bannerContainer) {
+    const target = subject.targetGrade || 95;
+    const calc = LuminaEngine.calculateSubject(subject);
+    const examSolver = LuminaEngine.solveForExam(subject.id, target, 50);
+
+    const hasData = calc && calc.hasAssessments;
+    const tGrade = hasData ? calc.transmutedGrade : 0;
+    const isMet = hasData && tGrade >= target;
 
     let cardClass = 'bawi-formula-card';
-    if (bawi.status === 'locked_in') cardClass += ' status-locked';
-    if (bawi.status === 'unreachable') cardClass += ' status-unreachable';
+    if (isMet) cardClass += ' status-locked';
+    else if (examSolver && examSolver.status === 'UNREACHABLE') cardClass += ' status-unreachable';
+
+    let headline = '';
+    let description = '';
+    let tag = '';
+    let badgePillHtml = '';
+
+    if (!hasData) {
+      tag = 'QUARTER 1 STRATEGY • IN-FLIGHT TASK GUIDANCE';
+      headline = `Establish Your Quarter 1 Pace (Target: ${target})`;
+      description = `No assessments logged yet for Quarter 1. Complete your upcoming Written Works and Performance Tasks to build locked points towards your target.`;
+      badgePillHtml = `Target Q1 Transmuted: <strong>${target}</strong> (≈${LuminaDepEd.transmutedToMinInitial(target)}% Initial Grade)`;
+    } else if (isMet) {
+      tag = 'QUARTER 1 ON TRACK • MAINTAIN PACE';
+      headline = `Quarter 1 Target Secured (${tGrade}/${target})`;
+      description = `Your current Quarter 1 running grade is <strong>${tGrade}</strong>. ${examSolver ? examSolver.recommendation : 'Keep up the momentum on remaining activities.'}`;
+      badgePillHtml = `Locked Points: <strong>${calc.lockedPoints} pts</strong> • Running Rate: <strong>${calc.runningRate.toFixed(1)}%</strong> • Exam Cushion: <strong>${examSolver ? examSolver.requiredExamRawScore : 35}/50</strong>`;
+    } else {
+      const deficit = target - tGrade;
+      tag = 'QUARTER 1 IN-FLIGHT GUIDANCE • TASK LEVERAGE';
+      headline = `Bring Up Q1 Grade: Need +${deficit} pts`;
+      description = `Your current Quarter 1 running grade is <strong>${tGrade}</strong>. To reach your Q1 target of <strong>${target}</strong>, focus on upcoming Performance Tasks (${Math.round(subject.weights.pt * 100)}% weight) and score at least <strong>${examSolver ? examSolver.requiredExamRawScore : 40} / 50</strong> on the Quarterly Exam.`;
+      badgePillHtml = `Locked Points: <strong>${calc.lockedPoints} pts</strong> • Exam Requirement: <strong>${examSolver ? examSolver.requiredExamRawScore : 40} / 50 items (${examSolver ? examSolver.requiredExamPct : 80}%)</strong>`;
+    }
+
+    const examScoreTarget = examSolver ? examSolver.requiredExamRawScore : 40;
 
     bannerContainer.innerHTML = `
       <div class="${cardClass}">
         <div class="bawi-card-left">
           <div class="bawi-card-tag">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-            <span>${isQ2 ? 'The Bawi Formula • Recovery Engine' : 'Semester Trajectory • Foundation Stage'}</span>
+            <span>${tag}</span>
           </div>
-          <div class="bawi-card-headline">${bawi.headline}</div>
-          <div class="bawi-card-desc">${bawi.description}</div>
+          <div class="bawi-card-headline">${headline}</div>
+          <div class="bawi-card-desc">${description}</div>
           <div class="bawi-equation-pill">
-            <span>DepEd Standard:</span>
-            <span>(Q1 <strong>${bawi.q1Transmuted}</strong> + Q2 <strong>${bawi.requiredQ2}</strong>) ÷ 2 = <strong>${bawi.target}</strong> Target Semestral Average</span>
+            <span>DepEd Q1 Tracking:</span>
+            <span>${badgePillHtml}</span>
           </div>
         </div>
         <div class="bawi-card-right">
           <div class="bawi-metric-block">
-            <div class="bawi-metric-label">${isQ2 ? 'Required Q2 Grade' : 'Q2 Target to Lock'}</div>
+            <div class="bawi-metric-label">Q1 Exam Target</div>
+            <div class="bawi-metric-number">${examScoreTarget}<span style="font-size:18px; font-weight:500; opacity:0.7;">/50</span></div>
+          </div>
+          <button class="bawi-simulate-btn" onclick="LuminaApp.simulateBawiTarget(${target}, 'QA')">
+            🎯 Simulate Q1 Target (${target})
+          </button>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderQuarter2BawiBanner(subject, bannerContainer) {
+    const bawi = LuminaEngine.calculateBawiFormula(subject);
+    if (!bawi) {
+      bannerContainer.innerHTML = '';
+      return;
+    }
+
+    let cardClass = 'bawi-formula-card';
+    if (bawi.status === 'locked_in') cardClass += ' status-locked';
+    if (bawi.status === 'unreachable') cardClass += ' status-unreachable';
+
+    let currentStandingHtml = '';
+    if (bawi.hasQ2Data) {
+      currentStandingHtml = `
+        <div style="margin-top:10px; font-size:12.5px; color:var(--text-secondary); display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+          <span>Current Standing: Q1 <strong>${bawi.q1Transmuted}</strong> + Q2 <strong>${bawi.q2Transmuted}</strong></span>
+          <span style="opacity:0.4;">•</span>
+          <span>Semestral Final: <strong style="color:var(--status-emerald); font-size:13.5px;">${bawi.currentSemestralFinal}</strong> (${bawi.honorsTier.title})</span>
+        </div>
+      `;
+    }
+
+    bannerContainer.innerHTML = `
+      <div class="${cardClass}">
+        <div class="bawi-card-left">
+          <div class="bawi-card-tag">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            <span>The Bawi Formula • Academic Recovery Engine</span>
+          </div>
+          <div class="bawi-card-headline">${bawi.headline}</div>
+          <div class="bawi-card-desc">${bawi.description}</div>
+          <div class="bawi-equation-pill">
+            <span>DepEd Round-Off Standard:</span>
+            <span>(Q1 <strong>${bawi.q1Transmuted}</strong> + Q2 <strong>${bawi.requiredQ2}</strong>) ÷ 2 = <strong>${bawi.unroundedAvg}</strong> → Rounds to <strong>${bawi.target}</strong> Target Semestral Average</span>
+          </div>
+          ${currentStandingHtml}
+        </div>
+        <div class="bawi-card-right">
+          <div class="bawi-metric-block">
+            <div class="bawi-metric-label">Required Q2 Grade</div>
             <div class="bawi-metric-number">${bawi.requiredQ2}</div>
           </div>
           <button class="bawi-simulate-btn" onclick="LuminaApp.simulateBawiTarget(${bawi.requiredQ2})">
@@ -717,9 +854,13 @@ window.LuminaApp = (function () {
     `;
   }
 
-  function simulateBawiTarget(targetGrade) {
+  function simulateBawiTarget(targetGrade, category) {
     const target = Math.min(100, Math.max(60, Number(targetGrade) || 95));
     embeddedSimTarget = target;
+
+    if (category) {
+      setEmbeddedSimCategory(category);
+    }
 
     const customTargetInput = document.getElementById('embeddedSimCustomTarget');
     if (customTargetInput) {
@@ -738,7 +879,8 @@ window.LuminaApp = (function () {
     }
 
     LuminaAudio.playTargetChime();
-    showToast(`Simulator tuned for Q2 Bawi target: ${target}`);
+    const activeQ = LuminaStore.getActiveQuarter();
+    showToast(activeQ === 'Quarter 1' ? `Simulator tuned for Q1 target: ${target}` : `Simulator tuned for Q2 Bawi target: ${target}`);
   }
 
   function setSubjectQuarter(quarter) {
