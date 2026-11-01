@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bawi! Prototype - Senior High School Academic OS</title>
+  <meta name="description" content="Research Prototype: Senior High School Academic System featuring DepEd Table 4 Grading & Target Solver.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="prototype.css">
+</head>
+<body>
+
+  <div class="proto-app">
+    <!-- Clean Left Navigation Sidebar -->
+    <aside class="proto-sidebar">
+      <div>
+        <div class="proto-brand-block">
+          <img src="logo-ba.png" alt="Baybayin Ba Logo" class="proto-brand-logo-img">
+          <div>
+            <div class="proto-brand-title">Bawi!</div>
+          </div>
+        </div>
+
+        <ul class="proto-nav-menu">
+          <li class="proto-nav-item active" data-tab="overview">
+            <button onclick="BawiProto.switchTab('overview')">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
+              <span>Dashboard</span>
+            </button>
+          </li>
+          <li class="proto-nav-item" data-tab="subjects">
+            <button onclick="BawiProto.switchTab('subjects')">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M6 6h10M6 10h10"/></svg>
+              <span>Subjects</span>
+            </button>
+          </li>
+          <li class="proto-nav-item" data-tab="planner">
+            <button onclick="BawiProto.switchTab('planner')">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/></svg>
+              <span>Planner</span>
+              <span class="proto-badge-counter" id="sidebarTaskCount">2</span>
+            </button>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Bottom Profile Card -->
+      <div class="proto-sidebar-footer">
+        <div class="proto-user-card" onclick="BawiProto.openSetupModal()" title="Click to edit Student Setup">
+          <div>
+            <div class="proto-user-name" id="sidebarStudentName">Maria Santos</div>
+            <div class="proto-user-sub" id="sidebarStrandText">STEM Track</div>
+          </div>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--text-muted);"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="proto-main">
+
+      <!-- ===================================================================
+           TAB 1: DASHBOARD / OVERVIEW
+           =================================================================== -->
+      <section class="proto-view active" id="view-overview">
+        <div class="proto-view-header">
+          <div class="proto-view-title">
+            <h1>Academic Dashboard</h1>
+          </div>
+          <div class="proto-header-actions">
+            <button class="btn-canva btn-canva-secondary" onclick="BawiProto.openSetupModal()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+              <span>Setup Profile</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Clean Hero White Card (General Average) -->
+        <div class="hero-white-card">
+          <div>
+            <div class="hero-left-label">Transmuted General Average</div>
+            <div class="hero-gpa-number" id="heroGpaNumber">96.40</div>
+            <div class="hero-initial-meta">
+              Unweighted Initial Grade: <strong id="heroInitialAverage">95.66%</strong>
+            </div>
+          </div>
+          <div>
+            <div class="honors-canva-pill" id="heroHonorsBadge">
+              With High Honors
+            </div>
+          </div>
+        </div>
+
+        <!-- Enrolled Subjects Grid -->
+        <div class="section-subtitle-bar">
+          <h2>Enrolled Subjects</h2>
+          <button class="btn-canva btn-canva-secondary btn-canva-sm" onclick="BawiProto.openAddSubjectModal()">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            <span>Add Subject</span>
+          </button>
+        </div>
+
+        <div class="canva-cards-grid" id="dashboardSubjectsGrid">
+          <!-- Populated by JavaScript -->
+        </div>
+      </section>
+
+      <!-- ===================================================================
+           TAB 2: SUBJECTS WORKSPACE (WW, PT, QA & TARGET SOLVER)
+           =================================================================== -->
+      <section class="proto-view" id="view-subjects">
+        <div class="proto-view-header">
+          <div class="proto-view-title">
+            <div class="subject-header-dropdown-wrap">
+              <button class="subject-dropdown-trigger" onclick="BawiProto.toggleSubjectDropdown(event)">
+                <span id="currentSubjectTitleText">General Chemistry 1</span>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+              </button>
+              <div class="subject-dropdown-menu" id="subjectDropdownMenu">
+                <!-- Dynamically populated options -->
+              </div>
+            </div>
+            <p id="currentSubjectMeta">Specialized Subject</p>
+          </div>
+          <div class="proto-header-actions" style="text-align: right; display: flex; flex-direction: column; align-items: flex-end;">
+            <span style="font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); margin-bottom: 2px;">Current Grade</span>
+            <div style="font-size: 34px; font-weight: 800; font-family: var(--font-mono); color: var(--text-main); line-height: 1;" id="currentSubjectGrade">
+              95
+            </div>
+          </div>
+        </div>
+
+        <!-- Tri-Column Gradebook: Written Works, Performance Tasks, Quarterly Exam -->
+        <div class="tri-column-board">
+          <!-- Column 1: Written Works (WW) -->
+          <div class="column-card">
+            <div class="column-header">
+              <span class="column-title">1. Written Works (WW)</span>
+              <span class="column-weight pill-ww" id="colWeight-ww">25%</span>
+            </div>
+            <div class="column-score-summary">
+              <span>Total: <strong id="colScore-ww">46 / 50</strong></span>
+              <span>Percentage: <strong id="colPct-ww">92.0%</strong></span>
+            </div>
+            <div class="column-items-list" id="colList-ww">
+              <!-- Dynamically populated -->
+            </div>
+            <div class="column-footer-action">
+              <button class="btn-add-item" onclick="BawiProto.openAddScoreModal('WW')">+ Add Written Work</button>
+            </div>
+          </div>
+
+          <!-- Column 2: Performance Tasks (PT) -->
+          <div class="column-card">
+            <div class="column-header">
+              <span class="column-title">2. Performance Tasks (PT)</span>
+              <span class="column-weight pill-pt" id="colWeight-pt">45%</span>
+            </div>
+            <div class="column-score-summary">
+              <span>Total: <strong id="colScore-pt">95 / 100</strong></span>
+              <span>Percentage: <strong id="colPct-pt">95.0%</strong></span>
+            </div>
+            <div class="column-items-list" id="colList-pt">
+              <!-- Dynamically populated -->
+            </div>
+            <div class="column-footer-action">
+              <button class="btn-add-item" onclick="BawiProto.openAddScoreModal('PT')">+ Add Performance Task</button>
+            </div>
+          </div>
+
+          <!-- Column 3: Quarterly Exam (QA) -->
+          <div class="column-card">
+            <div class="column-header">
+              <span class="column-title">3. Quarterly Exam (QA)</span>
+              <span class="column-weight pill-qa" id="colWeight-qa">30%</span>
+            </div>
+            <div class="column-score-summary">
+              <span>Total: <strong id="colScore-qa">44 / 50</strong></span>
+              <span>Percentage: <strong id="colPct-qa">88.0%</strong></span>
+            </div>
+            <div class="column-items-list" id="colList-qa">
+              <!-- Dynamically populated -->
+            </div>
+            <div class="column-footer-action">
+              <button class="btn-add-item" onclick="BawiProto.openAddScoreModal('QA')">+ Add Quarterly Exam</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Target Solver Box (Canva Prototype style) -->
+        <div class="canva-solver-box">
+          <div class="solver-heading">Target Grade Simulator</div>
+
+          <div class="solver-controls-row">
+            <div class="solver-field">
+              <label>Target Grade</label>
+              <select id="solverTargetSelect" onchange="BawiProto.runReverseSolver()">
+                <option value="98">98 (With Highest Honors)</option>
+                <option value="95" selected>95 (With High Honors)</option>
+                <option value="90">90 (With Honors)</option>
+                <option value="85">85 (Above Average)</option>
+                <option value="75">75 (Passing Benchmark)</option>
+              </select>
+            </div>
+            <div class="solver-field">
+              <label>Upcoming Assessment</label>
+              <select id="solverCategorySelect" onchange="BawiProto.runReverseSolver()">
+                <option value="QA" selected>Quarterly Exam (QA)</option>
+                <option value="PT">Performance Task (PT)</option>
+                <option value="WW">Written Work (WW)</option>
+              </select>
+            </div>
+            <div class="solver-field">
+              <label>Total Items</label>
+              <input type="number" id="solverItemsInput" value="50" min="1" max="150" style="width: 90px;" onchange="BawiProto.runReverseSolver()">
+            </div>
+          </div>
+
+          <div class="solver-result-card">
+            <div>
+              <div style="font-weight: 600; color: var(--text-main);" id="solverResultTitle">Minimum Score Needed:</div>
+              <div style="font-size: 13px; color: var(--text-muted); margin-top: 4px;" id="solverResultDesc">
+                Score at least 44 points (88%) on this assessment to secure grade 95.
+              </div>
+            </div>
+            <div class="solver-result-score" id="solverResultScore">
+              44 / 50
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===================================================================
+           TAB 3: ACADEMIC ACTION PLANNER
+           =================================================================== -->
+      <section class="proto-view" id="view-planner">
+        <div class="proto-view-header">
+          <div class="proto-view-title">
+            <h1>Task Planner</h1>
+          </div>
+          <div class="proto-header-actions">
+            <button class="btn-canva btn-canva-primary" onclick="BawiProto.openAddTaskModal()">
+              + Add New Task
+            </button>
+          </div>
+        </div>
+
+        <div class="planner-card">
+          <div class="section-subtitle-bar">
+            <h2>Current Tasks</h2>
+          </div>
+
+          <div id="plannerTasksList">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- =======================================================================
+       PROTOTYPE POPUPS & MODALS (Ready for individual screenshotting)
+       ======================================================================= -->
+
+  <!-- 1. Setup Student Profile Modal -->
+  <div class="proto-modal-backdrop" id="modalSetup">
+    <div class="proto-modal-box">
+      <div class="proto-modal-header">
+        <div class="proto-modal-title">Student Profile Setup</div>
+        <button class="proto-close-btn" onclick="BawiProto.closeModal('modalSetup')">&times;</button>
+      </div>
+      <div class="proto-modal-body">
+        <div class="form-group-clean">
+          <label>Student Full Name</label>
+          <input type="text" id="setupStudentName" value="Maria Santos">
+        </div>
+        <div class="form-group-clean">
+          <label>Senior High School Strand</label>
+          <select id="setupStrand">
+            <option value="STEM" selected>STEM (Science, Tech, Eng, Math)</option>
+            <option value="ABM">ABM (Accountancy, Business, Management)</option>
+            <option value="HUMSS">HUMSS (Humanities & Social Sciences)</option>
+            <option value="TVL">TVL (Technical-Vocational-Livelihood)</option>
+          </select>
+        </div>
+        <div class="form-group-clean">
+          <label>Grade Level</label>
+          <select id="setupGradeLevel">
+            <option value="Grade 11" selected>Grade 11</option>
+            <option value="Grade 12">Grade 12</option>
+          </select>
+        </div>
+        <div class="form-group-clean">
+          <label>Target General Average</label>
+          <input type="number" id="setupTargetGrade" value="95" min="75" max="100" step="1" placeholder="e.g. 95">
+        </div>
+      </div>
+      <div class="proto-modal-footer">
+        <button class="btn-canva btn-canva-secondary" onclick="BawiProto.closeModal('modalSetup')">Cancel</button>
+        <button class="btn-canva btn-canva-primary" onclick="BawiProto.saveSetupModal()">Save Settings</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. Log Assessment Score Modal -->
+  <div class="proto-modal-backdrop" id="modalAddScore">
+    <div class="proto-modal-box">
+      <div class="proto-modal-header">
+        <div class="proto-modal-title">Record Assessment &bull; <span id="scoreModalCatTag" style="color:var(--primary);">Written Work</span></div>
+        <button class="proto-close-btn" onclick="BawiProto.closeModal('modalAddScore')">&times;</button>
+      </div>
+      <div class="proto-modal-body">
+        <input type="hidden" id="scoreModalCategory" value="WW">
+        <div class="form-group-clean">
+          <label>Assessment Title</label>
+          <input type="text" id="scoreModalTitle" placeholder="e.g. Quiz 3: Chemical Equilibrium">
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+          <div class="form-group-clean">
+            <label>Score Earned</label>
+            <input type="number" id="scoreModalScore" placeholder="28" min="0">
+          </div>
+          <div class="form-group-clean">
+            <label>Total Items (Max)</label>
+            <input type="number" id="scoreModalMax" placeholder="30" min="1">
+          </div>
+        </div>
+      </div>
+      <div class="proto-modal-footer">
+        <button class="btn-canva btn-canva-secondary" onclick="BawiProto.closeModal('modalAddScore')">Cancel</button>
+        <button class="btn-canva btn-canva-primary" onclick="BawiProto.saveScoreFromModal()">Record Score</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. Add Planner Task Modal -->
+  <div class="proto-modal-backdrop" id="modalAddTask">
+    <div class="proto-modal-box">
+      <div class="proto-modal-header">
+        <div class="proto-modal-title">Create Academic Task</div>
+        <button class="proto-close-btn" onclick="BawiProto.closeModal('modalAddTask')">&times;</button>
+      </div>
+      <div class="proto-modal-body">
+        <div class="form-group-clean">
+          <label>Task Description</label>
+          <input type="text" id="taskModalTitle" placeholder="e.g. Prepare for First Periodical Exam">
+        </div>
+        <div class="form-group-clean">
+          <label>Related Subject</label>
+          <select id="taskModalSubject">
+            <!-- Populated dynamically -->
+          </select>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+          <div class="form-group-clean">
+            <label>Component</label>
+            <select id="taskModalCategory">
+              <option value="QA">Quarterly Exam</option>
+              <option value="PT">Performance Task</option>
+              <option value="WW">Written Work</option>
+            </select>
+          </div>
+          <div class="form-group-clean">
+            <label>Due</label>
+            <input type="text" id="taskModalDue" value="Friday">
+          </div>
+        </div>
+      </div>
+      <div class="proto-modal-footer">
+        <button class="btn-canva btn-canva-secondary" onclick="BawiProto.closeModal('modalAddTask')">Cancel</button>
+        <button class="btn-canva btn-canva-primary" onclick="BawiProto.saveTaskFromModal()">Add Task</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. Enroll Subject from DepEd Catalog Modal -->
+  <div class="proto-modal-backdrop" id="modalAddSubject">
+    <div class="proto-modal-box" style="max-width: 600px;">
+      <div class="proto-modal-header">
+        <div class="proto-modal-title">Enroll Subject from DepEd Catalog</div>
+        <button class="proto-close-btn" onclick="BawiProto.closeModal('modalAddSubject')">&times;</button>
+      </div>
+      <div class="proto-modal-body">
+        <div class="form-group-clean">
+          <label>Search Official Curriculum Catalog</label>
+          <input type="text" id="catalogSearchInput" placeholder="Filter e.g. 'Calculus', 'Oral', 'STEM'..." oninput="BawiProto.filterCatalog(this.value)">
+        </div>
+
+        <div class="form-group-clean">
+          <label>Select Official Subject Title</label>
+          <div class="catalog-options-container" id="catalogOptionsContainer">
+            <!-- Dynamically populated options -->
+          </div>
+        </div>
+
+        <div class="form-group-clean">
+          <label>Target Transmuted Grade</label>
+          <input type="number" id="catalogTargetGrade" value="95" min="75" max="100" step="1">
+        </div>
+      </div>
+      <div class="proto-modal-footer">
+        <button class="btn-canva btn-canva-secondary" onclick="BawiProto.closeModal('modalAddSubject')">Cancel</button>
+        <button class="btn-canva btn-canva-primary" onclick="BawiProto.saveSubjectFromModal()">Enroll Subject</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="prototype.js"></script>
+</body>
+</html>

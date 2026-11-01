@@ -1,0 +1,1408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bawi! Prototype - Senior High School Academic OS</title>
+  <meta name="description" content="Research Prototype: DepEd Table 4 Grading Simulator & Target Solver for Senior High School.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    /* Clean, clean white paper prototype styling */
+    :root {
+      --bg: #ffffff;
+      --surface: #ffffff;
+      --surface-subtle: #f8fafc;
+      --surface-hover: #f1f5f9;
+      --border: #e2e8f0;
+      --border-dark: #cbd5e1;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --text-light: #94a3b8;
+      --primary: #0f172a;
+      --primary-accent: #2563eb;
+      --accent-subtle: #eff6ff;
+      --success: #16a34a;
+      --success-bg: #f0fdf4;
+      --warning: #d97706;
+      --warning-bg: #fffbeb;
+      --danger: #dc2626;
+      --danger-bg: #fef2f2;
+      --radius: 6px;
+      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: var(--font-sans);
+      font-size: 14px;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      padding: 24px;
+    }
+
+    .container {
+      max-width: 1180px;
+      margin: 0 auto;
+    }
+
+    /* Header Bar */
+    header.proto-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 16px;
+      margin-bottom: 24px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .brand-section {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-logo {
+      font-weight: 700;
+      font-size: 18px;
+      letter-spacing: -0.02em;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .proto-badge {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 3px 8px;
+      background: var(--surface-subtle);
+      border: 1px solid var(--border-dark);
+      border-radius: var(--radius);
+      color: var(--text-muted);
+    }
+
+    .header-links {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .btn {
+      font-family: var(--font-sans);
+      font-size: 13px;
+      font-weight: 500;
+      padding: 7px 14px;
+      border-radius: var(--radius);
+      border: 1px solid var(--border-dark);
+      background: #ffffff;
+      color: var(--text);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: background-color 0.1s ease;
+      text-decoration: none;
+    }
+
+    .btn:hover {
+      background: var(--surface-subtle);
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: #ffffff;
+      border-color: var(--primary);
+    }
+
+    .btn-primary:hover {
+      background: #1e293b;
+    }
+
+    .btn-sm {
+      padding: 4px 8px;
+      font-size: 12px;
+    }
+
+    /* Student Profile & Control Banner */
+    .profile-card {
+      background: var(--surface-subtle);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px 20px;
+      margin-bottom: 24px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      align-items: center;
+    }
+
+    .profile-item label {
+      display: block;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+
+    .profile-item select,
+    .profile-item input {
+      width: 100%;
+      padding: 7px 10px;
+      font-size: 13px;
+      font-family: var(--font-sans);
+      border: 1px solid var(--border-dark);
+      border-radius: var(--radius);
+      background: #ffffff;
+      color: var(--text);
+    }
+
+    .profile-item select:focus,
+    .profile-item input:focus {
+      outline: 2px solid var(--primary-accent);
+      outline-offset: -1px;
+    }
+
+    /* Metric Summary Row */
+    .metrics-summary {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    @media (max-width: 860px) {
+      .metrics-summary {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    .metric-card {
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+    }
+
+    .metric-title {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+
+    .metric-value {
+      font-size: 26px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      font-family: var(--font-mono);
+      line-height: 1.1;
+    }
+
+    .metric-sub {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 6px;
+    }
+
+    /* Main Grid Layout */
+    .proto-grid {
+      display: grid;
+      grid-template-columns: 320px 1fr;
+      gap: 24px;
+      align-items: start;
+    }
+
+    @media (max-width: 960px) {
+      .proto-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Left Sidebar: Subject List */
+    .card {
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+    }
+
+    .card-header {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #ffffff;
+    }
+
+    .card-title {
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+    }
+
+    .subject-list {
+      list-style: none;
+      padding: 4px;
+    }
+
+    .subject-item {
+      padding: 10px 12px;
+      border-radius: var(--radius);
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2px;
+      border: 1px solid transparent;
+    }
+
+    .subject-item:hover {
+      background: var(--surface-subtle);
+    }
+
+    .subject-item.active {
+      background: var(--surface-subtle);
+      border-color: var(--border-dark);
+      font-weight: 600;
+    }
+
+    .subject-meta {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .subject-grade {
+      font-family: var(--font-mono);
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    /* Right Main Panel */
+    .content-area {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* Subject Header Inside Details */
+    .subject-detail-header {
+      padding: 16px;
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .subject-detail-info h2 {
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .subject-detail-info p {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .weights-badge-row {
+      display: flex;
+      gap: 8px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+    }
+
+    .weight-tag {
+      padding: 4px 8px;
+      background: var(--surface-subtle);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+    }
+
+    /* Tables */
+    .table-responsive {
+      overflow-x: auto;
+    }
+
+    table.proto-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      text-align: left;
+    }
+
+    table.proto-table th {
+      padding: 10px 14px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--text-muted);
+      background: var(--surface-subtle);
+      border-bottom: 1px solid var(--border);
+    }
+
+    table.proto-table td {
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+    }
+
+    table.proto-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .table-input {
+      width: 68px;
+      padding: 5px 8px;
+      font-size: 13px;
+      font-family: var(--font-mono);
+      border: 1px solid var(--border-dark);
+      border-radius: var(--radius);
+      text-align: right;
+    }
+
+    .table-input:focus {
+      outline: 2px solid var(--primary-accent);
+    }
+
+    /* Component Summary Box */
+    .component-summary-bar {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      padding: 14px 16px;
+      background: var(--surface-subtle);
+      border-top: 1px solid var(--border);
+      font-size: 12px;
+    }
+
+    @media (max-width: 600px) {
+      .component-summary-bar {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .comp-box strong {
+      display: block;
+      color: var(--text-muted);
+      font-size: 11px;
+      text-transform: uppercase;
+      font-weight: 600;
+      margin-bottom: 2px;
+    }
+
+    .comp-box span {
+      font-family: var(--font-mono);
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    /* Reverse Solver Box */
+    .solver-box {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      background: #ffffff;
+    }
+
+    .solver-box-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .solver-controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 14px;
+      padding: 12px;
+      background: var(--surface-subtle);
+      border-radius: var(--radius);
+    }
+
+    .solver-controls label {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-muted);
+    }
+
+    .solver-controls select,
+    .solver-controls input {
+      padding: 6px 10px;
+      font-size: 13px;
+      font-family: var(--font-sans);
+      border: 1px solid var(--border-dark);
+      border-radius: var(--radius);
+      background: #ffffff;
+    }
+
+    .solver-result {
+      padding: 12px 16px;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      background: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .solver-result.feasible {
+      border-left: 4px solid var(--success);
+      background: var(--success-bg);
+    }
+
+    .solver-result.difficult {
+      border-left: 4px solid var(--warning);
+      background: var(--warning-bg);
+    }
+
+    .solver-result.infeasible {
+      border-left: 4px solid var(--danger);
+      background: var(--danger-bg);
+    }
+
+    .result-text {
+      font-size: 13px;
+    }
+
+    .result-score {
+      font-family: var(--font-mono);
+      font-size: 20px;
+      font-weight: 700;
+    }
+
+    /* Transmutation Table Reference Collapsible */
+    details.deped-reference {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: #ffffff;
+      padding: 12px 16px;
+    }
+
+    details.deped-reference summary {
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    details.deped-reference[open] summary {
+      margin-bottom: 12px;
+    }
+
+    .transmutation-matrix-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 8px;
+      font-size: 12px;
+      font-family: var(--font-mono);
+    }
+
+    .matrix-item {
+      padding: 6px 10px;
+      background: var(--surface-subtle);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      display: flex;
+      justify-content: space-between;
+    }
+
+    /* Footer */
+    footer.proto-footer {
+      margin-top: 40px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: var(--text-muted);
+      font-size: 12px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <!-- Header -->
+    <header class="proto-header">
+      <div class="brand-section">
+        <div class="brand-logo">
+          <span>Bawi!</span>
+        </div>
+        <span class="proto-badge">Research Prototype v1.0</span>
+      </div>
+
+      <div class="header-links">
+        <button class="btn btn-sm" onclick="resetDefaultData()">Reset Prototype Data</button>
+        <a href="index.html" class="btn btn-sm">Interactive App &rarr;</a>
+      </div>
+    </header>
+
+    <!-- Student Configuration Card -->
+    <div class="profile-card">
+      <div class="profile-item">
+        <label>Student Name</label>
+        <input type="text" id="studentNameInput" value="Maria Santos" onchange="updateProfile()">
+      </div>
+      <div class="profile-item">
+        <label>Track & Strand</label>
+        <select id="strandSelect" onchange="onStrandChange()">
+          <option value="STEM" selected>STEM (Science, Tech, Eng, Math)</option>
+          <option value="ABM">ABM (Accountancy, Business, Management)</option>
+          <option value="HUMSS">HUMSS (Humanities & Social Sciences)</option>
+          <option value="TVL">TVL (Technical-Vocational-Livelihood)</option>
+        </select>
+      </div>
+      <div class="profile-item">
+        <label>Target General Average</label>
+        <select id="targetSelect" onchange="updateProfile()">
+          <option value="98">98 - With Highest Honors</option>
+          <option value="95" selected>95 - With High Honors</option>
+          <option value="90">90 - With Honors</option>
+          <option value="85">85 - Academic Good Standing</option>
+          <option value="75">75 - Passing Standard</option>
+        </select>
+      </div>
+      <div class="profile-item">
+        <label>Academic Period</label>
+        <select id="quarterSelect" onchange="renderAll()">
+          <option value="Q1" selected>Semester 1 &bull; Quarter 1</option>
+          <option value="Q2">Semester 1 &bull; Quarter 2</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Summary Metrics -->
+    <div class="metrics-summary">
+      <div class="metric-card">
+        <div class="metric-title">General Average (Projected)</div>
+        <div class="metric-value" id="gaValue">0.00</div>
+        <div class="metric-sub" id="gaStatus">Calculating...</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-title">DepEd Honors Classification</div>
+        <div class="metric-value" style="font-size: 19px;" id="honorsValue">-</div>
+        <div class="metric-sub" id="honorsSub">-</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-title">Total Enrolled Subjects</div>
+        <div class="metric-value" id="totalSubjectsCount">0</div>
+        <div class="metric-sub">Across active quarter</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-title">Target Status</div>
+        <div class="metric-value" style="font-size: 18px;" id="targetStatusValue">-</div>
+        <div class="metric-sub" id="targetGapSub">-</div>
+      </div>
+    </div>
+
+    <!-- Main Prototype Grid -->
+    <div class="proto-grid">
+      <!-- Left: Subject Navigation -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Enrolled Subjects</span>
+          <button class="btn btn-sm" onclick="addNewSubject()">+ Add</button>
+        </div>
+        <ul class="subject-list" id="subjectListContainer">
+          <!-- Rendered dynamically -->
+        </ul>
+      </div>
+
+      <!-- Right: Detailed Calculation & Target Solver -->
+      <div class="content-area">
+
+        <!-- Subject Header -->
+        <div class="subject-detail-header">
+          <div class="subject-detail-info">
+            <h2 id="currentSubjectName">Pre-Calculus</h2>
+            <p id="currentSubjectMeta">Specialized &bull; STEM Strand</p>
+          </div>
+          <div class="weights-badge-row">
+            <div class="weight-tag" id="wwWeightTag">WW: 25%</div>
+            <div class="weight-tag" id="ptWeightTag">PT: 45%</div>
+            <div class="weight-tag" id="qaWeightTag">QA: 30%</div>
+          </div>
+        </div>
+
+        <!-- Section 1: Written Works Table -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">1. Written Works (WW)</span>
+            <button class="btn btn-sm" onclick="addAssessment('WW')">+ Add Task</button>
+          </div>
+          <div class="table-responsive">
+            <table class="proto-table">
+              <thead>
+                <tr>
+                  <th style="width: 45%;">Assessment Title</th>
+                  <th style="width: 25%; text-align: right;">Score</th>
+                  <th style="width: 25%; text-align: right;">Total Items</th>
+                  <th style="width: 5%; text-align: center;"></th>
+                </tr>
+              </thead>
+              <tbody id="wwTableBody">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+          <div class="component-summary-bar">
+            <div class="comp-box">
+              <strong>Raw Score Total</strong>
+              <span id="wwRawTotal">0 / 0</span>
+            </div>
+            <div class="comp-box">
+              <strong>Percentage Score (PS)</strong>
+              <span id="wwPercentage">0.00%</span>
+            </div>
+            <div class="comp-box">
+              <strong>Weighted Score (WS)</strong>
+              <span id="wwWeighted">0.00 pts</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 2: Performance Tasks Table -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">2. Performance Tasks (PT)</span>
+            <button class="btn btn-sm" onclick="addAssessment('PT')">+ Add Task</button>
+          </div>
+          <div class="table-responsive">
+            <table class="proto-table">
+              <thead>
+                <tr>
+                  <th style="width: 45%;">Assessment Title</th>
+                  <th style="width: 25%; text-align: right;">Score</th>
+                  <th style="width: 25%; text-align: right;">Total Items</th>
+                  <th style="width: 5%; text-align: center;"></th>
+                </tr>
+              </thead>
+              <tbody id="ptTableBody">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+          <div class="component-summary-bar">
+            <div class="comp-box">
+              <strong>Raw Score Total</strong>
+              <span id="ptRawTotal">0 / 0</span>
+            </div>
+            <div class="comp-box">
+              <strong>Percentage Score (PS)</strong>
+              <span id="ptPercentage">0.00%</span>
+            </div>
+            <div class="comp-box">
+              <strong>Weighted Score (WS)</strong>
+              <span id="ptWeighted">0.00 pts</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 3: Quarterly Exam Table -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">3. Quarterly Assessment (QA)</span>
+            <button class="btn btn-sm" onclick="addAssessment('QA')">+ Add Exam</button>
+          </div>
+          <div class="table-responsive">
+            <table class="proto-table">
+              <thead>
+                <tr>
+                  <th style="width: 45%;">Assessment Title</th>
+                  <th style="width: 25%; text-align: right;">Score</th>
+                  <th style="width: 25%; text-align: right;">Total Items</th>
+                  <th style="width: 5%; text-align: center;"></th>
+                </tr>
+              </thead>
+              <tbody id="qaTableBody">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+          <div class="component-summary-bar">
+            <div class="comp-box">
+              <strong>Raw Score Total</strong>
+              <span id="qaRawTotal">0 / 0</span>
+            </div>
+            <div class="comp-box">
+              <strong>Percentage Score (PS)</strong>
+              <span id="qaPercentage">0.00%</span>
+            </div>
+            <div class="comp-box">
+              <strong>Weighted Score (WS)</strong>
+              <span id="qaWeighted">0.00 pts</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Current Subject Outcome Summary -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">DepEd Transmutation & Grade Output</span>
+          </div>
+          <div style="padding: 16px; display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px;">
+            <div>
+              <div style="font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase;">Sum Initial Grade (IG)</div>
+              <div style="font-size: 22px; font-weight: 700; font-family: var(--font-mono);" id="subjectInitialGrade">0.00%</div>
+              <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">WW + PT + QA Weighted Points</div>
+            </div>
+            <div>
+              <div style="font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase;">DepEd Transmuted Grade (TG)</div>
+              <div style="font-size: 22px; font-weight: 700; font-family: var(--font-mono); color: var(--primary);" id="subjectTransmutedGrade">-</div>
+              <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">Table 4 Transmuted Value</div>
+            </div>
+            <div>
+              <div style="font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase;">Status Remark</div>
+              <div style="font-size: 16px; font-weight: 600; margin-top: 4px;" id="subjectRemark">-</div>
+              <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;" id="subjectRemarkSub">Passing is 75</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 4: Reverse Target Solver (Lumina Engine) -->
+        <div class="solver-box">
+          <div class="solver-box-header">
+            <span class="card-title">Reverse Target Score Solver</span>
+            <span class="proto-badge">Closed-form Algorithm</span>
+          </div>
+          <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 12px;">
+            Calculates the minimum raw score required on an upcoming assessment to achieve a desired final transmuted grade.
+          </p>
+
+          <div class="solver-controls">
+            <div>
+              <label>Target Grade for this Subject</label>
+              <select id="solverTargetGrade" onchange="runReverseSolver()">
+                <option value="98">98 (With Highest Honors cutoff)</option>
+                <option value="95" selected>95 (With High Honors cutoff)</option>
+                <option value="90">90 (With Honors cutoff)</option>
+                <option value="85">85 (Above Average)</option>
+                <option value="75">75 (Passing Benchmark)</option>
+              </select>
+            </div>
+            <div>
+              <label>Upcoming Component</label>
+              <select id="solverCategory" onchange="runReverseSolver()">
+                <option value="QA" selected>Quarterly Assessment (QA)</option>
+                <option value="PT">Performance Task (PT)</option>
+                <option value="WW">Written Work (WW)</option>
+              </select>
+            </div>
+            <div>
+              <label>Upcoming Total Items</label>
+              <input type="number" id="solverTotalItems" value="50" min="1" max="200" style="width: 80px;" onchange="runReverseSolver()">
+            </div>
+          </div>
+
+          <div class="solver-result feasible" id="solverResultBox">
+            <div>
+              <div class="result-text" id="solverExplanation">
+                To reach target transmuted grade of <strong>95</strong>:
+              </div>
+              <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;" id="solverSubDetails">
+                Minimum raw score required
+              </div>
+            </div>
+            <div class="result-score" id="solverScoreNeeded">
+              -- / 50
+            </div>
+          </div>
+        </div>
+
+        <!-- DepEd Transmutation Reference Table -->
+        <details class="deped-reference">
+          <summary>Official DepEd Table 4 Reference Guide (DepEd Order No. 8, s. 2015)</summary>
+          <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px;">
+            The non-linear step matrix maps Initial Grade (IG) percentages into the official report card Transmuted Grade (TG).
+          </p>
+          <div class="transmutation-matrix-grid">
+            <div class="matrix-item"><span>100:</span> <span>99.50 – 100.00</span></div>
+            <div class="matrix-item"><span>99:</span> <span>98.32 – 99.49</span></div>
+            <div class="matrix-item"><span>98:</span> <span>97.14 – 98.31</span></div>
+            <div class="matrix-item"><span>97:</span> <span>95.96 – 97.13</span></div>
+            <div class="matrix-item"><span>96:</span> <span>94.78 – 95.95</span></div>
+            <div class="matrix-item"><span>95:</span> <span>93.60 – 94.77</span></div>
+            <div class="matrix-item"><span>94:</span> <span>92.42 – 93.59</span></div>
+            <div class="matrix-item"><span>93:</span> <span>91.24 – 92.41</span></div>
+            <div class="matrix-item"><span>92:</span> <span>90.06 – 91.23</span></div>
+            <div class="matrix-item"><span>91:</span> <span>88.88 – 90.05</span></div>
+            <div class="matrix-item"><span>90:</span> <span>87.70 – 88.87</span></div>
+            <div class="matrix-item"><span>85:</span> <span>81.80 – 82.97</span></div>
+            <div class="matrix-item"><span>80:</span> <span>75.90 – 77.07</span></div>
+            <div class="matrix-item"><span>75:</span> <span>70.00 – 71.17</span></div>
+            <div class="matrix-item"><span>Below 75:</span> <span>Under 70.00</span></div>
+          </div>
+        </details>
+
+      </div>
+    </div>
+
+    <!-- Prototype Footer -->
+    <footer class="proto-footer">
+      <div>Bawi! Academic OS &bull; System Prototype for Research Verification</div>
+      <div>Local-First &bull; Client-Side Computation</div>
+    </footer>
+  </div>
+
+  <script>
+    /**
+     * Bawi! Prototype Core JavaScript
+     * Self-contained, lightweight implementation of DepEd Table 4 and reverse solving.
+     */
+
+    // Official DepEd Table 4 (Initial Grade to Transmuted Grade)
+    const TRANSMUTATION_TABLE = [
+      { transmuted: 100, min: 99.50, max: 100.00, remarks: 'With Highest Honors' },
+      { transmuted: 99,  min: 98.32, max: 99.49,  remarks: 'With Highest Honors' },
+      { transmuted: 98,  min: 97.14, max: 98.31,  remarks: 'With Highest Honors' },
+      { transmuted: 97,  min: 95.96, max: 97.13,  remarks: 'With High Honors' },
+      { transmuted: 96,  min: 94.78, max: 95.95,  remarks: 'With High Honors' },
+      { transmuted: 95,  min: 93.60, max: 94.77,  remarks: 'With High Honors' },
+      { transmuted: 94,  min: 92.42, max: 93.59,  remarks: 'With Honors' },
+      { transmuted: 93,  min: 91.24, max: 92.41,  remarks: 'With Honors' },
+      { transmuted: 92,  min: 90.06, max: 91.23,  remarks: 'With Honors' },
+      { transmuted: 91,  min: 88.88, max: 90.05,  remarks: 'With Honors' },
+      { transmuted: 90,  min: 87.70, max: 88.87,  remarks: 'With Honors' },
+      { transmuted: 89,  min: 86.52, max: 87.69,  remarks: 'Passed' },
+      { transmuted: 88,  min: 85.34, max: 86.51,  remarks: 'Passed' },
+      { transmuted: 87,  min: 84.16, max: 85.33,  remarks: 'Passed' },
+      { transmuted: 86,  min: 82.98, max: 84.15,  remarks: 'Passed' },
+      { transmuted: 85,  min: 81.80, max: 82.97,  remarks: 'Passed' },
+      { transmuted: 84,  min: 80.62, max: 81.79,  remarks: 'Passed' },
+      { transmuted: 83,  min: 79.44, max: 80.61,  remarks: 'Passed' },
+      { transmuted: 82,  min: 78.26, max: 79.43,  remarks: 'Passed' },
+      { transmuted: 81,  min: 77.08, max: 78.25,  remarks: 'Passed' },
+      { transmuted: 80,  min: 75.90, max: 77.07,  remarks: 'Passed' },
+      { transmuted: 79,  min: 74.72, max: 75.89,  remarks: 'Passed' },
+      { transmuted: 78,  min: 73.54, max: 74.71,  remarks: 'Passed' },
+      { transmuted: 77,  min: 72.36, max: 73.53,  remarks: 'Passed' },
+      { transmuted: 76,  min: 71.18, max: 72.35,  remarks: 'Passed' },
+      { transmuted: 75,  min: 70.00, max: 71.17,  remarks: 'Passed - Passing Standard' },
+      { transmuted: 74,  min: 65.34, max: 69.99,  remarks: 'Did Not Meet Expectations' },
+      { transmuted: 73,  min: 60.67, max: 65.33,  remarks: 'Did Not Meet Expectations' },
+      { transmuted: 72,  min: 56.01, max: 60.66,  remarks: 'Did Not Meet Expectations' },
+      { transmuted: 71,  min: 51.34, max: 56.00,  remarks: 'Did Not Meet Expectations' },
+      { transmuted: 70,  min: 46.67, max: 51.33,  remarks: 'Did Not Meet Expectations' },
+      { transmuted: 69,  min: 42.01, max: 46.66,  remarks: 'Did Not Meet Expectations' },
+      { transmuted: 68,  min: 37.34, max: 42.00,  remarks: 'Did Not Meet Expectations' },
+      { transmuted: 67,  min: 32.68, max: 37.33,  remarks: 'Did Not Meet Expectations' },
+      { transmuted: 66,  min: 28.01, max: 32.67,  remarks: 'Did Not Meet Expectations' },
+      { transmuted: 65,  min: 23.35, max: 28.00,  remarks: 'Did Not Meet Expectations' },
+      { transmuted: 64,  min: 18.68, max: 23.34,  remarks: 'Did Not Meet Expectations' },
+      { transmuted: 63,  min: 14.01, max: 18.67,  remarks: 'Did Not Meet Expectations' },
+      { transmuted: 62,  min: 9.35,  max: 14.00,  remarks: 'Did Not Meet Expectations' },
+      { transmuted: 61,  min: 4.68,  max: 9.34,   remarks: 'Did Not Meet Expectations' },
+      { transmuted: 60,  min: 0.00,  max: 4.67,   remarks: 'Did Not Meet Expectations' }
+    ];
+
+    function initialToTransmuted(initialGrade) {
+      if (typeof initialGrade !== 'number' || isNaN(initialGrade)) return 60;
+      if (initialGrade >= 99.50) return 100;
+      if (initialGrade <= 0) return 60;
+      const rounded = Math.round(initialGrade * 100) / 100;
+      for (const row of TRANSMUTATION_TABLE) {
+        if (rounded >= row.min && rounded <= row.max + 0.0001) {
+          return row.transmuted;
+        }
+      }
+      return rounded > 100 ? 100 : 60;
+    }
+
+    function transmutedToMinInitial(tg) {
+      const target = Math.min(100, Math.max(60, Math.round(tg)));
+      const row = TRANSMUTATION_TABLE.find(r => r.transmuted === target);
+      return row ? row.min : 70.00;
+    }
+
+    function getTransmutedRow(tg) {
+      return TRANSMUTATION_TABLE.find(r => r.transmuted === tg) || TRANSMUTATION_TABLE[TRANSMUTATION_TABLE.length - 1];
+    }
+
+    // Default Seed Data
+    const DEFAULT_PROTOTYPE_DATA = {
+      profile: {
+        name: 'Maria Santos',
+        strand: 'STEM',
+        targetGrade: 95
+      },
+      subjects: [
+        {
+          id: 'stem-pre-calc',
+          name: 'Pre-Calculus',
+          classification: 'Specialized',
+          strand: 'STEM',
+          weights: { ww: 0.25, pt: 0.45, qa: 0.30 },
+          assessments: [
+            { id: 'a1', category: 'WW', title: 'Quiz 1: Conic Sections', score: 26, max: 30 },
+            { id: 'a2', category: 'WW', title: 'Problem Set 1: Parabolas', score: 19, max: 20 },
+            { id: 'a3', category: 'WW', title: 'Seatwork: Ellipses & Hyperbolas', score: 23, max: 25 },
+            { id: 'a4', category: 'PT', title: 'Performance Task 1: Architectural Bridge Design', score: 48, max: 50 },
+            { id: 'a5', category: 'PT', title: 'Math Journal: Real-World Planetary Orbits', score: 29, max: 30 },
+            { id: 'a6', category: 'QA', title: 'First Periodic Exam', score: 44, max: 50 }
+          ]
+        },
+        {
+          id: 'stem-gen-bio',
+          name: 'General Biology 1',
+          classification: 'Specialized',
+          strand: 'STEM',
+          weights: { ww: 0.25, pt: 0.45, qa: 0.30 },
+          assessments: [
+            { id: 'b1', category: 'WW', title: 'Quiz 1: Cell Theory & Organelles', score: 28, max: 30 },
+            { id: 'b2', category: 'WW', title: 'Lab Worksheet: Microscopy', score: 20, max: 20 },
+            { id: 'b3', category: 'PT', title: 'Lab Report: Osmosis & Diffusion', score: 45, max: 50 },
+            { id: 'b4', category: 'PT', title: '3D Organelle Cell Model', score: 48, max: 50 },
+            { id: 'b5', category: 'QA', title: 'First Periodic Exam', score: 46, max: 50 }
+          ]
+        },
+        {
+          id: 'core-oral-comm',
+          name: 'Oral Communication',
+          classification: 'Core',
+          strand: 'All',
+          weights: { ww: 0.25, pt: 0.50, qa: 0.25 },
+          assessments: [
+            { id: 'c1', category: 'WW', title: 'Written Quiz 1: Communication Models', score: 24, max: 25 },
+            { id: 'c2', category: 'PT', title: 'Speech Delivery: Persuasive Pitch', score: 47, max: 50 },
+            { id: 'c3', category: 'PT', title: 'Panel Discussion & Impromptu', score: 48, max: 50 },
+            { id: 'c4', category: 'QA', title: 'First Periodic Exam', score: 45, max: 50 }
+          ]
+        },
+        {
+          id: 'core-gen-math',
+          name: 'General Mathematics',
+          classification: 'Core',
+          strand: 'All',
+          weights: { ww: 0.25, pt: 0.50, qa: 0.25 },
+          assessments: [
+            { id: 'd1', category: 'WW', title: 'Quiz 1: Rational Functions', score: 27, max: 30 },
+            { id: 'd2', category: 'PT', title: 'Financial Math Case Study: Loan Amortization', score: 46, max: 50 },
+            { id: 'd3', category: 'QA', title: 'First Periodic Exam', score: 45, max: 50 }
+          ]
+        },
+        {
+          id: 'core-ucsp',
+          name: 'Understanding Culture, Society & Politics',
+          classification: 'Core',
+          strand: 'All',
+          weights: { ww: 0.25, pt: 0.50, qa: 0.25 },
+          assessments: [
+            { id: 'e1', category: 'WW', title: 'Essay: Cultural Relativism', score: 29, max: 30 },
+            { id: 'e2', category: 'PT', title: 'Community Ethnography Case Analysis', score: 49, max: 50 },
+            { id: 'e3', category: 'QA', title: 'First Periodic Exam', score: 47, max: 50 }
+          ]
+        }
+      ]
+    };
+
+    // State
+    let prototypeState = JSON.parse(localStorage.getItem('bawi_prototype_data') || 'null');
+    if (!prototypeState) {
+      prototypeState = JSON.parse(JSON.stringify(DEFAULT_PROTOTYPE_DATA));
+      saveState();
+    }
+
+    let activeSubjectId = prototypeState.subjects[0]?.id || '';
+
+    function saveState() {
+      localStorage.setItem('bawi_prototype_data', JSON.stringify(prototypeState));
+    }
+
+    function resetDefaultData() {
+      if (confirm('Reset prototype data back to standard research baseline?')) {
+        prototypeState = JSON.parse(JSON.stringify(DEFAULT_PROTOTYPE_DATA));
+        activeSubjectId = prototypeState.subjects[0]?.id || '';
+        saveState();
+        initInputs();
+        renderAll();
+      }
+    }
+
+    function initInputs() {
+      document.getElementById('studentNameInput').value = prototypeState.profile.name;
+      document.getElementById('strandSelect').value = prototypeState.profile.strand;
+      document.getElementById('targetSelect').value = prototypeState.profile.targetGrade;
+    }
+
+    function updateProfile() {
+      prototypeState.profile.name = document.getElementById('studentNameInput').value.trim() || 'Student';
+      prototypeState.profile.strand = document.getElementById('strandSelect').value;
+      prototypeState.profile.targetGrade = parseInt(document.getElementById('targetSelect').value, 10);
+      saveState();
+      renderAll();
+    }
+
+    function onStrandChange() {
+      updateProfile();
+    }
+
+    // Calculations
+    function computeSubject(subject) {
+      const ww = subject.assessments.filter(a => a.category === 'WW');
+      const pt = subject.assessments.filter(a => a.category === 'PT');
+      const qa = subject.assessments.filter(a => a.category === 'QA');
+
+      const sumWWScore = ww.reduce((acc, i) => acc + (Number(i.score) || 0), 0);
+      const sumWWMax = ww.reduce((acc, i) => acc + (Number(i.max) || 0), 0);
+      const wwPS = sumWWMax > 0 ? (sumWWScore / sumWWMax) * 100 : 0;
+      const wwWS = wwPS * subject.weights.ww;
+
+      const sumPTScore = pt.reduce((acc, i) => acc + (Number(i.score) || 0), 0);
+      const sumPTMax = pt.reduce((acc, i) => acc + (Number(i.max) || 0), 0);
+      const ptPS = sumPTMax > 0 ? (sumPTScore / sumPTMax) * 100 : 0;
+      const ptWS = ptPS * subject.weights.pt;
+
+      const sumQAScore = qa.reduce((acc, i) => acc + (Number(i.score) || 0), 0);
+      const sumQAMax = qa.reduce((acc, i) => acc + (Number(i.max) || 0), 0);
+      const qaPS = sumQAMax > 0 ? (sumQAScore / sumQAMax) * 100 : 0;
+      const qaWS = qaPS * subject.weights.qa;
+
+      // Initial Grade
+      const initialGrade = +(wwWS + ptWS + qaWS).toFixed(2);
+      const transmutedGrade = initialToTransmuted(initialGrade);
+
+      return {
+        ww: { score: sumWWScore, max: sumWWMax, ps: wwPS, ws: wwWS },
+        pt: { score: sumPTScore, max: sumPTMax, ps: ptPS, ws: ptWS },
+        qa: { score: sumQAScore, max: sumQAMax, ps: qaPS, ws: qaWS },
+        initialGrade,
+        transmutedGrade
+      };
+    }
+
+    function renderAll() {
+      renderSubjectList();
+      renderActiveSubject();
+      renderOverallMetrics();
+      runReverseSolver();
+    }
+
+    function renderSubjectList() {
+      const container = document.getElementById('subjectListContainer');
+      container.innerHTML = '';
+
+      prototypeState.subjects.forEach(sub => {
+        const metrics = computeSubject(sub);
+        const li = document.createElement('li');
+        li.className = 'subject-item' + (sub.id === activeSubjectId ? ' active' : '');
+        li.onclick = () => {
+          activeSubjectId = sub.id;
+          renderAll();
+        };
+
+        li.innerHTML = `
+          <div>
+            <div style="font-weight: 500;">${sub.name}</div>
+            <div class="subject-meta">${sub.classification} &bull; ${Math.round(sub.weights.ww*100)}/${Math.round(sub.weights.pt*100)}/${Math.round(sub.weights.qa*100)}</div>
+          </div>
+          <div class="subject-grade">${metrics.transmutedGrade}</div>
+        `;
+        container.appendChild(li);
+      });
+    }
+
+    function renderActiveSubject() {
+      const sub = prototypeState.subjects.find(s => s.id === activeSubjectId);
+      if (!sub) return;
+
+      document.getElementById('currentSubjectName').textContent = sub.name;
+      document.getElementById('currentSubjectMeta').textContent = `${sub.classification} \u2022 Strand: ${sub.strand}`;
+      document.getElementById('wwWeightTag').textContent = `WW: ${Math.round(sub.weights.ww * 100)}%`;
+      document.getElementById('ptWeightTag').textContent = `PT: ${Math.round(sub.weights.pt * 100)}%`;
+      document.getElementById('qaWeightTag').textContent = `QA: ${Math.round(sub.weights.qa * 100)}%`;
+
+      renderTable('WW', sub.assessments.filter(a => a.category === 'WW'));
+      renderTable('PT', sub.assessments.filter(a => a.category === 'PT'));
+      renderTable('QA', sub.assessments.filter(a => a.category === 'QA'));
+
+      const metrics = computeSubject(sub);
+
+      // Summaries
+      document.getElementById('wwRawTotal').textContent = `${metrics.ww.score} / ${metrics.ww.max}`;
+      document.getElementById('wwPercentage').textContent = `${metrics.ww.ps.toFixed(2)}%`;
+      document.getElementById('wwWeighted').textContent = `${metrics.ww.ws.toFixed(2)} pts`;
+
+      document.getElementById('ptRawTotal').textContent = `${metrics.pt.score} / ${metrics.pt.max}`;
+      document.getElementById('ptPercentage').textContent = `${metrics.pt.ps.toFixed(2)}%`;
+      document.getElementById('ptWeighted').textContent = `${metrics.pt.ws.toFixed(2)} pts`;
+
+      document.getElementById('qaRawTotal').textContent = `${metrics.qa.score} / ${metrics.qa.max}`;
+      document.getElementById('qaPercentage').textContent = `${metrics.qa.ps.toFixed(2)}%`;
+      document.getElementById('qaWeighted').textContent = `${metrics.qa.ws.toFixed(2)} pts`;
+
+      // Outputs
+      document.getElementById('subjectInitialGrade').textContent = `${metrics.initialGrade.toFixed(2)}%`;
+      document.getElementById('subjectTransmutedGrade').textContent = metrics.transmutedGrade;
+
+      const row = getTransmutedRow(metrics.transmutedGrade);
+      document.getElementById('subjectRemark').textContent = row.remarks;
+    }
+
+    function renderTable(cat, items) {
+      const tbody = document.getElementById(cat.toLowerCase() + 'TableBody');
+      tbody.innerHTML = '';
+
+      if (items.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="4" style="color: var(--text-light); text-align: center; padding: 14px;">No items recorded in this component yet.</td></tr>`;
+        return;
+      }
+
+      items.forEach(item => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>
+            <input type="text" value="${item.title}" style="width: 100%; border: none; background: transparent; font-size: 13px;" onchange="updateItem('${item.id}', 'title', this.value)">
+          </td>
+          <td style="text-align: right;">
+            <input type="number" class="table-input" value="${item.score}" min="0" max="${item.max}" onchange="updateItem('${item.id}', 'score', this.value)">
+          </td>
+          <td style="text-align: right;">
+            <input type="number" class="table-input" value="${item.max}" min="1" onchange="updateItem('${item.id}', 'max', this.value)">
+          </td>
+          <td style="text-align: center;">
+            <button class="btn btn-sm" style="padding: 2px 6px; color: var(--danger);" onclick="deleteAssessment('${item.id}')" title="Delete">&times;</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function updateItem(itemId, field, value) {
+      const sub = prototypeState.subjects.find(s => s.id === activeSubjectId);
+      if (!sub) return;
+      const item = sub.assessments.find(a => a.id === itemId);
+      if (!item) return;
+
+      if (field === 'title') {
+        item.title = value.trim() || 'Assessment';
+      } else if (field === 'score') {
+        item.score = Math.max(0, Number(value) || 0);
+      } else if (field === 'max') {
+        item.max = Math.max(1, Number(value) || 1);
+      }
+
+      saveState();
+      renderAll();
+    }
+
+    function addAssessment(category) {
+      const sub = prototypeState.subjects.find(s => s.id === activeSubjectId);
+      if (!sub) return;
+
+      const newId = 'item_' + Date.now();
+      const count = sub.assessments.filter(a => a.category === category).length + 1;
+      const defaultTitle = category === 'QA' ? 'Periodic Exam' : `${category === 'WW' ? 'Seatwork / Quiz' : 'Performance Task'} ${count}`;
+      const defaultMax = category === 'QA' ? 50 : 25;
+
+      sub.assessments.push({
+        id: newId,
+        category,
+        title: defaultTitle,
+        score: defaultMax,
+        max: defaultMax
+      });
+
+      saveState();
+      renderAll();
+    }
+
+    function deleteAssessment(itemId) {
+      const sub = prototypeState.subjects.find(s => s.id === activeSubjectId);
+      if (!sub) return;
+      sub.assessments = sub.assessments.filter(a => a.id !== itemId);
+      saveState();
+      renderAll();
+    }
+
+    function addNewSubject() {
+      const name = prompt('Enter subject title:', 'Empowerment Technologies');
+      if (!name) return;
+      const newSub = {
+        id: 'sub_' + Date.now(),
+        name: name.trim(),
+        classification: 'Applied',
+        strand: prototypeState.profile.strand,
+        weights: { ww: 0.25, pt: 0.50, qa: 0.25 },
+        assessments: [
+          { id: 'item_w1', category: 'WW', title: 'Written Quiz 1', score: 20, max: 20 },
+          { id: 'item_p1', category: 'PT', title: 'Practical Project 1', score: 45, max: 50 },
+          { id: 'item_q1', category: 'QA', title: 'Periodic Exam', score: 40, max: 50 }
+        ]
+      };
+      prototypeState.subjects.push(newSub);
+      activeSubjectId = newSub.id;
+      saveState();
+      renderAll();
+    }
+
+    function renderOverallMetrics() {
+      let sumTG = 0;
+      let count = prototypeState.subjects.length;
+
+      prototypeState.subjects.forEach(sub => {
+        const m = computeSubject(sub);
+        sumTG += m.transmutedGrade;
+      });
+
+      const ga = count > 0 ? (sumTG / count) : 0;
+      document.getElementById('gaValue').textContent = ga.toFixed(2);
+      document.getElementById('totalSubjectsCount').textContent = count;
+
+      const target = prototypeState.profile.targetGrade || 95;
+      const diff = ga - target;
+
+      // Honors Classification
+      const honorsEl = document.getElementById('honorsValue');
+      const honorsSubEl = document.getElementById('honorsSub');
+      if (ga >= 98.00) {
+        honorsEl.textContent = 'Highest Honors';
+        honorsSubEl.textContent = 'GA \u2265 98.00 cutoff met';
+      } else if (ga >= 95.00) {
+        honorsEl.textContent = 'High Honors';
+        honorsSubEl.textContent = 'GA \u2265 95.00 cutoff met';
+      } else if (ga >= 90.00) {
+        honorsEl.textContent = 'With Honors';
+        honorsSubEl.textContent = 'GA \u2265 90.00 cutoff met';
+      } else if (ga >= 75.00) {
+        honorsEl.textContent = 'Passed';
+        honorsSubEl.textContent = 'Academic Good Standing';
+      } else {
+        honorsEl.textContent = 'Under Benchmark';
+        honorsSubEl.textContent = 'Passing is 75.00';
+      }
+
+      // Target Status
+      const targetStatusEl = document.getElementById('targetStatusValue');
+      const targetGapEl = document.getElementById('targetGapSub');
+      if (diff >= 0) {
+        targetStatusEl.textContent = `Surplus (+${diff.toFixed(2)})`;
+        targetStatusEl.style.color = 'var(--success)';
+        targetGapEl.textContent = `Achieving target (${target})`;
+      } else {
+        targetStatusEl.textContent = `Deficit (${diff.toFixed(2)})`;
+        targetStatusEl.style.color = 'var(--danger)';
+        targetGapEl.textContent = `Points needed to reach ${target}`;
+      }
+    }
+
+    // Reverse Solver Algorithm
+    function runReverseSolver() {
+      const sub = prototypeState.subjects.find(s => s.id === activeSubjectId);
+      if (!sub) return;
+
+      const targetTG = parseInt(document.getElementById('solverTargetGrade').value, 10);
+      const category = document.getElementById('solverCategory').value;
+      const upcomingMax = Math.max(1, parseInt(document.getElementById('solverTotalItems').value, 10) || 50);
+
+      const minInitialRequired = transmutedToMinInitial(targetTG);
+
+      // Existing component contributions
+      const ww = sub.assessments.filter(a => a.category === 'WW');
+      const pt = sub.assessments.filter(a => a.category === 'PT');
+      const qa = sub.assessments.filter(a => a.category === 'QA');
+
+      let currentWWScore = ww.reduce((a, b) => a + Number(b.score), 0);
+      let currentWWMax = ww.reduce((a, b) => a + Number(b.max), 0);
+
+      let currentPTScore = pt.reduce((a, b) => a + Number(b.score), 0);
+      let currentPTMax = pt.reduce((a, b) => a + Number(b.max), 0);
+
+      let currentQAScore = qa.reduce((a, b) => a + Number(b.score), 0);
+      let currentQAMax = qa.reduce((a, b) => a + Number(b.max), 0);
+
+      // Calculate locked contribution from OTHER components
+      let lockedFromOthers = 0;
+
+      if (category === 'QA') {
+        const wwPS = currentWWMax > 0 ? (currentWWScore / currentWWMax) * 100 : 0;
+        const ptPS = currentPTMax > 0 ? (currentPTScore / currentPTMax) * 100 : 0;
+        lockedFromOthers = (wwPS * sub.weights.ww) + (ptPS * sub.weights.pt);
+      } else if (category === 'PT') {
+        const wwPS = currentWWMax > 0 ? (currentWWScore / currentWWMax) * 100 : 0;
+        const qaPS = currentQAMax > 0 ? (currentQAScore / currentQAMax) * 100 : 0;
+        lockedFromOthers = (wwPS * sub.weights.ww) + (qaPS * sub.weights.qa);
+      } else if (category === 'WW') {
+        const ptPS = currentPTMax > 0 ? (currentPTScore / currentPTMax) * 100 : 0;
+        const qaPS = currentQAMax > 0 ? (currentQAScore / currentQAMax) * 100 : 0;
+        lockedFromOthers = (ptPS * sub.weights.pt) + (qaPS * sub.weights.qa);
+      }
+
+      // We need: lockedFromOthers + (TargetCategoryWS) >= minInitialRequired
+      const targetCategoryWeight = category === 'QA' ? sub.weights.qa : (category === 'PT' ? sub.weights.pt : sub.weights.ww);
+      const neededCategoryWS = Math.max(0, minInitialRequired - lockedFromOthers);
+      const neededCategoryPS = neededCategoryWS / targetCategoryWeight; // percentage score needed (0-100)
+
+      let scoreNeeded = 0;
+      let isFeasible = true;
+
+      if (category === 'QA') {
+        // If QA is fresh: PS = (X / upcomingMax) * 100 = neededCategoryPS
+        scoreNeeded = (neededCategoryPS / 100) * (currentQAMax + upcomingMax) - currentQAScore;
+      } else if (category === 'PT') {
+        scoreNeeded = (neededCategoryPS / 100) * (currentPTMax + upcomingMax) - currentPTScore;
+      } else if (category === 'WW') {
+        scoreNeeded = (neededCategoryPS / 100) * (currentWWMax + upcomingMax) - currentWWScore;
+      }
+
+      scoreNeeded = Math.ceil(scoreNeeded);
+
+      const box = document.getElementById('solverResultBox');
+      const exp = document.getElementById('solverExplanation');
+      const scoreEl = document.getElementById('solverScoreNeeded');
+      const subDetails = document.getElementById('solverSubDetails');
+
+      box.className = 'solver-result';
+
+      if (scoreNeeded <= 0) {
+        box.classList.add('feasible');
+        exp.innerHTML = `Target <strong>${targetTG}</strong> is already mathematically secured!`;
+        scoreEl.textContent = `0 / ${upcomingMax}`;
+        subDetails.textContent = `Even with 0 on this assessment, initial grade satisfies Table 4 cutoff (${minInitialRequired.toFixed(2)}%).`;
+      } else if (scoreNeeded <= upcomingMax) {
+        box.classList.add(scoreNeeded / upcomingMax > 0.85 ? 'difficult' : 'feasible');
+        exp.innerHTML = `To reach target transmuted grade of <strong>${targetTG}</strong> (${minInitialRequired.toFixed(2)}% min raw):`;
+        scoreEl.textContent = `${scoreNeeded} / ${upcomingMax}`;
+        const pct = Math.round((scoreNeeded / upcomingMax) * 100);
+        subDetails.textContent = `Requires scoring at least ${pct}% on this upcoming assessment.`;
+      } else {
+        box.classList.add('infeasible');
+        exp.innerHTML = `Target <strong>${targetTG}</strong> is mathematically out of reach on this single assessment.`;
+        scoreEl.textContent = `${scoreNeeded} / ${upcomingMax}`;
+        subDetails.textContent = `Requires ${scoreNeeded} points (exceeds total items of ${upcomingMax}). Additional assessments needed.`;
+      }
+    }
+
+    // Initialization
+    window.addEventListener('DOMContentLoaded', () => {
+      initInputs();
+      renderAll();
+    });
+  </script>
+</body>
+</html>
